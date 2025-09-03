@@ -4,6 +4,7 @@ export * from './Button'          // 버튼 컴포넌트 (기본, 보조, 링크
 export * from './Card'            // 카드 컴포넌트 (헤더, 바디, 푸터 포함)
 export * from './Input'           // 입력 필드 컴포넌트 (아이콘, 에러 상태 지원)
 export * from './Badge'           // 배지 컴포넌트
+export * from './Avatar'          // 아바타 컴포넌트 (이름 기반 생성, 이미지 지원)
 export * from './Progress'        // 진행률 표시 컴포넌트
 export * from './Grid'            // 그리드 레이아웃 컴포넌트 (반응형 지원)
 export * from './FloatingActionButton' // 플로팅 액션 버튼

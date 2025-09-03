@@ -16,6 +16,10 @@ import { AdminDashboard } from './components/dashboard/admin'
 import { UserManagement } from './components/admin/UserManagement'
 import { ClassManagement } from './components/admin/ClassManagement'
 import { Unauthorized } from './components/auth/Unauthorized'
+import { SignInPage, SignUpPage, ProfilePage } from './pages/auth'
+import { TodayReviewsPage, ReviewStatisticsPage } from './pages/srs'
+import { ClassProgressPage, StreakLeaderboardPage } from './pages/progress'
+import { RewardRedemptionPage, LeaderboardPage } from './pages/gamification'
 import { ProblemBankBrowser, GradingWorkflow, AnalyticsDashboard } from './components/problems'
 
 // React Query client 생성
@@ -35,14 +39,29 @@ function App() {
         <ThemeProvider defaultTheme="system">
           <AuthProvider>
             <Routes>
+              {/* 인증 라우트 - Layout 밖에서 독립적으로 */}
+              <Route path="/auth/signin" element={<SignInPage />} />
+              <Route path="/auth/signup" element={<SignUpPage />} />
+              
               <Route path="/" element={<MainLayout />}>
                 {/* 학생 전용 라우트 */}
                 <Route index element={<StudentDashboard />} />
                 <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="profile" element={<ProfilePage />} />
                 <Route path="study/today" element={<TodayStudyPage />} />
+                <Route path="study/reviews" element={<TodayReviewsPage />} />
+                <Route path="study/stats" element={<ReviewStatisticsPage />} />
                 <Route path="study/review" element={<ReviewPage />} />
                 <Route path="study/solve" element={<ProblemSolvingPage />} />
                 <Route path="study/progress" element={<MyProgressPage />} />
+                
+                {/* 진도 관리 라우트 */}
+                <Route path="progress/class" element={<ClassProgressPage />} />
+                <Route path="progress/streaks" element={<StreakLeaderboardPage />} />
+                
+                {/* 게임화 시스템 라우트 */}
+                <Route path="gamification/rewards" element={<RewardRedemptionPage />} />
+                <Route path="gamification/leaderboard" element={<LeaderboardPage />} />
                 
                 {/* 교사 전용 라우트 */}
                 <Route path="teacher" element={<TeacherDashboard />} />

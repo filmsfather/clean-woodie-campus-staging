@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../../../hooks/useAuth';
 import { Unauthorized } from '../../auth/Unauthorized';
 import { DashboardSkeleton, DashboardError, EmptyDashboard } from '../shared/components';
+import { FeatureGuard } from '../../auth/FeatureGuard';
 import { useStudentDashboard, useStartStudySession, useStartReview } from './hooks/useStudentDashboard';
 import {
   WelcomeSection,
@@ -67,39 +68,49 @@ export const StudentDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* 환영 메시지 */}
-      <WelcomeSection profile={data.profile} />
+    <FeatureGuard feature="studentDashboard">
+      <div className="space-y-6">
+        {/* 환영 메시지 */}
+        <WelcomeSection studentId={data.dashboard.studentId} />
 
-      {/* 빠른 통계 카드들 */}
-      <QuickStatsGrid 
-        statistics={data.statistics} 
-        studyStreak={data.studyStreak} 
-      />
-
-      {/* 오늘의 학습 태스크 */}
-      <TodayTasksSection 
-        tasks={data.todayTasks}
-        onStartTask={handleStartTask}
-        isStartingTask={startStudySession.isPending}
-      />
-
-      {/* 2열 레이아웃: 스트릭 & 복습 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <StudyStreakCard studyStreak={data.studyStreak} />
-        <ReviewQueueCard 
-          reviewQueue={data.reviewQueue}
-          onStartReview={handleStartReview}
-          isStartingReview={startReview.isPending}
+        {/* 빠른 통계 카드들 */}
+        <QuickStatsGrid 
+          currentStreak={data.dashboard.currentStreak}
+          longestStreak={data.dashboard.longestStreak}
+          reviewCount={data.dashboard.reviewCount}
         />
-      </div>
 
-      {/* 추가 섹션들은 필요에 따라 구현 예정 */}
-      {/* 
-      <ProgressChartSection data={data.progressData} />
-      <ProblemSetsSection problemSets={data.activeProblemSets} />
-      <UpcomingDeadlinesSection deadlines={data.upcomingDeadlines} />
-      */}
-    </div>
+        {/* 오늘의 학습 태스크 */}
+        <TodayTasksSection 
+          tasks={data.dashboard.todayTasks}
+          onStartTask={handleStartTask}
+          isStartingTask={startStudySession.isPending}
+        />
+
+        {/* 2열 레이아웃: 스트릭 & 복습 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <FeatureGuard feature="progressTracking">
+            <StudyStreakCard 
+              currentStreak={data.dashboard.currentStreak}
+              longestStreak={data.dashboard.longestStreak}
+            />
+          </FeatureGuard>
+          
+          <FeatureGuard feature="reviewSystem">
+            <ReviewQueueCard 
+              reviewCount={data.dashboard.reviewCount}
+              onStartReview={handleStartReview}
+              isStartingReview={startReview.isPending}
+            />
+          </FeatureGuard>
+        </div>
+
+        {/* 추가 섹션들은 필요에 따라 구현 예정 */}
+        {/* 
+        <ProgressChartSection data={data.dashboard.progressData} />
+        <UpcomingDeadlinesSection deadlines={data.dashboard.upcomingDeadlines} />
+        */}
+      </div>
+    </FeatureGuard>
   );
 };
