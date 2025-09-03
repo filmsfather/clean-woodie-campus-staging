@@ -1,5 +1,5 @@
 name: 'Setup Node.js and pnpm'
-description: 'Setup Node.js, pnpm, and install dependencies'
+description: 'Setup Node.js, pnpm with Corepack, and install dependencies'
 
 runs:
   using: 'composite'
@@ -10,10 +10,13 @@ runs:
         node-version: '20'
         cache: 'pnpm'
         
+    - name: Enable Corepack
+      shell: bash
+      run: corepack enable
+        
     - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: '9.0.0'
+      shell: bash
+      run: corepack prepare pnpm@latest --activate
         
     - name: Install dependencies
       shell: bash
