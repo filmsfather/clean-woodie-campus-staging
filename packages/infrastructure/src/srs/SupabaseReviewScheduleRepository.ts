@@ -1,5 +1,5 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { IReviewScheduleRepository, ReviewSchedule, ReviewState, ReviewInterval, EaseFactor } from '@domain/srs'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { IReviewScheduleRepository, ReviewSchedule, ReviewState, ReviewInterval, EaseFactor } from '@woodie/domain/srs'
 import { BaseRepository } from '../repositories/BaseRepository'
 
 interface ReviewScheduleRow {
@@ -16,9 +16,15 @@ interface ReviewScheduleRow {
   updated_at: string
 }
 
-export class SupabaseReviewScheduleRepository extends BaseRepository implements IReviewScheduleRepository {
+export class SupabaseReviewScheduleRepository extends BaseRepository<ReviewSchedule> implements IReviewScheduleRepository {
+  protected client: any // Supabase client
   private readonly tableName = 'review_schedules'
   private readonly schema = 'learning'
+
+  constructor(client: any) {
+    super()
+    this.client = client
+  }
 
   async findById(id: UniqueEntityID): Promise<ReviewSchedule | null> {
     const { data, error } = await this.client
@@ -68,7 +74,7 @@ export class SupabaseReviewScheduleRepository extends BaseRepository implements 
       return []
     }
 
-    return data.map(row => this.toDomain(row))
+    return data.map((row: ReviewScheduleRow) => this.toDomain(row))
   }
 
   async findTodayReviews(
@@ -90,7 +96,7 @@ export class SupabaseReviewScheduleRepository extends BaseRepository implements 
       return []
     }
 
-    return data.map(row => this.toDomain(row))
+    return data.map((row: ReviewScheduleRow) => this.toDomain(row))
   }
 
   async findOverdueReviews(
@@ -112,7 +118,7 @@ export class SupabaseReviewScheduleRepository extends BaseRepository implements 
       return []
     }
 
-    return data.map(row => this.toDomain(row))
+    return data.map((row: ReviewScheduleRow) => this.toDomain(row))
   }
 
   async save(reviewSchedule: ReviewSchedule): Promise<void> {

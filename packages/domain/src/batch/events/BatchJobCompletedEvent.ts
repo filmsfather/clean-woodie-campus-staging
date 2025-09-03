@@ -1,4 +1,4 @@
-import { DomainEvent } from '../../events/DomainEvent'
+import { DomainEvent, BaseDomainEvent } from '../../events/DomainEvent'
 import { UniqueEntityID } from '../../common/Identifier'
 import { BatchJobType } from '../entities/BatchJob'
 
@@ -18,8 +18,8 @@ interface BatchJobResult {
  * 배치 작업 완료 이벤트
  * 배치 작업이 성공적으로 완료되었을 때 발생하는 도메인 이벤트
  */
-export class BatchJobCompletedEvent implements DomainEvent {
-  public readonly occurredAt: Date
+export class BatchJobCompletedEvent extends BaseDomainEvent {
+  public readonly eventType: string = 'BatchJobCompletedEvent'
   public readonly aggregateId: UniqueEntityID
   public readonly name: string
   public readonly type: BatchJobType
@@ -33,12 +33,12 @@ export class BatchJobCompletedEvent implements DomainEvent {
     durationMs: number,
     result: BatchJobResult
   ) {
+    super()
     this.aggregateId = aggregateId
     this.name = name
     this.type = type
     this.durationMs = durationMs
     this.result = result
-    this.occurredAt = new Date()
   }
 
   getAggregateId(): UniqueEntityID {

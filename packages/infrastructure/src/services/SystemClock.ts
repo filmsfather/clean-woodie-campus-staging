@@ -1,4 +1,4 @@
-import { IClock } from '@domain/srs'
+import { IClock } from '@woodie/domain/srs'
 
 export class SystemClock implements IClock {
   now(): Date {

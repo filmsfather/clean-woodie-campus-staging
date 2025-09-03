@@ -126,7 +126,7 @@ export class AuthMiddleware {
         }
 
         // 문제 소유권 확인 (실제 구현에서는 Repository 사용)
-        const isOwner = await this.checkProblemOwnership(problemId, user.teacherId);
+        const isOwner = await this.checkProblemOwnership(problemId, user.teacherId!);
         
         if (!isOwner) {
           this.sendForbiddenResponse(res, 'Access denied: You do not own this problem');
@@ -166,7 +166,7 @@ export class AuthMiddleware {
         }
 
         // 일괄 소유권 확인
-        const ownershipResults = await this.checkBulkOwnership(problemIds, user.teacherId);
+        const ownershipResults = await this.checkBulkOwnership(problemIds, user.teacherId!);
         const unauthorizedProblems = ownershipResults
           .filter(result => !result.isOwner)
           .map(result => result.problemId);

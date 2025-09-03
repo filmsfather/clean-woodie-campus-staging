@@ -21,9 +21,9 @@ export interface InviteProps {
   createdAt: Date;
 }
 
-export class Invite extends Entity<UniqueEntityID> {
-  private constructor(private props: InviteProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID());
+export class Invite extends Entity<InviteProps> {
+  private constructor(props: InviteProps, id?: UniqueEntityID) {
+    super(props, id);
   }
 
   // Getters

@@ -3,21 +3,24 @@ import {
   AuthenticatedRequest,
   GetAnalyticsQuery,
   ProblemAnalyticsResponse,
-  ApiSuccessResponse,
-  ApiErrorResponse,
   HTTP_STATUS
 } from '../interfaces/ProblemApiTypes';
 
+import { BaseController } from '../../common/controllers/BaseController';
 import { ProblemAnalyticsService } from '@woodie/application/problems/services/ProblemAnalyticsService';
-import { ProblemBankError, ProblemBankErrorCode } from '@woodie/application/problems/errors/ProblemBankErrors';
 
 import * as crypto from 'crypto';
 
-// 문제 분석 및 통계 컨트롤러
-export class AnalyticsController {
+/**
+ * 문제 분석 및 통계 컨트롤러
+ * DDD 원칙에 따라 BaseController를 상속받아 공통 기능 활용
+ */
+export class AnalyticsController extends BaseController {
   constructor(
     private analyticsService: ProblemAnalyticsService
-  ) {}
+  ) {
+    super();
+  }
 
   // 종합 분석 정보 조회
   async getAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -26,6 +29,11 @@ export class AnalyticsController {
       const { user } = req;
       const query: GetAnalyticsQuery = req.query as any;
 
+      // 사용자 인증 확인
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
       // 요약 정보와 태그 분석을 병렬로 실행
       const [summaryResult, tagAnalyticsResult] = await Promise.all([
         this.analyticsService.getProblemBankSummary(user.teacherId),
@@ -33,19 +41,19 @@ export class AnalyticsController {
       ]);
 
       if (summaryResult.isFailure) {
-        const error = summaryResult.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = summaryResult.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'ANALYTICS_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to get summary'
         }, requestId);
         return;
       }
 
       if (tagAnalyticsResult.isFailure) {
-        const error = tagAnalyticsResult.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = tagAnalyticsResult.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'ANALYTICS_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to get tag analytics'
         }, requestId);
         return;
       }
@@ -59,7 +67,7 @@ export class AnalyticsController {
       this.sendSuccessResponse(res, HTTP_STATUS.OK, response, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getAnalytics');
+      this.handleError(res, error, req.requestContext?.requestId || crypto.randomUUID());
     }
   }
 
@@ -69,13 +77,17 @@ export class AnalyticsController {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
 
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
       const result = await this.analyticsService.getProblemBankSummary(user.teacherId);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'ANALYTICS_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to get summary'
         }, requestId);
         return;
       }
@@ -86,7 +98,8 @@ export class AnalyticsController {
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getSummary');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -96,91 +109,76 @@ export class AnalyticsController {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
 
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
       const result = await this.analyticsService.getTagAnalytics(user.teacherId);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'ANALYTICS_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to get tag analytics'
         }, requestId);
         return;
       }
 
       this.sendSuccessResponse(res, HTTP_STATUS.OK, {
-        tagAnalytics: result.value,
-        message: 'Tag analytics retrieved successfully'
+        tagAnalytics: result.value
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getTagAnalytics');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
-  // 난이도 분석 정보
+  // 난이도별 분석 정보
   async getDifficultyAnalysis(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
 
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
       const result = await this.analyticsService.getDifficultyAnalysis(user.teacherId);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'ANALYTICS_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to get difficulty analysis'
         }, requestId);
         return;
       }
 
       this.sendSuccessResponse(res, HTTP_STATUS.OK, {
-        difficultyAnalysis: result.value,
-        message: 'Difficulty analysis retrieved successfully'
+        difficultyAnalysis: result.value
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getDifficultyAnalysis');
-    }
-  }
-
-  // 문제 유형 분포
-  async getTypeDistribution(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
-      const { user } = req;
-
-      const result = await this.analyticsService.getTypeDistribution(user.teacherId);
-
-      if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
-        }, requestId);
-        return;
-      }
-
-      this.sendSuccessResponse(res, HTTP_STATUS.OK, {
-        typeDistribution: result.value,
-        message: 'Type distribution retrieved successfully'
-      }, requestId);
-
-    } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getTypeDistribution');
+      this.handleError(res, error, requestId);
     }
   }
 
-  // 캐시 무효화 (관리자 또는 문제 수정 후)
+  // 캐시 무효화 (관리자 전용)
   async invalidateCache(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
 
       // 관리자만 수동으로 캐시 무효화 가능
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
       if (user.role !== 'admin') {
         this.sendErrorResponse(res, HTTP_STATUS.FORBIDDEN, {
-          code: ProblemBankErrorCode.INSUFFICIENT_PERMISSIONS,
+          code: 'INSUFFICIENT_PERMISSIONS',
           message: 'Only administrators can invalidate cache'
         }, requestId);
         return;
@@ -196,67 +194,8 @@ export class AnalyticsController {
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'invalidateCache');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
-  }
-
-  // === Private 헬퍼 메서드들 ===
-
-  private sendSuccessResponse<T>(
-    res: Response,
-    statusCode: number,
-    data: T,
-    requestId: string
-  ): void {
-    const response: ApiSuccessResponse<T> = {
-      success: true,
-      data,
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId,
-        version: '1.0.0'
-      }
-    };
-
-    res.status(statusCode).json(response);
-  }
-
-  private sendErrorResponse(
-    res: Response,
-    statusCode: number,
-    error: { code: string; message: string; details?: any },
-    requestId: string
-  ): void {
-    const response: ApiErrorResponse = {
-      success: false,
-      error,
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId,
-        version: '1.0.0'
-      }
-    };
-
-    res.status(statusCode).json(response);
-  }
-
-  private handleUnexpectedError(res: Response, error: Error, operation: string): void {
-    console.error(`Unexpected error in ${operation}:`, error);
-    
-    const response: ApiErrorResponse = {
-      success: false,
-      error: {
-        code: ProblemBankErrorCode.UNEXPECTED_ERROR,
-        message: 'An unexpected error occurred',
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: crypto.randomUUID(),
-        version: '1.0.0'
-      }
-    };
-
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
   }
 }

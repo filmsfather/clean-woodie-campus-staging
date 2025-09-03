@@ -1,5 +1,5 @@
-import { ReviewCompletedEvent } from '@domain/srs';
-import { IStudyRecordRepository } from '@domain/srs';
+import { ReviewCompletedEvent } from '@woodie/domain/srs';
+import { IStudyRecordRepository } from '@woodie/domain/srs';
 /**
  * ReviewCompleted 이벤트 핸들러
  * 복습 완료 시 StudyRecord를 생성하는 Infrastructure 레이어 컴포넌트

@@ -265,4 +265,27 @@ export interface IProblemRepository {
   
   // 여러 문제 존재 여부 일괄 확인
   existsMany(ids: UniqueEntityID[]): Promise<Result<Array<{ id: string; exists: boolean }>>>;
+
+  // === Additional methods used by CachedProblemService ===
+  
+  // Create new problem
+  create(problem: Problem): Promise<Result<Problem>>;
+  
+  // Update existing problem  
+  update(problem: Problem): Promise<Result<Problem>>;
+  
+  // Find by teacher (alias for findByTeacherId)
+  findByTeacher(teacherId: string, options?: ProblemBankOptions): Promise<Result<Problem[]>>;
+  
+  // Search problems with text query
+  search(query: string, filter?: ProblemSearchFilter): Promise<Result<Problem[]>>;
+  
+  // Find problems by tag names
+  findByTags(tagNames: string[], teacherId?: string): Promise<Result<Problem[]>>;
+  
+  // Find popular problems
+  findPopular(limit?: number, teacherId?: string): Promise<Result<Problem[]>>;
+  
+  // Get statistics for problems
+  getStatistics(teacherId?: string): Promise<Result<ProblemStatistics>>;
 }

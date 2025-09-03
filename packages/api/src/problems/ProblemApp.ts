@@ -22,13 +22,16 @@ import { ProblemSearchService } from '@woodie/application/problems/services/Prob
 import { ProblemAnalyticsService } from '@woodie/application/problems/services/ProblemAnalyticsService';
 import { ProblemBankManagementService } from '@woodie/application/problems/services/ProblemBankManagementService';
 import { TagRecommendationService } from '@woodie/application/problems/services/TagRecommendationService';
+import { BatchJobExecutorService } from '@woodie/application/batch/services/BatchJobExecutorService';
 
 // Repository
 import { IProblemRepository } from '@woodie/domain/problems/repositories/IProblemRepository';
+import { IBatchJobRepository } from '@woodie/domain/batch/repositories/IBatchJobRepository';
 
 // 인프라스트럭처
 import { ILogger } from '@woodie/application/common/interfaces/ILogger';
 import { ICacheService } from '@woodie/application/common/interfaces/ICacheService';
+import { IEventDispatcher } from '@woodie/domain/events/IEventDispatcher';
 import { ITagManagementService } from '@woodie/domain/problems/services/ITagManagementService';
 
 // 타입
@@ -37,13 +40,15 @@ import { ApiSuccessResponse, HTTP_STATUS } from './interfaces/ProblemApiTypes';
 // 문제 관리 API 애플리케이션 클래스
 export class ProblemApp {
   private app: Express;
-  private problemRoutes: ProblemRoutes;
+  private problemRoutes!: ProblemRoutes;
 
   constructor(
     private problemRepository: IProblemRepository,
     private logger: ILogger,
     private cacheService?: ICacheService,
-    private tagManagementService?: ITagManagementService
+    private tagManagementService?: ITagManagementService,
+    private batchJobRepository?: IBatchJobRepository,
+    private eventDispatcher?: IEventDispatcher
   ) {
     this.app = express();
     this.setupMiddleware();
@@ -188,6 +193,15 @@ export class ProblemApp {
       this.cacheService
     );
 
+    // 배치 작업 서비스 (옵셔널)
+    let batchJobService: BatchJobExecutorService | undefined;
+    if (this.batchJobRepository && this.eventDispatcher) {
+      batchJobService = new BatchJobExecutorService(
+        this.batchJobRepository,
+        this.eventDispatcher
+      );
+    }
+
     // 컨트롤러 인스턴스 생성
     const problemController = new ProblemController(
       this.problemRepository,
@@ -198,7 +212,10 @@ export class ProblemApp {
     );
 
     const analyticsController = new AnalyticsController(analyticsService);
-    const bulkController = new BulkOperationsController(managementService);
+    const bulkController = new BulkOperationsController(
+      managementService,
+      batchJobService!
+    );
     const tagController = new TagController(tagService);
 
     // 라우터 생성

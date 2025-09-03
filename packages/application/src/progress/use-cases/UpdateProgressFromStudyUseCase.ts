@@ -158,7 +158,7 @@ export class UpdateProgressFromStudyUseCase extends BaseUseCase<
       achievements.performanceImprovement = true
     }
 
-    return Object.keys(achievements).length > 0 ? achievements : undefined
+    return Object.keys(achievements).length > 0 ? achievements : {}
   }
 
   private checkNotificationNeeds(

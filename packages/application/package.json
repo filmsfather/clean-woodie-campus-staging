@@ -13,6 +13,8 @@
   },
   "scripts": {
     "build": "tsc --build",
+    "build:staging": "node scripts/build-staging.js",
+    "build:production": "NODE_ENV=production tsc --build",
     "dev": "tsc --build --watch",
     "test": "vitest run",
     "test:watch": "vitest",

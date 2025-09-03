@@ -1,12 +1,31 @@
-import { NotificationType } from '@domain/srs/value-objects/NotificationType';
+import { NotificationType } from '@woodie/domain/srs/value-objects/NotificationType';
 import { BaseRepository } from '../repositories/BaseRepository';
 /**
  * Supabase 기반 알림 이력 리포지토리 구현체
  * 알림 전송 이력, 실패 기록, 재시도 정보 관리
  */
 export class SupabaseNotificationHistoryRepository extends BaseRepository {
+    client;
     tableName = 'notification_history';
     schema = 'learning';
+    constructor(client) {
+        super();
+        this.client = client;
+    }
+    // BaseRepository abstract 메서드들 구현
+    async findById(id) {
+        // NotificationMessage는 ID 기반 조회보다는 사용자별 조회가 일반적
+        // 임시로 null 반환, 필요 시 구체적인 구현 추가
+        console.warn('findById not implemented for NotificationHistoryRepository');
+        return null;
+    }
+    async save(entity) {
+        return this.saveNotification(entity);
+    }
+    async delete(id) {
+        // 필요 시 구현
+        console.warn('delete not implemented for NotificationHistoryRepository');
+    }
     /**
      * 알림 전송 이력 저장
      */
@@ -40,7 +59,7 @@ export class SupabaseNotificationHistoryRepository extends BaseRepository {
                 console.warn(`Failed to find notification history for user ${userId.toString()}:`, error);
                 return [];
             }
-            return data.map(row => this.toDomain(row));
+            return data.map((row) => this.toDomain(row));
         }
         catch (error) {
             console.error(`Error finding notification history for user ${userId.toString()}:`, error);
@@ -64,7 +83,7 @@ export class SupabaseNotificationHistoryRepository extends BaseRepository {
                 console.warn('Failed to find failed notifications:', error);
                 return [];
             }
-            return data.map(row => this.toDomain(row));
+            return data.map((row) => this.toDomain(row));
         }
         catch (error) {
             console.error('Error finding failed notifications:', error);
@@ -181,17 +200,17 @@ export class SupabaseNotificationHistoryRepository extends BaseRepository {
                 };
             }
             const statistics = {
-                totalSent: data.filter(row => row.sent_at).length,
-                totalFailed: data.filter(row => row.failed_at).length,
+                totalSent: data.filter((row) => row.sent_at).length,
+                totalFailed: data.filter((row) => row.failed_at).length,
                 byType: {},
                 byHour: {}
             };
             // 타입별 통계
-            data.forEach(row => {
+            data.forEach((row) => {
                 statistics.byType[row.type] = (statistics.byType[row.type] || 0) + 1;
             });
             // 시간대별 통계
-            data.forEach(row => {
+            data.forEach((row) => {
                 const hour = new Date(row.created_at).getHours();
                 statistics.byHour[hour] = (statistics.byHour[hour] || 0) + 1;
             });

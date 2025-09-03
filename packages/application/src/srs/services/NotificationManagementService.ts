@@ -1,15 +1,15 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { Result } from '@domain/common/Result'
-import { IClock } from '@domain/srs'
 import { 
-  INotificationService,
+  UniqueEntityID, 
+  Result, 
+  IClock,
+  ISrsNotificationService as INotificationService,
   INotificationSettingsRepository,
   INotificationHistoryRepository,
   NotificationMessage,
-  ChannelSubscription
-} from '@domain/srs/interfaces/INotificationService'
-import { NotificationType } from '@domain/srs/value-objects/NotificationType'
-import { NotificationSettings } from '@domain/srs/value-objects/NotificationSettings'
+  ChannelSubscription,
+  NotificationType,
+  NotificationSettings
+} from '@woodie/domain'
 
 // 알림 예약 요청 DTO
 export interface ScheduleNotificationRequest {

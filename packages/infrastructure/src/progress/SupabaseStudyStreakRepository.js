@@ -1,6 +1,6 @@
-import { Result } from '@domain/common/Result';
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { StudyStreak } from '@domain/progress';
+import { Result } from '@woodie/domain/common/Result';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { StudyStreak } from '@woodie/domain/progress';
 /**
  * Supabase 기반 StudyStreak 리포지토리 구현체
  * Domain 인터페이스를 Infrastructure에서 구현
@@ -212,7 +212,7 @@ export class SupabaseStudyStreakRepository {
      */
     toDomain(row) {
         try {
-            return StudyStreak.reconstitute({
+            const studyStreak = StudyStreak.reconstitute({
                 studentId: new UniqueEntityID(row.student_id),
                 currentStreak: row.current_streak,
                 longestStreak: row.longest_streak,
@@ -220,6 +220,7 @@ export class SupabaseStudyStreakRepository {
                 createdAt: new Date(row.created_at),
                 updatedAt: new Date(row.updated_at)
             }, new UniqueEntityID(row.id));
+            return Result.ok(studyStreak);
         }
         catch (err) {
             return Result.fail(`Failed to convert row to domain: ${err}`);

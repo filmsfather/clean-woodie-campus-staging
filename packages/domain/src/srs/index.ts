@@ -12,6 +12,7 @@ export { NotificationType } from './value-objects/NotificationType'
 export { NotificationSettings } from './value-objects/NotificationSettings'
 
 // Services
+export type { ISrsService } from './services/ISrsService'
 export type { ISpacedRepetitionPolicy, ReviewCalculationResult } from './services/ISpacedRepetitionPolicy'
 export { SpacedRepetitionCalculator } from './services/SpacedRepetitionCalculator'
 export type { IClock } from './services/IClock'

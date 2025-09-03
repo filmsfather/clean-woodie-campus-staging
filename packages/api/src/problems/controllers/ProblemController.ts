@@ -12,6 +12,8 @@ import {
   HTTP_STATUS
 } from '../interfaces/ProblemApiTypes';
 
+import { BaseController } from '../../common/controllers/BaseController';
+
 // Application Services
 import { ProblemSearchService } from '@woodie/application/problems/services/ProblemSearchService';
 import { ProblemAnalyticsService } from '@woodie/application/problems/services/ProblemAnalyticsService';
@@ -34,14 +36,16 @@ import { ProblemBankError, ProblemBankErrorCode } from '@woodie/application/prob
 import * as crypto from 'crypto';
 
 // 문제 관리 메인 컨트롤러
-export class ProblemController {
+export class ProblemController extends BaseController {
   constructor(
     private problemRepository: IProblemRepository,
     private searchService: ProblemSearchService,
     private analyticsService: ProblemAnalyticsService,
     private managementService: ProblemBankManagementService,
     private tagService: TagRecommendationService
-  ) {}
+  ) {
+    super();
+  }
 
   // === 기본 CRUD 작업 ===
 
@@ -49,11 +53,16 @@ export class ProblemController {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+      
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+      
       const createRequest: CreateProblemRequest = req.body;
 
       // Domain Value Objects 생성
       const contentResult = ProblemContent.fromPrimitive({
-        type: createRequest.type,
+        type: createRequest.type as any, // 타입 검증은 도메인 계층에서 수행
         ...createRequest.content
       });
 
@@ -66,8 +75,8 @@ export class ProblemController {
       }
 
       const answerResult = AnswerContent.fromPrimitive({
-        type: createRequest.type,
-        ...createRequest.correctAnswer
+        ...createRequest.correctAnswer,
+        type: createRequest.type as any // 타입 검증은 도메인 계층에서 수행
       });
 
       if (answerResult.isFailure) {
@@ -141,7 +150,8 @@ export class ProblemController {
       this.sendSuccessResponse(res, HTTP_STATUS.CREATED, response, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'createProblem');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -149,15 +159,19 @@ export class ProblemController {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+      
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+      
       const { id: problemId } = req.params;
 
       const result = await this.searchService.findProblemById(problemId, user.teacherId);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        this.sendErrorResponse(res, HTTP_STATUS.NOT_FOUND, {
+          code: 'PROBLEM_NOT_FOUND',
+          message: typeof result.error === 'string' ? result.error : 'Problem not found'
         }, requestId);
         return;
       }
@@ -165,7 +179,8 @@ export class ProblemController {
       this.sendSuccessResponse(res, HTTP_STATUS.OK, result.value, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getProblemById');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -173,6 +188,11 @@ export class ProblemController {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+      
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+      
       const { id: problemId } = req.params;
       const updateRequest: UpdateProblemRequest = req.body;
 
@@ -307,7 +327,8 @@ export class ProblemController {
       this.sendSuccessResponse(res, HTTP_STATUS.OK, response, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'updateProblem');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -315,6 +336,11 @@ export class ProblemController {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+      
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+      
       const { id: problemId } = req.params;
 
       // 소유권 확인은 미들웨어에서 처리됨
@@ -332,7 +358,8 @@ export class ProblemController {
       this.sendSuccessResponse(res, HTTP_STATUS.NO_CONTENT, null, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'deleteProblem');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -342,6 +369,10 @@ export class ProblemController {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+      
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
       const query: SearchProblemsQuery = req.query as any;
 
       // 쿼리 파라미터를 DTO로 변환
@@ -352,10 +383,9 @@ export class ProblemController {
       const result = await this.searchService.searchProblems(searchDto, paginationDto, sortDto);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'SEARCH_FAILED',
+          message: typeof result.error === 'string' ? result.error : 'Search failed'
         }, requestId);
         return;
       }
@@ -372,7 +402,8 @@ export class ProblemController {
       this.sendSuccessResponse(res, HTTP_STATUS.OK, response, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'searchProblems');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -380,6 +411,10 @@ export class ProblemController {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+      
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
 
       // 교사의 모든 문제 조회
       const result = await this.problemRepository.findByTeacherId(user.teacherId);
@@ -401,7 +436,8 @@ export class ProblemController {
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getMyProblems');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -474,61 +510,4 @@ export class ProblemController {
     };
   }
 
-  private sendSuccessResponse<T>(
-    res: Response,
-    statusCode: number,
-    data: T,
-    requestId: string
-  ): void {
-    const response: ApiSuccessResponse<T> = {
-      success: true,
-      data,
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId,
-        version: '1.0.0'
-      }
-    };
-
-    res.status(statusCode).json(response);
-  }
-
-  private sendErrorResponse(
-    res: Response,
-    statusCode: number,
-    error: { code: string; message: string; details?: any },
-    requestId: string
-  ): void {
-    const response: ApiErrorResponse = {
-      success: false,
-      error,
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId,
-        version: '1.0.0'
-      }
-    };
-
-    res.status(statusCode).json(response);
-  }
-
-  private handleUnexpectedError(res: Response, error: Error, operation: string): void {
-    console.error(`Unexpected error in ${operation}:`, error);
-    
-    const response: ApiErrorResponse = {
-      success: false,
-      error: {
-        code: ProblemBankErrorCode.UNEXPECTED_ERROR,
-        message: 'An unexpected error occurred',
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: crypto.randomUUID(),
-        version: '1.0.0'
-      }
-    };
-
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
 }

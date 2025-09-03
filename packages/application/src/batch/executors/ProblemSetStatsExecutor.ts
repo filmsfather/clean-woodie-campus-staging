@@ -208,15 +208,15 @@ export class ProblemSetStatsExecutor implements IBatchJobExecutor {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
     const totalStudents = statistics.length
-    const activeStudents7Days = statistics.filter(s => new Date(s.updated_at) >= sevenDaysAgo).length
-    const activeStudents30Days = statistics.filter(s => new Date(s.updated_at) >= thirtyDaysAgo).length
-    const completedStudents = statistics.filter(s => s.completed_problems === s.total_problems && s.total_problems > 0).length
+    const activeStudents7Days = statistics.filter((s: any) => new Date(s.updated_at) >= sevenDaysAgo).length
+    const activeStudents30Days = statistics.filter((s: any) => new Date(s.updated_at) >= thirtyDaysAgo).length
+    const completedStudents = statistics.filter((s: any) => s.completed_problems === s.total_problems && s.total_problems > 0).length
 
-    const avgCompletionRate = statistics.reduce((sum, s) => {
+    const avgCompletionRate = statistics.reduce((sum: number, s: any) => {
       return sum + (s.total_problems > 0 ? (s.completed_problems / s.total_problems) * 100 : 0)
     }, 0) / totalStudents
 
-    const avgAccuracyRate = statistics.reduce((sum, s) => {
+    const avgAccuracyRate = statistics.reduce((sum: number, s: any) => {
       return sum + (s.completed_problems > 0 ? (s.correct_answers / s.completed_problems) * 100 : 0)
     }, 0) / totalStudents
 
@@ -231,7 +231,7 @@ export class ProblemSetStatsExecutor implements IBatchJobExecutor {
       avg_completion_rate: Math.round(avgCompletionRate * 100) / 100,
       avg_accuracy_rate: Math.round(avgAccuracyRate * 100) / 100,
       estimated_difficulty_score: Math.max(0, Math.min(100, Math.round(estimatedDifficulty * 100) / 100)),
-      last_activity_at: statistics.reduce((latest, s) => {
+      last_activity_at: statistics.reduce((latest: Date | null, s: any) => {
         const updatedAt = new Date(s.updated_at)
         return !latest || updatedAt > latest ? updatedAt : latest
       }, null as Date | null)?.toISOString()

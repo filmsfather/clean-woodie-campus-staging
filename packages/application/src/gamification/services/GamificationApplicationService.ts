@@ -1,5 +1,5 @@
 import { ApplicationService } from '../../services/ApplicationService';
-import { Result } from '../../../domain';
+import { Result } from '@woodie/domain';
 import { 
   GetGamificationDashboardUseCase,
   AwardTokensUseCase,
@@ -13,15 +13,14 @@ import {
   LeaderboardSummaryDto
 } from '../dto';
 
-export class GamificationApplicationService extends ApplicationService {
+export class GamificationApplicationService implements ApplicationService {
+  readonly name = 'GamificationApplicationService'
   constructor(
     private getDashboardUseCase: GetGamificationDashboardUseCase,
     private awardTokensUseCase: AwardTokensUseCase,
     private redeemRewardUseCase: RedeemRewardUseCase,
     private getLeaderboardsUseCase: GetLeaderboardsUseCase
-  ) {
-    super();
-  }
+  ) {}
 
   /**
    * 게임화 대시보드 데이터 조회

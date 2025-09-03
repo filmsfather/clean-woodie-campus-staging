@@ -1,6 +1,6 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { ReviewCompletedEvent, StudyRecord, ReviewFeedback } from '@domain/srs'
-import { IStudyRecordRepository } from '@domain/srs'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { ReviewCompletedEvent, StudyRecord, ReviewFeedback } from '@woodie/domain/srs'
+import { IStudyRecordRepository } from '@woodie/domain/srs'
 
 /**
  * ReviewCompleted 이벤트 핸들러
@@ -34,8 +34,7 @@ export class ReviewCompletedEventHandler {
         feedback: feedbackResult.getValue(),
         isCorrect: event.isCorrect,
         responseTime: event.responseTime,
-        answerContent: event.answerContent,
-        createdAt: event.occurredAt
+        answerContent: event.answerContent
       })
 
       if (studyRecordResult.isFailure) {
@@ -84,8 +83,7 @@ export class ReviewCompletedEventHandler {
           feedback: feedbackResult.getValue(),
           isCorrect: event.isCorrect,
           responseTime: event.responseTime,
-          answerContent: event.answerContent,
-          createdAt: event.occurredAt
+          answerContent: event.answerContent
         })
 
         if (studyRecordResult.isSuccess) {

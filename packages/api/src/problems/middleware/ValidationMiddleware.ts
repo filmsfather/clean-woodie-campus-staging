@@ -437,7 +437,7 @@ export class ValidationMiddleware {
       }
 
       // Enum 검증
-      if (rules.enum && !rules.enum.includes(value)) {
+      if (rules.enum && Array.isArray(rules.enum) && !(rules.enum as any[]).includes(value)) {
         errors.push({
           field: fieldPath,
           message: `${field} must be one of: ${rules.enum.join(', ')}`,

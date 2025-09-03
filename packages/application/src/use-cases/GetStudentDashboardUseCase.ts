@@ -3,7 +3,8 @@
  * 캐시를 우선 확인하고, 캐시 미스 시 리포지토리에서 조회하여 캐싱하는 로직 구현
  */
 
-import { Result, IUseCase, Logger } from '@woodie/domain'
+import { Result } from '@woodie/domain'
+import { ILogger } from '../common/interfaces/ILogger'
 import { CachedStudentDashboardService, StudentDashboardDto } from '../services/CachedDashboardService'
 
 // Use Case 입력/출력 타입 정의
@@ -32,13 +33,12 @@ export interface IStudentDashboardRepository {
  * 2. 캐시 미스 시 리포지토리에서 조회
  * 3. 조회 결과를 캐시에 저장
  */
-export class GetStudentDashboardUseCase 
-  implements IUseCase<GetStudentDashboardRequest, GetStudentDashboardResponse> {
+export class GetStudentDashboardUseCase {
   
   constructor(
     private dashboardRepository: IStudentDashboardRepository,
     private cachedDashboardService: CachedStudentDashboardService,
-    private logger: Logger
+    private logger: ILogger
   ) {}
 
   async execute(request: GetStudentDashboardRequest): Promise<Result<GetStudentDashboardResponse>> {

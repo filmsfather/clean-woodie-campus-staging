@@ -18,9 +18,9 @@ interface StudyRecordProps {
  * 학습 기록 엔티티
  * 개별 복습 세션의 결과를 기록하는 불변 객체
  */
-export class StudyRecord extends Entity<UniqueEntityID> {
-  private constructor(private props: StudyRecordProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID())
+export class StudyRecord extends Entity<StudyRecordProps> {
+  private constructor(props: StudyRecordProps, id?: UniqueEntityID) {
+    super(props, id)
   }
 
   get studentId(): UniqueEntityID {

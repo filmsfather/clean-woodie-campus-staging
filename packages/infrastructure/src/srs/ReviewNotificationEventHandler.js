@@ -19,7 +19,7 @@ export class ReviewNotificationEventHandler {
         try {
             console.log(`📅 Processing notification event: ${event.eventType} for schedule ${event.scheduleId}`);
             // 1. 즉시 전송이 필요한 알림인지 확인
-            if (event.shouldSendImmediately()) {
+            if (event.shouldSendImmediately) {
                 await this.sendImmediateNotification(event);
             }
             else {
@@ -145,8 +145,8 @@ export class ReviewNotificationEventHandler {
      */
     async handleBatch(events) {
         // 1. 즉시 전송과 지연 전송 분리
-        const immediateEvents = events.filter(e => e.shouldSendImmediately());
-        const delayedEvents = events.filter(e => !e.shouldSendImmediately());
+        const immediateEvents = events.filter(e => e.shouldSendImmediately);
+        const delayedEvents = events.filter(e => !e.shouldSendImmediately);
         // 2. 즉시 전송 알림들을 배치로 처리
         if (immediateEvents.length > 0) {
             const scheduleNotificationRequests = immediateEvents.map(event => {

@@ -1,7 +1,5 @@
-import { ICacheService } from '@woodie/infrastructure/cache/ICacheService'
-import { CacheKeys, CacheTTL } from '@woodie/infrastructure/cache/CacheService'
-import { IProgressService } from '../progress/services/CachedProgressService'
-import { IProblemService } from '../problems/services/CachedProblemService'
+import { ICacheService, CacheKeyBuilder, CacheStrategies } from '../../common/interfaces/ICacheService'
+import { IProgressService, IProblemService } from '../../common/interfaces'
 import { UniqueEntityID } from '@woodie/domain/common/Identifier'
 import { Result } from '@woodie/domain/common/Result'
 
@@ -228,12 +226,12 @@ export class CacheWarmerService {
       // 일별 통계 워밍
       for (const date of dates) {
         try {
-          const cacheKey = CacheKeys.DAILY_STATS(date)
+          const cacheKey = CacheKeyBuilder.forTeacherStatistics(`daily_${date}`)
           const exists = await this.cacheService.exists(cacheKey)
           
           if (!exists) {
             // 집계 데이터가 없으면 생성 (실제로는 집계 테이블에서 조회)
-            await this.cacheService.set(cacheKey, { date, warmed: true }, CacheTTL.LONG)
+            await this.cacheService.set(cacheKey, { date, warmed: true }, { ttl: CacheStrategies.LONG_TTL })
           }
           
           warmedItems++
@@ -253,11 +251,11 @@ export class CacheWarmerService {
 
       for (const weekStart of weeks) {
         try {
-          const cacheKey = CacheKeys.WEEKLY_STATS(weekStart)
+          const cacheKey = CacheKeyBuilder.forTeacherStatistics(`weekly_${weekStart}`)
           const exists = await this.cacheService.exists(cacheKey)
           
           if (!exists) {
-            await this.cacheService.set(cacheKey, { weekStart, warmed: true }, CacheTTL.LONG)
+            await this.cacheService.set(cacheKey, { weekStart, warmed: true }, { ttl: CacheStrategies.LONG_TTL })
           }
           
           warmedItems++
@@ -312,7 +310,7 @@ export class CacheWarmerService {
     try {
       // 교사 관련 데이터 로드
       await Promise.allSettled([
-        this.problemService.getProblemsByTeacher(teacherId),
+        this.problemService.getProblemsByTeacher(teacherId.toString()),
         // 교사 대시보드 데이터 등
       ])
 
@@ -333,7 +331,7 @@ export class CacheWarmerService {
     warmingConfig: CacheWarmingConfig
   }>> {
     try {
-      const stats = this.cacheService.getStats()
+      const stats = await this.cacheService.stats()
       const nextWarming = this.calculateNextWarmingTime()
 
       const status = {

@@ -1,11 +1,11 @@
 import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { Result } from '@domain/common/Result'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { Result } from '@woodie/domain/common/Result'
 import { 
   INotificationService,
   NotificationMessage,
   ChannelSubscription
-} from '@domain/srs/interfaces/INotificationService'
+} from '@woodie/domain/srs/interfaces/INotificationService'
 import { BaseRepository } from '../repositories/BaseRepository'
 
 interface NotificationChannelMessage {
@@ -24,13 +24,29 @@ interface NotificationChannelMessage {
  * Supabase Realtime 기반 알림 서비스 구현체
  * WebSocket을 통한 실시간 알림 전송 및 채널 관리
  */
-export class SupabaseNotificationService extends BaseRepository implements INotificationService {
+export class SupabaseNotificationService extends BaseRepository<NotificationMessage> implements INotificationService {
+  protected client: SupabaseClient
   private activeChannels: Map<string, RealtimeChannel> = new Map()
   private reconnectAttempts: Map<string, number> = new Map()
   private readonly maxReconnectAttempts = 3
 
-  constructor(client?: SupabaseClient) {
-    super(client)
+  constructor(client: SupabaseClient) {
+    super()
+    this.client = client
+  }
+
+  // BaseRepository abstract 메서드들 구현 (알림 서비스에서는 사용 안함)
+  async findById(id: UniqueEntityID): Promise<NotificationMessage | null> {
+    console.warn('findById not applicable for NotificationService')
+    return null
+  }
+
+  async save(entity: NotificationMessage): Promise<void> {
+    await this.sendNotification(entity)
+  }
+
+  async delete(id: UniqueEntityID): Promise<void> {
+    console.warn('delete not applicable for NotificationService')
   }
 
   /**
@@ -63,19 +79,19 @@ export class SupabaseNotificationService extends BaseRepository implements INoti
       })
 
       // 메시지 수신 핸들러 설정
-      channel.on('broadcast', { event: 'notification' }, (payload) => {
+      channel.on('broadcast', { event: 'notification' }, (payload: any) => {
         this.handleNotificationReceived(userId, payload)
       })
 
       // 연결 상태 변화 핸들러
-      channel.on('system', {}, (payload) => {
+      channel.on('system', {}, (payload: any) => {
         this.handleChannelStatusChange(channelId, payload)
       })
 
       // 구독 시작
       const subscribeStatus = await new Promise<'ok' | 'error' | 'timed_out'>((resolve) => {
-        const subscription = channel.subscribe((status) => {
-          resolve(status)
+        const subscription = channel.subscribe((status: any) => {
+          resolve(status as 'ok' | 'error' | 'timed_out')
         })
 
         // 타임아웃 설정 (10초)
@@ -284,22 +300,15 @@ export class SupabaseNotificationService extends BaseRepository implements INoti
   private handleNotificationReceived(userId: UniqueEntityID, payload: any): void {
     console.log(`📨 Notification received for user ${userId.toString()}:`, payload)
     
-    // 브라우저 알림 표시 (권한이 있는 경우)
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(payload.payload?.title || 'New Notification', {
-        body: payload.payload?.body,
-        icon: '/notification-icon.png', // 앱 아이콘 경로
-        tag: payload.payload?.id, // 중복 방지
-        data: payload.payload?.data
-      })
-    }
+    // 서버 환경에서는 브라우저 알림을 사용할 수 없음
+    // 클라이언트 측에서 이 핸들러를 오버라이드하여 UI 알림 처리
   }
 
   /**
    * 채널 상태 변화 핸들러
    * 연결 끊김 시 자동 재연결 시도
    */
-  private async handleChannelStatusChange(channelId: string, payload: any): void {
+  private async handleChannelStatusChange(channelId: string, payload: any): Promise<void> {
     console.log(`🔄 Channel ${channelId} status changed:`, payload)
 
     // 연결 끊김 감지 시 재연결 시도

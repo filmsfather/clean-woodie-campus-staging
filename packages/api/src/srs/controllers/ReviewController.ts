@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { ReviewFeedback, NotificationType } from '@domain/srs'
-import { ReviewQueueService } from '@application/srs/services/ReviewQueueService'
-import { NotificationManagementService } from '@application/srs/services/NotificationManagementService'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { ReviewFeedback, NotificationType } from '@woodie/domain/srs'
+import { ReviewQueueService } from '@woodie/application/srs/services/ReviewQueueService'
+import { NotificationManagementService } from '@woodie/application/srs/services/NotificationManagementService'
 import { BaseController } from '../../common/BaseController'
 
 // Request/Response 타입 정의
@@ -351,7 +351,7 @@ export class ReviewController extends BaseController {
 
       const result = await this.notificationService.sendImmediateNotification(
         new UniqueEntityID(userId),
-        NotificationType.reviewDue(),
+        NotificationType.review(),
         '테스트 알림',
         '알림 시스템이 정상적으로 작동하고 있습니다.',
         { test: true, timestamp: new Date().toISOString() }

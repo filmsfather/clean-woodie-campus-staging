@@ -1,4 +1,4 @@
-import { Entity } from '../../entities/Entity';
+import { AggregateRoot } from '../../aggregates/AggregateRoot';
 import { UniqueEntityID } from '../../common/Identifier';
 import { Result } from '../../common/Result';
 import { StudentId } from '../../assignments/value-objects/StudentId';
@@ -16,7 +16,7 @@ export interface UserAchievementProps {
  * 사용자 업적 엔티티
  * 특정 학생이 획득한 업적을 나타냅니다
  */
-export class UserAchievement extends Entity<UserAchievementProps> {
+export class UserAchievement extends AggregateRoot<UserAchievementProps> {
   get studentId(): StudentId {
     return this.props.studentId;
   }

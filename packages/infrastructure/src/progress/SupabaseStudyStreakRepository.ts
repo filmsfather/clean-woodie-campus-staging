@@ -1,6 +1,6 @@
-import { Result } from '@domain/common/Result'
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { StudyStreak, IStudyStreakRepository } from '@domain/progress'
+import { Result } from '@woodie/domain/common/Result'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { StudyStreak, IStudyStreakRepository } from '@woodie/domain/progress'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 interface StudyStreakRow {
@@ -265,7 +265,7 @@ export class SupabaseStudyStreakRepository implements IStudyStreakRepository {
    */
   private toDomain(row: StudyStreakRow): Result<StudyStreak> {
     try {
-      return StudyStreak.reconstitute({
+      const studyStreak = StudyStreak.reconstitute({
         studentId: new UniqueEntityID(row.student_id),
         currentStreak: row.current_streak,
         longestStreak: row.longest_streak,
@@ -273,6 +273,8 @@ export class SupabaseStudyStreakRepository implements IStudyStreakRepository {
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at)
       }, new UniqueEntityID(row.id))
+      
+      return Result.ok<StudyStreak>(studyStreak)
     } catch (err) {
       return Result.fail<StudyStreak>(`Failed to convert row to domain: ${err}`)
     }

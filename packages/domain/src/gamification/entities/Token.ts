@@ -1,4 +1,4 @@
-import { Entity } from '../../entities/Entity';
+import { AggregateRoot } from '../../aggregates/AggregateRoot';
 import { UniqueEntityID } from '../../common/Identifier';
 import { Result } from '../../common/Result';
 import { TokenAmount } from '../value-objects/TokenAmount';
@@ -16,7 +16,7 @@ export interface TokenProps {
   updatedAt: Date;
 }
 
-export class Token extends Entity<TokenProps> {
+export class Token extends AggregateRoot<TokenProps> {
   get studentId(): StudentId {
     return this.props.studentId;
   }

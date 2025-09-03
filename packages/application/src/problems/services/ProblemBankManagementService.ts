@@ -81,11 +81,12 @@ export class ProblemBankManagementService {
       }
 
       if (authorizedProblemIds.length === 0) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.CLONE_PERMISSION_DENIED,
           'No problems are authorized for cloning',
           { request, correlationId }
-        ));
+        );
+        return Result.fail(error.message);
       }
 
       // 일괄 복제 실행
@@ -115,7 +116,7 @@ export class ProblemBankManagementService {
           duration: Date.now() - startTime
         });
         
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       const clonedProblems = cloneResult.value;
@@ -157,7 +158,7 @@ export class ProblemBankManagementService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -200,7 +201,7 @@ export class ProblemBankManagementService {
           duration: Date.now() - startTime
         });
         
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       // 성공 응답
@@ -239,7 +240,7 @@ export class ProblemBankManagementService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -264,11 +265,12 @@ export class ProblemBankManagementService {
 
       // 태그 검증
       if (request.tags.length === 0) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.BULK_VALIDATION_FAILED,
           'Tags array cannot be empty',
           { request }
-        ));
+        );
+        return Result.fail(error.message);
       }
 
       // Repository 호출
@@ -293,7 +295,7 @@ export class ProblemBankManagementService {
           duration: Date.now() - startTime
         });
         
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       // 성공 응답
@@ -333,7 +335,7 @@ export class ProblemBankManagementService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -360,11 +362,12 @@ export class ProblemBankManagementService {
       ]);
 
       if (ownershipResult.isFailure || accessResult.isFailure) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.OWNERSHIP_VERIFICATION_FAILED,
           'Failed to verify bulk permissions',
           { problemIds, teacherId, correlationId }
-        ));
+        );
+        return Result.fail(error.message);
       }
 
       const ownershipMap = new Map(ownershipResult.value.map(item => [item.id, item.isOwner]));
@@ -419,7 +422,7 @@ export class ProblemBankManagementService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -513,7 +516,7 @@ export class ProblemBankManagementService {
         error as Error
       );
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -521,24 +524,27 @@ export class ProblemBankManagementService {
 
   private async validateCloneRequest(request: ProblemCloneRequestDto): Promise<Result<void>> {
     if (!request.targetTeacherId || request.targetTeacherId.trim().length === 0) {
-      return Result.fail(new ProblemBankError(
+      const error = new ProblemBankError(
         ProblemBankErrorCode.CLONE_VALIDATION_FAILED,
         'Target teacher ID is required'
-      ));
+      );
+      return Result.fail(error.message);
     }
 
     if (!request.problemIds || request.problemIds.length === 0) {
-      return Result.fail(new ProblemBankError(
+      const error = new ProblemBankError(
         ProblemBankErrorCode.CLONE_VALIDATION_FAILED,
         'Problem IDs array cannot be empty'
-      ));
+      );
+      return Result.fail(error.message);
     }
 
     if (request.problemIds.length > 50) {
-      return Result.fail(new ProblemBankError(
+      const error = new ProblemBankError(
         ProblemBankErrorCode.CLONE_VALIDATION_FAILED,
         'Cannot clone more than 50 problems at once'
-      ));
+      );
+      return Result.fail(error.message);
     }
 
     return Result.ok();

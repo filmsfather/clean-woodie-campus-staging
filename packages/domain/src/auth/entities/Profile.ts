@@ -34,9 +34,9 @@ interface ProfileProps {
   updatedAt: Date; // DB: updated_at
 }
 
-export class Profile extends Entity<UniqueEntityID> {
-  private constructor(private props: ProfileProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID());
+export class Profile extends Entity<ProfileProps> {
+  private constructor(props: ProfileProps, id?: UniqueEntityID) {
+    super(props, id);
   }
 
   // Getters

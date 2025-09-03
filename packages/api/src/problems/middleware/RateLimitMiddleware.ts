@@ -229,7 +229,7 @@ export class RateLimitMiddleware {
           }
         };
 
-        res.status(HTTP_STATUS.TOO_MANY_REQUESTS || 429)
+        res.status(HTTP_STATUS.TOO_MANY_REQUESTS)
            .set('Retry-After', String(Math.round(windowMs / 1000)))
            .json(errorResponse);
       }

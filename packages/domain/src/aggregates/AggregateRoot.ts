@@ -19,4 +19,12 @@ export abstract class AggregateRoot<T> extends Entity<T> {
   markEventsForDispatch(): void {
     this._domainEvents.forEach(event => this.addDomainEvent(event))
   }
+
+  getUncommittedEvents(): readonly DomainEvent[] {
+    return this._domainEvents
+  }
+
+  markEventsAsCommitted(): void {
+    this.clearEvents()
+  }
 }

@@ -1,5 +1,5 @@
 import { UseCase } from '../../use-cases/UseCase';
-import { Result } from '../../../domain';
+import { Result } from '@woodie/domain';
 import { TokenDto } from '../dto/TokenDto';
 import { 
   TokenService,
@@ -7,7 +7,7 @@ import {
   StudentId,
   TokenAmount,
   TokenReason
-} from '../../../domain';
+} from '@woodie/domain';
 
 interface AwardTokensRequest {
   studentId: string;
@@ -16,7 +16,7 @@ interface AwardTokensRequest {
   checkAchievements?: boolean;
 }
 
-type AwardTokensResponse = Result<TokenDto>;
+type AwardTokensResponse = TokenDto;
 
 export class AwardTokensUseCase implements UseCase<AwardTokensRequest, AwardTokensResponse> {
   constructor(
@@ -24,7 +24,7 @@ export class AwardTokensUseCase implements UseCase<AwardTokensRequest, AwardToke
     private achievementService: AchievementService
   ) {}
 
-  async execute(request: AwardTokensRequest): Promise<AwardTokensResponse> {
+  async execute(request: AwardTokensRequest): Promise<Result<AwardTokensResponse>> {
     // 입력 검증
     const studentIdResult = StudentId.create(request.studentId);
     if (studentIdResult.isFailure) {

@@ -770,4 +770,293 @@ export class SupabaseProblemRepository implements IProblemRepository {
       }
     };
   }
+
+  // === 누락된 메서드들 구현 ===
+
+  async getTeacherTagStatistics(
+    teacherId: string
+  ): Promise<Result<Array<{ tag: string; count: number; percentage: number }>>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('learning.problems')
+        .select('tags')
+        .eq('teacher_id', teacherId)
+        .eq('is_active', true);
+
+      if (error) {
+        return Result.fail(`Failed to get tag statistics: ${error.message}`);
+      }
+
+      const tagCounts = new Map<string, number>();
+      let totalTags = 0;
+      
+      data.forEach((record: any) => {
+        (record.tags || []).forEach((tag: string) => {
+          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+          totalTags++;
+        });
+      });
+
+      const statistics = Array.from(tagCounts.entries()).map(([tag, count]) => ({
+        tag,
+        count,
+        percentage: totalTags > 0 ? (count / totalTags) * 100 : 0
+      }));
+
+      return Result.ok(statistics);
+    } catch (error) {
+      return Result.fail(`Error getting teacher tag statistics: ${error}`);
+    }
+  }
+
+  async getTeacherUniqueTags(teacherId: string): Promise<Result<string[]>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('learning.problems')
+        .select('tags')
+        .eq('teacher_id', teacherId)
+        .eq('is_active', true);
+
+      if (error) {
+        return Result.fail(`Failed to get unique tags: ${error.message}`);
+      }
+
+      const uniqueTags = new Set<string>();
+      data.forEach((record: any) => {
+        (record.tags || []).forEach((tag: string) => {
+          uniqueTags.add(tag);
+        });
+      });
+
+      return Result.ok(Array.from(uniqueTags).sort());
+    } catch (error) {
+      return Result.fail(`Error getting teacher unique tags: ${error}`);
+    }
+  }
+
+  async getTeacherTypeDistribution(
+    teacherId: string
+  ): Promise<Result<Array<{ type: string; count: number; percentage: number }>>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('learning.problems')
+        .select('type')
+        .eq('teacher_id', teacherId)
+        .eq('is_active', true);
+
+      if (error) {
+        return Result.fail(`Failed to get type distribution: ${error.message}`);
+      }
+
+      const typeCounts = new Map<string, number>();
+      data.forEach((record: any) => {
+        const type = record.type || 'unknown';
+        typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
+      });
+
+      const totalProblems = data.length;
+      const distribution = Array.from(typeCounts.entries()).map(([type, count]) => ({
+        type,
+        count,
+        percentage: totalProblems > 0 ? (count / totalProblems) * 100 : 0
+      }));
+
+      return Result.ok(distribution);
+    } catch (error) {
+      return Result.fail(`Error getting teacher type distribution: ${error}`);
+    }
+  }
+
+  async bulkVerifyOwnership(
+    problemIds: UniqueEntityID[],
+    teacherId: string
+  ): Promise<Result<Array<{ id: string; isOwner: boolean }>>> {
+    try {
+      const ids = problemIds.map(id => id.toString());
+      const { data, error } = await this.supabase
+        .from('learning.problems')
+        .select('id, teacher_id')
+        .in('id', ids);
+
+      if (error) {
+        return Result.fail(`Failed to verify ownership: ${error.message}`);
+      }
+
+      const ownershipMap = new Map<string, boolean>();
+      data.forEach((record: any) => {
+        ownershipMap.set(record.id, record.teacher_id === teacherId);
+      });
+
+      const results = ids.map(id => ({
+        id,
+        isOwner: ownershipMap.get(id) || false
+      }));
+
+      return Result.ok(results);
+    } catch (error) {
+      return Result.fail(`Error verifying bulk ownership: ${error}`);
+    }
+  }
+
+  async bulkCanAccess(
+    problemIds: UniqueEntityID[],
+    teacherId: string
+  ): Promise<Result<Array<{ id: string; canAccess: boolean }>>> {
+    try {
+      const ids = problemIds.map(id => id.toString());
+      const { data, error } = await this.supabase
+        .from('learning.problems')
+        .select('id, teacher_id, is_active')
+        .in('id', ids);
+
+      if (error) {
+        return Result.fail(`Failed to check access: ${error.message}`);
+      }
+
+      const accessMap = new Map<string, boolean>();
+      data.forEach((record: any) => {
+        // 교사가 소유하거나 활성화된 문제에 접근 가능
+        const canAccess = record.teacher_id === teacherId || record.is_active;
+        accessMap.set(record.id, canAccess);
+      });
+
+      const results = ids.map(id => ({
+        id,
+        canAccess: accessMap.get(id) || false
+      }));
+
+      return Result.ok(results);
+    } catch (error) {
+      return Result.fail(`Error checking bulk access: ${error}`);
+    }
+  }
+
+  // === Additional methods used by CachedProblemService ===
+  
+  async create(problem: Problem): Promise<Result<Problem>> {
+    const saveResult = await this.save(problem);
+    if (saveResult.isFailure) {
+      return Result.fail(saveResult.error);
+    }
+    return Result.ok(problem);
+  }
+  
+  async update(problem: Problem): Promise<Result<Problem>> {
+    const saveResult = await this.save(problem);
+    if (saveResult.isFailure) {
+      return Result.fail(saveResult.error);
+    }
+    return Result.ok(problem);
+  }
+  
+  async findByTeacher(teacherId: string, options?: ProblemBankOptions): Promise<Result<Problem[]>> {
+    return this.findByTeacherId(teacherId, options);
+  }
+  
+  async search(query: string, filter?: ProblemSearchFilter): Promise<Result<Problem[]>> {
+    try {
+      let queryBuilder = this.supabase
+        .from('learning.problems')
+        .select('*');
+      
+      // Add text search if query provided
+      if (query) {
+        queryBuilder = queryBuilder.textSearch('content', query);
+      }
+      
+      // Apply filters
+      if (filter?.teacherId) {
+        queryBuilder = queryBuilder.eq('teacher_id', filter.teacherId);
+      }
+      if (filter?.isActive !== undefined) {
+        queryBuilder = queryBuilder.eq('is_active', filter.isActive);
+      }
+      
+      const { data, error } = await queryBuilder;
+      
+      if (error) {
+        return Result.fail(`Failed to search problems: ${error.message}`);
+      }
+      
+      const problems: Problem[] = [];
+      for (const record of data) {
+        const problemResult = await this.mapToDomain(record);
+        if (problemResult.isSuccess) {
+          problems.push(problemResult.value);
+        }
+      }
+      
+      return Result.ok(problems);
+    } catch (error) {
+      return Result.fail(`Error searching problems: ${error}`);
+    }
+  }
+  
+  async findByTags(tagNames: string[], teacherId?: string): Promise<Result<Problem[]>> {
+    try {
+      let queryBuilder = this.supabase
+        .from('learning.problems')
+        .select('*')
+        .overlaps('tags', tagNames);
+      
+      if (teacherId) {
+        queryBuilder = queryBuilder.eq('teacher_id', teacherId);
+      }
+      
+      const { data, error } = await queryBuilder;
+      
+      if (error) {
+        return Result.fail(`Failed to find problems by tags: ${error.message}`);
+      }
+      
+      const problems: Problem[] = [];
+      for (const record of data) {
+        const problemResult = await this.mapToDomain(record);
+        if (problemResult.isSuccess) {
+          problems.push(problemResult.value);
+        }
+      }
+      
+      return Result.ok(problems);
+    } catch (error) {
+      return Result.fail(`Error finding problems by tags: ${error}`);
+    }
+  }
+  
+  async findPopular(limit = 10, teacherId?: string): Promise<Result<Problem[]>> {
+    try {
+      let queryBuilder = this.supabase
+        .from('learning.problems')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (teacherId) {
+        queryBuilder = queryBuilder.eq('teacher_id', teacherId);
+      }
+      
+      const { data, error } = await queryBuilder;
+      
+      if (error) {
+        return Result.fail(`Failed to find popular problems: ${error.message}`);
+      }
+      
+      const problems: Problem[] = [];
+      for (const record of data) {
+        const problemResult = await this.mapToDomain(record);
+        if (problemResult.isSuccess) {
+          problems.push(problemResult.value);
+        }
+      }
+      
+      return Result.ok(problems);
+    } catch (error) {
+      return Result.fail(`Error finding popular problems: ${error}`);
+    }
+  }
+  
+  async getStatistics(teacherId?: string): Promise<Result<ProblemStatistics>> {
+    return this.getTeacherStatistics(teacherId || '');
+  }
 }

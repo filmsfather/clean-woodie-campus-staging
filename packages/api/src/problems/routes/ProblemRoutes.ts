@@ -115,12 +115,8 @@ export class ProblemRoutes {
       this.analyticsController.getDifficultyAnalysis.bind(this.analyticsController)
     );
 
-    // 문제 유형 분포
-    this.router.get(
-      '/analytics/types',
-      RateLimitMiddleware.analyticsLimit(),
-      this.analyticsController.getTypeDistribution.bind(this.analyticsController)
-    );
+    // Note: getTypeDistribution 메소드는 아직 구현되지 않았습니다.
+    // 필요시 AnalyticsController에 추가하세요.
 
     // 캐시 무효화 (관리자 전용)
     this.router.delete(
@@ -191,7 +187,7 @@ export class ProblemRoutes {
       RateLimitMiddleware.bulkLimit(),
       ValidationMiddleware.validateBulkOperation(),
       AuthMiddleware.requireBulkOperationPermission(),
-      this.bulkController.updateActiveStatus.bind(this.bulkController)
+      this.bulkController.updateStatus.bind(this.bulkController)
     );
 
     // 태그 일괄 업데이트

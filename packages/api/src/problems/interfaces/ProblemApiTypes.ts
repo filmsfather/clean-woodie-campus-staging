@@ -1,5 +1,6 @@
 // API 레이어 요청/응답 타입 정의
 
+import { Request } from 'express';
 import {
   ProblemDto,
   ProblemDetailDto,
@@ -209,6 +210,7 @@ export const HTTP_STATUS = {
   METHOD_NOT_ALLOWED: 405,
   CONFLICT: 409,
   UNPROCESSABLE_ENTITY: 422,
+  TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503
 } as const;
@@ -253,11 +255,11 @@ export const API_ROUTES = {
 // === 미들웨어 관련 타입 ===
 
 export interface AuthenticatedRequest extends Request {
-  user: {
+  user?: {
     id: string;
     email: string;
     role: 'teacher' | 'admin';
-    teacherId: string;
+    teacherId?: string;
   };
 }
 

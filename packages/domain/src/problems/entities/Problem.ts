@@ -19,9 +19,9 @@ interface ProblemProps {
   updatedAt: Date;
 }
 
-export class Problem extends AggregateRoot<UniqueEntityID> {
-  private constructor(private props: ProblemProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID());
+export class Problem extends AggregateRoot<ProblemProps> {
+  private constructor(props: ProblemProps, id?: UniqueEntityID) {
+    super(props, id);
   }
 
   // Getters - 도메인 순수성 유지
@@ -308,6 +308,9 @@ export class Problem extends AggregateRoot<UniqueEntityID> {
 
     return Result.ok<Problem>(problem);
   }
+
+  // Alias for restore method (used by cached services)
+  public static reconstitute = Problem.restore;
 
   // 직렬화 (영속성을 위한)
   public toPersistence(): {

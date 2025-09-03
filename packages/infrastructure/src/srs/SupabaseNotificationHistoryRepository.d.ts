@@ -1,13 +1,18 @@
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { INotificationHistoryRepository, NotificationMessage } from '@domain/srs/interfaces/INotificationService';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { INotificationHistoryRepository, NotificationMessage } from '@woodie/domain/srs/interfaces/INotificationService';
 import { BaseRepository } from '../repositories/BaseRepository';
 /**
  * Supabase 기반 알림 이력 리포지토리 구현체
  * 알림 전송 이력, 실패 기록, 재시도 정보 관리
  */
-export declare class SupabaseNotificationHistoryRepository extends BaseRepository implements INotificationHistoryRepository {
+export declare class SupabaseNotificationHistoryRepository extends BaseRepository<NotificationMessage> implements INotificationHistoryRepository {
+    protected client: any;
     private readonly tableName;
     private readonly schema;
+    constructor(client: any);
+    findById(id: UniqueEntityID): Promise<NotificationMessage | null>;
+    save(entity: NotificationMessage): Promise<void>;
+    delete(id: UniqueEntityID): Promise<void>;
     /**
      * 알림 전송 이력 저장
      */

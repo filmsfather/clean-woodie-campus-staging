@@ -4,8 +4,10 @@
  * 도메인 서비스와 인프라 캐시 서비스를 조합
  */
 
-import { Result, Logger } from '@woodie/domain'
-import { CacheService, CacheKeys, CacheTTL } from '@woodie/infrastructure'
+import { Result } from '@woodie/domain'
+import { ILogger } from '../common/interfaces/ILogger'
+import { ICacheService } from '../infrastructure/interfaces/ICacheService'
+import { CacheKeys, CacheTTL } from '../common/constants/CacheConstants'
 
 // 도메인 DTOs (캐시할 데이터 타입들)
 export interface StudentDashboardDto {
@@ -74,8 +76,8 @@ export interface StudentStatisticsDto {
  */
 export class CachedStudentDashboardService {
   constructor(
-    private cacheService: CacheService,
-    private logger: Logger
+    private cacheService: ICacheService,
+    private logger: ILogger
   ) {}
 
   /**
@@ -163,8 +165,8 @@ export class CachedStudentDashboardService {
  */
 export class CachedTeacherDashboardService {
   constructor(
-    private cacheService: CacheService,
-    private logger: Logger
+    private cacheService: ICacheService,
+    private logger: ILogger
   ) {}
 
   /**
@@ -250,8 +252,8 @@ export class CachedTeacherDashboardService {
  */
 export class CachedStatisticsService {
   constructor(
-    private cacheService: CacheService,
-    private logger: Logger
+    private cacheService: ICacheService,
+    private logger: ILogger
   ) {}
 
   /**

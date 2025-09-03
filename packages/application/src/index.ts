@@ -1,17 +1,18 @@
 // Application layer exports
 // Use Cases와 Application Services를 관리하는 애플리케이션 레이어
 
+// 핵심 기능 - 항상 export
 export * from './use-cases/index'
 export * from './services/index'
 export * from './auth/index'
 export * from './progress/index'
-export * from './gamification/index'
 
-// 성능 최적화 및 인프라 인터페이스
-export * from './infrastructure'
+// 공통 인터페이스 및 설정
+export * from './common/interfaces'
+export * from './common/config'
 export * from './utils'
-export * from './config'
-export * from './performance'
+
+// 기능별 조건부 export는 FeatureModules로 처리
 
 // SRS 관련 Application Services
 export { 

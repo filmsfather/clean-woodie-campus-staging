@@ -1,9 +1,9 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
 import { 
   INotificationHistoryRepository,
   NotificationMessage
-} from '@domain/srs/interfaces/INotificationService'
-import { NotificationType } from '@domain/srs/value-objects/NotificationType'
+} from '@woodie/domain/srs/interfaces/INotificationService'
+import { NotificationType } from '@woodie/domain/srs/value-objects/NotificationType'
 import { BaseRepository } from '../repositories/BaseRepository'
 
 interface NotificationHistoryRow {
@@ -25,9 +25,32 @@ interface NotificationHistoryRow {
  * Supabase 기반 알림 이력 리포지토리 구현체
  * 알림 전송 이력, 실패 기록, 재시도 정보 관리
  */
-export class SupabaseNotificationHistoryRepository extends BaseRepository implements INotificationHistoryRepository {
+export class SupabaseNotificationHistoryRepository extends BaseRepository<NotificationMessage> implements INotificationHistoryRepository {
+  protected client: any
   private readonly tableName = 'notification_history'
   private readonly schema = 'learning'
+
+  constructor(client: any) {
+    super()
+    this.client = client
+  }
+
+  // BaseRepository abstract 메서드들 구현
+  async findById(id: UniqueEntityID): Promise<NotificationMessage | null> {
+    // NotificationMessage는 ID 기반 조회보다는 사용자별 조회가 일반적
+    // 임시로 null 반환, 필요 시 구체적인 구현 추가
+    console.warn('findById not implemented for NotificationHistoryRepository')
+    return null
+  }
+
+  async save(entity: NotificationMessage): Promise<void> {
+    return this.saveNotification(entity)
+  }
+
+  async delete(id: UniqueEntityID): Promise<void> {
+    // 필요 시 구현
+    console.warn('delete not implemented for NotificationHistoryRepository')
+  }
 
   /**
    * 알림 전송 이력 저장
@@ -67,7 +90,7 @@ export class SupabaseNotificationHistoryRepository extends BaseRepository implem
         return []
       }
 
-      return data.map(row => this.toDomain(row))
+      return data.map((row: NotificationHistoryRow) => this.toDomain(row))
 
     } catch (error) {
       console.error(`Error finding notification history for user ${userId.toString()}:`, error)
@@ -94,7 +117,7 @@ export class SupabaseNotificationHistoryRepository extends BaseRepository implem
         return []
       }
 
-      return data.map(row => this.toDomain(row))
+      return data.map((row: NotificationHistoryRow) => this.toDomain(row))
 
     } catch (error) {
       console.error('Error finding failed notifications:', error)
@@ -229,19 +252,19 @@ export class SupabaseNotificationHistoryRepository extends BaseRepository implem
       }
 
       const statistics = {
-        totalSent: data.filter(row => row.sent_at).length,
-        totalFailed: data.filter(row => row.failed_at).length,
+        totalSent: data.filter((row: any) => row.sent_at).length,
+        totalFailed: data.filter((row: any) => row.failed_at).length,
         byType: {} as Record<string, number>,
         byHour: {} as Record<number, number>
       }
 
       // 타입별 통계
-      data.forEach(row => {
+      data.forEach((row: any) => {
         statistics.byType[row.type] = (statistics.byType[row.type] || 0) + 1
       })
 
       // 시간대별 통계
-      data.forEach(row => {
+      data.forEach((row: any) => {
         const hour = new Date(row.created_at).getHours()
         statistics.byHour[hour] = (statistics.byHour[hour] || 0) + 1
       })

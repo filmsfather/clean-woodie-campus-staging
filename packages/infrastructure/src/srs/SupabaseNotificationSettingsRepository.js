@@ -1,13 +1,16 @@
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { NotificationSettings } from '@domain/srs/value-objects/NotificationSettings';
-import { BaseRepository } from '../repositories/BaseRepository';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { NotificationSettings } from '@woodie/domain/srs/value-objects/NotificationSettings';
 /**
  * Supabase 기반 알림 설정 리포지토리 구현체
  * 사용자별 알림 선호도와 설정을 영구 저장
  */
-export class SupabaseNotificationSettingsRepository extends BaseRepository {
+export class SupabaseNotificationSettingsRepository {
+    client;
     tableName = 'notification_settings';
     schema = 'learning';
+    constructor(client) {
+        this.client = client;
+    }
     /**
      * 사용자 알림 설정 조회
      */
@@ -34,9 +37,15 @@ export class SupabaseNotificationSettingsRepository extends BaseRepository {
         }
     }
     /**
-     * 알림 설정 저장 (생성 또는 업데이트)
+     * INotificationSettingsRepository save 구현
      */
     async save(userId, settings) {
+        return this.saveUserSettings(userId, settings);
+    }
+    /**
+     * 알림 설정 저장 (생성 또는 업데이트)
+     */
+    async saveUserSettings(userId, settings) {
         try {
             const persistence = this.toPersistence(userId, settings);
             const { error } = await this.client
@@ -56,9 +65,15 @@ export class SupabaseNotificationSettingsRepository extends BaseRepository {
         }
     }
     /**
-     * 알림 설정 삭제
+     * INotificationSettingsRepository delete 구현
      */
     async delete(userId) {
+        return this.deleteUserSettings(userId);
+    }
+    /**
+     * 알림 설정 삭제
+     */
+    async deleteUserSettings(userId) {
         try {
             const { error } = await this.client
                 .from(`${this.schema}.${this.tableName}`)
@@ -103,7 +118,7 @@ export class SupabaseNotificationSettingsRepository extends BaseRepository {
             if (error) {
                 throw new Error(`Failed to find users with enabled ${type} notifications: ${error.message}`);
             }
-            return (data || []).map(row => new UniqueEntityID(row.user_id));
+            return (data || []).map((row) => new UniqueEntityID(row.user_id));
         }
         catch (error) {
             console.error(`Error finding users with enabled ${type} notifications:`, error);

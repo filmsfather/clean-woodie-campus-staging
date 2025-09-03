@@ -1,5 +1,5 @@
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { StudyRecord, ReviewFeedback } from '@domain/srs';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { StudyRecord, ReviewFeedback } from '@woodie/domain/srs';
 /**
  * ReviewCompleted 이벤트 핸들러
  * 복습 완료 시 StudyRecord를 생성하는 Infrastructure 레이어 컴포넌트
@@ -31,8 +31,7 @@ export class ReviewCompletedEventHandler {
                 feedback: feedbackResult.getValue(),
                 isCorrect: event.isCorrect,
                 responseTime: event.responseTime,
-                answerContent: event.answerContent,
-                createdAt: event.occurredAt
+                answerContent: event.answerContent
             });
             if (studyRecordResult.isFailure) {
                 throw new Error(`Failed to create StudyRecord: ${studyRecordResult.error}`);
@@ -74,8 +73,7 @@ export class ReviewCompletedEventHandler {
                     feedback: feedbackResult.getValue(),
                     isCorrect: event.isCorrect,
                     responseTime: event.responseTime,
-                    answerContent: event.answerContent,
-                    createdAt: event.occurredAt
+                    answerContent: event.answerContent
                 });
                 if (studyRecordResult.isSuccess) {
                     studyRecords.push(studyRecordResult.getValue());

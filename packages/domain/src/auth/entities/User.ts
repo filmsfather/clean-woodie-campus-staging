@@ -15,9 +15,9 @@ interface UserProps {
   updatedAt: Date;
 }
 
-export class User extends Entity<UniqueEntityID> {
-  private constructor(private props: UserProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID());
+export class User extends Entity<UserProps> {
+  private constructor(props: UserProps, id?: UniqueEntityID) {
+    super(props, id);
   }
 
   get email(): Email {

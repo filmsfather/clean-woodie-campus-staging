@@ -1,25 +1,25 @@
 import { UseCase } from '../../use-cases/UseCase';
-import { Result } from '../../../domain';
+import { Result } from '@woodie/domain';
 import { RewardRedemptionDto } from '../dto/RewardDto';
 import { 
   RewardRedemptionService,
   StudentId,
   RewardCode
-} from '../../../domain';
+} from '@woodie/domain';
 
 interface RedeemRewardRequest {
   studentId: string;
   rewardCode: string;
 }
 
-type RedeemRewardResponse = Result<RewardRedemptionDto>;
+type RedeemRewardResponse = RewardRedemptionDto;
 
 export class RedeemRewardUseCase implements UseCase<RedeemRewardRequest, RedeemRewardResponse> {
   constructor(
     private rewardRedemptionService: RewardRedemptionService
   ) {}
 
-  async execute(request: RedeemRewardRequest): Promise<RedeemRewardResponse> {
+  async execute(request: RedeemRewardRequest): Promise<Result<RedeemRewardResponse>> {
     // 입력 검증
     const studentIdResult = StudentId.create(request.studentId);
     if (studentIdResult.isFailure) {
@@ -61,7 +61,7 @@ export class RedeemRewardUseCase implements UseCase<RedeemRewardRequest, RedeemR
           tokenCost: result.reward.tokenCost.value,
           maxRedemptions: result.reward.maxRedemptions,
           currentRedemptions: result.reward.currentRedemptions,
-          remainingStock: result.reward.getRemainingStock(),
+          remainingStock: result.reward.getRemainingStock() ?? 0,
           isActive: result.reward.isActive,
           iconUrl: result.reward.iconUrl,
           expiresAt: result.reward.expiresAt?.toISOString(),
@@ -74,7 +74,7 @@ export class RedeemRewardUseCase implements UseCase<RedeemRewardRequest, RedeemR
         redeemedAt: result.redemption.redeemedAt.toISOString(),
         completedAt: result.redemption.completedAt?.toISOString(),
         failureReason: result.redemption.failureReason,
-        processingTimeMinutes: result.redemption.getProcessingTimeInMinutes()
+        processingTimeMinutes: result.redemption.getProcessingTimeInMinutes() ?? 0
       };
 
       return Result.ok(redemptionDto);

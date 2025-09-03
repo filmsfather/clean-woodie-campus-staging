@@ -1,7 +1,7 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { ReviewController } from '../controllers/ReviewController'
-import { ReviewQueueService } from '@application/srs/services/ReviewQueueService'
-import { NotificationManagementService } from '@application/srs/services/NotificationManagementService'
+import { ReviewQueueService } from '@woodie/application/srs/services/ReviewQueueService'
+import { NotificationManagementService } from '@woodie/application/srs/services/NotificationManagementService'
 import { 
   SupabaseReviewScheduleRepository,
   SupabaseStudyRecordRepository,
@@ -9,12 +9,13 @@ import {
   SupabaseNotificationService,
   SupabaseNotificationSettingsRepository,
   SupabaseNotificationHistoryRepository
-} from '@infrastructure'
-import { SpacedRepetitionCalculator } from '@domain/srs'
+} from '@woodie/infrastructure'
+import { SpacedRepetitionCalculator } from '@woodie/domain/srs'
 import { authMiddleware } from '../../middleware/AuthMiddleware'
 import { validateRequest } from '../../middleware/ValidationMiddleware'
 import { rateLimitMiddleware } from '../../middleware/RateLimitMiddleware'
 import { body, param } from 'express-validator'
+import { supabaseClient } from '../../config/database'
 
 /**
  * SRS 복습 관련 API 라우트 설정
@@ -36,12 +37,12 @@ export function createReviewRoutes(): Router {
   const clock = new SystemClock()
   const spacedRepetitionPolicy = new SpacedRepetitionCalculator()
   
-  // Repository 인스턴스 생성
-  const reviewScheduleRepository = new SupabaseReviewScheduleRepository()
-  const studyRecordRepository = new SupabaseStudyRecordRepository()
-  const notificationService = new SupabaseNotificationService()
-  const notificationSettingsRepository = new SupabaseNotificationSettingsRepository()
-  const notificationHistoryRepository = new SupabaseNotificationHistoryRepository()
+  // Repository 인스턴스 생성 (실제 Supabase client 주입)
+  const reviewScheduleRepository = new SupabaseReviewScheduleRepository(supabaseClient)
+  const studyRecordRepository = new SupabaseStudyRecordRepository(supabaseClient)
+  const notificationService = new SupabaseNotificationService(supabaseClient)
+  const notificationSettingsRepository = new SupabaseNotificationSettingsRepository(supabaseClient)
+  const notificationHistoryRepository = new SupabaseNotificationHistoryRepository(supabaseClient)
 
   // Service 인스턴스 생성
   const reviewQueueService = new ReviewQueueService(
@@ -75,7 +76,7 @@ export function createReviewRoutes(): Router {
    */
   router.get('/reviews/today', 
     rateLimitMiddleware(60, 100), // 분당 100회 제한
-    (req, res) => reviewController.getTodayReviews(req, res)
+    (req: Request, res: Response) => reviewController.getTodayReviews(req, res)
   )
 
   /**
@@ -84,7 +85,7 @@ export function createReviewRoutes(): Router {
    */
   router.get('/reviews/overdue',
     rateLimitMiddleware(60, 50), // 분당 50회 제한  
-    (req, res) => reviewController.getOverdueReviews(req, res)
+    (req: Request, res: Response) => reviewController.getOverdueReviews(req, res)
   )
 
   /**
@@ -112,7 +113,7 @@ export function createReviewRoutes(): Router {
         })
     ],
     validateRequest,
-    (req, res) => reviewController.submitReviewFeedback(req, res)
+    (req: Request, res: Response) => reviewController.submitReviewFeedback(req, res)
   )
 
   /**
@@ -121,7 +122,7 @@ export function createReviewRoutes(): Router {
    */
   router.get('/reviews/statistics',
     rateLimitMiddleware(60, 30), // 분당 30회 제한
-    (req, res) => reviewController.getReviewStatistics(req, res)
+    (req: Request, res: Response) => reviewController.getReviewStatistics(req, res)
   )
 
   // 알림 관련 라우트
@@ -132,7 +133,7 @@ export function createReviewRoutes(): Router {
    */
   router.get('/notifications/settings',
     rateLimitMiddleware(60, 20), // 분당 20회 제한
-    (req, res) => reviewController.getNotificationSettings(req, res)
+    (req: Request, res: Response) => reviewController.getNotificationSettings(req, res)
   )
 
   /**
@@ -176,7 +177,7 @@ export function createReviewRoutes(): Router {
         .withMessage('Timezone must be a valid string')
     ],
     validateRequest,
-    (req, res) => reviewController.updateNotificationSettings(req, res)
+    (req: Request, res: Response) => reviewController.updateNotificationSettings(req, res)
   )
 
   /**
@@ -185,7 +186,7 @@ export function createReviewRoutes(): Router {
    */
   router.get('/notifications/statistics',
     rateLimitMiddleware(60, 10), // 분당 10회 제한
-    (req, res) => reviewController.getNotificationStatistics(req, res)
+    (req: Request, res: Response) => reviewController.getNotificationStatistics(req, res)
   )
 
   /**
@@ -195,7 +196,7 @@ export function createReviewRoutes(): Router {
   if (process.env.NODE_ENV !== 'production') {
     router.post('/notifications/test',
       rateLimitMiddleware(60, 5), // 분당 5회 제한
-      (req, res) => reviewController.sendTestNotification(req, res)
+      (req: Request, res: Response) => reviewController.sendTestNotification(req, res)
     )
   }
 

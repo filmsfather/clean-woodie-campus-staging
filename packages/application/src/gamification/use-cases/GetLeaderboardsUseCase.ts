@@ -1,24 +1,24 @@
 import { UseCase } from '../../use-cases/UseCase';
-import { Result } from '../../../domain';
+import { Result } from '@woodie/domain';
 import { LeaderboardSummaryDto } from '../dto/LeaderboardDto';
 import { 
   LeaderboardService,
   StudentId
-} from '../../../domain';
+} from '@woodie/domain';
 
 interface GetLeaderboardsRequest {
   studentId?: string;
   limit?: number;
 }
 
-type GetLeaderboardsResponse = Result<LeaderboardSummaryDto>;
+type GetLeaderboardsResponse = LeaderboardSummaryDto;
 
 export class GetLeaderboardsUseCase implements UseCase<GetLeaderboardsRequest, GetLeaderboardsResponse> {
   constructor(
     private leaderboardService: LeaderboardService
   ) {}
 
-  async execute(request: GetLeaderboardsRequest): Promise<GetLeaderboardsResponse> {
+  async execute(request: GetLeaderboardsRequest): Promise<Result<GetLeaderboardsResponse>> {
     const limit = request.limit || 10;
     let studentId: StudentId | undefined;
 

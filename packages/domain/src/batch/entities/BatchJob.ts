@@ -60,9 +60,9 @@ interface BatchJobProps {
  * 배치 작업 엔티티
  * 백그라운드에서 실행되는 데이터 처리 작업을 관리
  */
-export class BatchJob extends AggregateRoot<UniqueEntityID> {
-  private constructor(private props: BatchJobProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID())
+export class BatchJob extends AggregateRoot<BatchJobProps> {
+  private constructor(props: BatchJobProps, id?: UniqueEntityID) {
+    super(props, id)
   }
 
   get name(): string {

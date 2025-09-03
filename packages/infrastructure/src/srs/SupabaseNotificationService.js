@@ -1,16 +1,29 @@
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { Result } from '@domain/common/Result';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { Result } from '@woodie/domain/common/Result';
 import { BaseRepository } from '../repositories/BaseRepository';
 /**
  * Supabase Realtime 기반 알림 서비스 구현체
  * WebSocket을 통한 실시간 알림 전송 및 채널 관리
  */
 export class SupabaseNotificationService extends BaseRepository {
+    client;
     activeChannels = new Map();
     reconnectAttempts = new Map();
     maxReconnectAttempts = 3;
     constructor(client) {
-        super(client);
+        super();
+        this.client = client;
+    }
+    // BaseRepository abstract 메서드들 구현 (알림 서비스에서는 사용 안함)
+    async findById(id) {
+        console.warn('findById not applicable for NotificationService');
+        return null;
+    }
+    async save(entity) {
+        await this.sendNotification(entity);
+    }
+    async delete(id) {
+        console.warn('delete not applicable for NotificationService');
     }
     /**
      * 사용자별 알림 채널 생성 및 구독
@@ -226,15 +239,8 @@ export class SupabaseNotificationService extends BaseRepository {
      */
     handleNotificationReceived(userId, payload) {
         console.log(`📨 Notification received for user ${userId.toString()}:`, payload);
-        // 브라우저 알림 표시 (권한이 있는 경우)
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(payload.payload?.title || 'New Notification', {
-                body: payload.payload?.body,
-                icon: '/notification-icon.png', // 앱 아이콘 경로
-                tag: payload.payload?.id, // 중복 방지
-                data: payload.payload?.data
-            });
-        }
+        // 서버 환경에서는 브라우저 알림을 사용할 수 없음
+        // 클라이언트 측에서 이 핸들러를 오버라이드하여 UI 알림 처리
     }
     /**
      * 채널 상태 변화 핸들러

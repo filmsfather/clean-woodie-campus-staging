@@ -1,11 +1,15 @@
-export abstract class Entity<T> {
-  protected readonly _id: T
+import { UniqueEntityID } from '../common/Identifier'
 
-  constructor(id: T) {
-    this._id = id
+export abstract class Entity<T> {
+  protected readonly _id: UniqueEntityID
+  protected props: T
+
+  constructor(props: T, id?: UniqueEntityID) {
+    this._id = id ? id : new UniqueEntityID()
+    this.props = props
   }
 
-  get id(): T {
+  get id(): UniqueEntityID {
     return this._id
   }
 
@@ -22,6 +26,6 @@ export abstract class Entity<T> {
       return false
     }
 
-    return this._id === entity.id
+    return this._id.equals(entity.id)
   }
 }

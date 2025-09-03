@@ -1,6 +1,6 @@
-import { Result } from '@domain/common/Result';
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { StudyStreak, IStudyStreakRepository } from '@domain/progress';
+import { Result } from '@woodie/domain/common/Result';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { StudyStreak, IStudyStreakRepository } from '@woodie/domain/progress';
 import { SupabaseClient } from '@supabase/supabase-js';
 /**
  * Supabase 기반 StudyStreak 리포지토리 구현체

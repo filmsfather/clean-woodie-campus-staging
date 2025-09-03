@@ -1,13 +1,38 @@
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { StudyRecord, ReviewFeedback } from '@domain/srs';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { StudyRecord, ReviewFeedback } from '@woodie/domain/srs';
 import { BaseRepository } from '../repositories/BaseRepository';
 /**
  * Supabase 기반 StudyRecord 리포지토리 구현체
  * Domain 인터페이스를 Infrastructure에서 구현
  */
 export class SupabaseStudyRecordRepository extends BaseRepository {
+    client;
     tableName = 'study_records';
     schema = 'learning';
+    constructor(client) {
+        super();
+        this.client = client;
+    }
+    async findById(id) {
+        const { data, error } = await this.client
+            .from(`${this.schema}.${this.tableName}`)
+            .select('*')
+            .eq('id', id.toString())
+            .single();
+        if (error || !data) {
+            return null;
+        }
+        return this.toDomain(data);
+    }
+    async delete(id) {
+        const { error } = await this.client
+            .from(`${this.schema}.${this.tableName}`)
+            .delete()
+            .eq('id', id.toString());
+        if (error) {
+            throw new Error(`Failed to delete study record: ${error.message}`);
+        }
+    }
     async save(record) {
         const persistence = this.toPersistence(record);
         const { error } = await this.client
@@ -27,7 +52,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository {
         if (error || !data) {
             return [];
         }
-        return data.map(row => this.toDomain(row));
+        return data.map((row) => this.toDomain(row));
     }
     async findByProblem(problemId, limit = 50) {
         const { data, error } = await this.client
@@ -39,7 +64,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository {
         if (error || !data) {
             return [];
         }
-        return data.map(row => this.toDomain(row));
+        return data.map((row) => this.toDomain(row));
     }
     async findByStudentAndProblem(studentId, problemId) {
         const { data, error } = await this.client
@@ -51,7 +76,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository {
         if (error || !data) {
             return [];
         }
-        return data.map(row => this.toDomain(row));
+        return data.map((row) => this.toDomain(row));
     }
     async countByStudent(studentId) {
         const { count, error } = await this.client
@@ -74,7 +99,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository {
         if (error || !data) {
             return [];
         }
-        return data.map(row => this.toDomain(row));
+        return data.map((row) => this.toDomain(row));
     }
     toDomain(row) {
         const feedbackResult = ReviewFeedback.create(row.feedback);

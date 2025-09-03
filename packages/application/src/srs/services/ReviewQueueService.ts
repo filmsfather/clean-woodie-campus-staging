@@ -1,6 +1,6 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { Result } from '@domain/common/Result'
 import { 
+  UniqueEntityID,
+  Result,
   ReviewSchedule, 
   StudyRecord,
   IReviewScheduleRepository, 
@@ -8,7 +8,7 @@ import {
   ISpacedRepetitionPolicy,
   IClock,
   ReviewFeedback
-} from '@domain/srs'
+} from '@woodie/domain'
 
 // 복습 큐 항목 DTO
 export interface ReviewQueueItem {

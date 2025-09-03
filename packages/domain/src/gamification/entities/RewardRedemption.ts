@@ -1,4 +1,4 @@
-import { Entity } from '../../entities/Entity';
+import { AggregateRoot } from '../../aggregates/AggregateRoot';
 import { UniqueEntityID } from '../../common/Identifier';
 import { Result } from '../../common/Result';
 import { StudentId } from '../../assignments/value-objects/StudentId';
@@ -27,7 +27,7 @@ export interface RewardRedemptionProps {
  * 보상 교환 기록 엔티티
  * 학생의 보상 교환 내역을 나타냅니다
  */
-export class RewardRedemption extends Entity<RewardRedemptionProps> {
+export class RewardRedemption extends AggregateRoot<RewardRedemptionProps> {
   get studentId(): StudentId {
     return this.props.studentId;
   }

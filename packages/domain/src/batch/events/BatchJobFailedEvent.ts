@@ -1,4 +1,4 @@
-import { DomainEvent } from '../../events/DomainEvent'
+import { DomainEvent, BaseDomainEvent } from '../../events/DomainEvent'
 import { UniqueEntityID } from '../../common/Identifier'
 import { BatchJobType } from '../entities/BatchJob'
 
@@ -18,8 +18,8 @@ interface BatchJobResult {
  * 배치 작업 실패 이벤트
  * 배치 작업이 실패했을 때 발생하는 도메인 이벤트
  */
-export class BatchJobFailedEvent implements DomainEvent {
-  public readonly occurredAt: Date
+export class BatchJobFailedEvent extends BaseDomainEvent {
+  public readonly eventType: string = 'BatchJobFailedEvent'
   public readonly aggregateId: UniqueEntityID
   public readonly name: string
   public readonly type: BatchJobType
@@ -33,12 +33,12 @@ export class BatchJobFailedEvent implements DomainEvent {
     errorMessage: string,
     result?: BatchJobResult
   ) {
+    super()
     this.aggregateId = aggregateId
     this.name = name
     this.type = type
     this.errorMessage = errorMessage
     this.result = result
-    this.occurredAt = new Date()
   }
 
   getAggregateId(): UniqueEntityID {

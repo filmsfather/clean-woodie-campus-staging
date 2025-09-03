@@ -45,10 +45,11 @@ export class TagRecommendationService {
 
       // 입력 검증
       if (!problemTitle.trim() && !problemDescription.trim()) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.RECOMMENDATION_FAILED,
           'Problem title or description is required for tag recommendation'
-        ));
+        );
+        return Result.fail(error.message);
       }
 
       // 캐시 확인
@@ -72,7 +73,7 @@ export class TagRecommendationService {
       const existingTagsResult = await this.problemRepository.getTeacherUniqueTags(teacherId);
       
       if (existingTagsResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(existingTagsResult.error));
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(existingTagsResult.error).message);
       }
 
       const existingTagNames = existingTagsResult.value;
@@ -90,11 +91,12 @@ export class TagRecommendationService {
       );
 
       if (recommendationResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.domainServiceError(
+        const problemBankError = ProblemBankErrorFactory.domainServiceError(
           'TagManagementService',
           'recommendTags',
           new Error(recommendationResult.error)
-        ));
+        );
+        return Result.fail(problemBankError.message);
       }
 
       const recommendedTags = recommendationResult.value;
@@ -163,7 +165,7 @@ export class TagRecommendationService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -185,17 +187,18 @@ export class TagRecommendationService {
 
       // 입력 검증
       if (!inputTag.trim()) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
           'Input tag cannot be empty'
-        ));
+        );
+        return Result.fail(error.message);
       }
 
       // 교사의 기존 태그 조회
       const existingTagsResult = await this.problemRepository.getTeacherUniqueTags(teacherId);
       
       if (existingTagsResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(existingTagsResult.error));
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(existingTagsResult.error).message);
       }
 
       const existingTagNames = existingTagsResult.value;
@@ -212,11 +215,12 @@ export class TagRecommendationService {
       );
 
       if (similarTagsResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.domainServiceError(
+        const problemBankError = ProblemBankErrorFactory.domainServiceError(
           'TagManagementService',
           'findSimilarTags',
           new Error(similarTagsResult.error)
-        ));
+        );
+        return Result.fail(problemBankError.message);
       }
 
       const similarTags = similarTagsResult.value;
@@ -245,7 +249,7 @@ export class TagRecommendationService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -267,10 +271,11 @@ export class TagRecommendationService {
       const tagStatsResult = await this.problemRepository.getTeacherTagStatistics(teacherId);
       
       if (tagStatsResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.tagAnalysisFailed(
+        const problemBankError = ProblemBankErrorFactory.tagAnalysisFailed(
           teacherId,
           new Error(tagStatsResult.error)
-        ));
+        );
+        return Result.fail(problemBankError.message);
       }
 
       const tagStats = tagStatsResult.value;
@@ -305,7 +310,7 @@ export class TagRecommendationService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -330,7 +335,7 @@ export class TagRecommendationService {
       );
       
       if (distributionResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(distributionResult.error));
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(distributionResult.error).message);
       }
 
       const distribution = distributionResult.value;
@@ -365,7 +370,7 @@ export class TagRecommendationService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -431,7 +436,7 @@ export class TagRecommendationService {
         correlationId
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 

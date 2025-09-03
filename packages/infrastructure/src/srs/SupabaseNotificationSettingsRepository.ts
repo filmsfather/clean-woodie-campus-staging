@@ -1,7 +1,6 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { INotificationSettingsRepository } from '@domain/srs/interfaces/INotificationService'
-import { NotificationSettings } from '@domain/srs/value-objects/NotificationSettings'
-import { BaseRepository } from '../repositories/BaseRepository'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { INotificationSettingsRepository } from '@woodie/domain/srs/interfaces/INotificationService'
+import { NotificationSettings } from '@woodie/domain/srs/value-objects/NotificationSettings'
 
 interface NotificationSettingsRow {
   user_id: string
@@ -21,9 +20,15 @@ interface NotificationSettingsRow {
  * Supabase 기반 알림 설정 리포지토리 구현체
  * 사용자별 알림 선호도와 설정을 영구 저장
  */
-export class SupabaseNotificationSettingsRepository extends BaseRepository implements INotificationSettingsRepository {
+export class SupabaseNotificationSettingsRepository implements INotificationSettingsRepository {
+  protected client: any
   private readonly tableName = 'notification_settings'
   private readonly schema = 'learning'
+
+  constructor(client: any) {
+    this.client = client
+  }
+
 
   /**
    * 사용자 알림 설정 조회
@@ -54,9 +59,16 @@ export class SupabaseNotificationSettingsRepository extends BaseRepository imple
   }
 
   /**
-   * 알림 설정 저장 (생성 또는 업데이트)
+   * INotificationSettingsRepository save 구현
    */
   async save(userId: UniqueEntityID, settings: NotificationSettings): Promise<void> {
+    return this.saveUserSettings(userId, settings)
+  }
+
+  /**
+   * 알림 설정 저장 (생성 또는 업데이트)
+   */
+  async saveUserSettings(userId: UniqueEntityID, settings: NotificationSettings): Promise<void> {
     try {
       const persistence = this.toPersistence(userId, settings)
 
@@ -80,9 +92,16 @@ export class SupabaseNotificationSettingsRepository extends BaseRepository imple
   }
 
   /**
-   * 알림 설정 삭제
+   * INotificationSettingsRepository delete 구현
    */
   async delete(userId: UniqueEntityID): Promise<void> {
+    return this.deleteUserSettings(userId)
+  }
+
+  /**
+   * 알림 설정 삭제
+   */
+  async deleteUserSettings(userId: UniqueEntityID): Promise<void> {
     try {
       const { error } = await this.client
         .from(`${this.schema}.${this.tableName}`)
@@ -134,7 +153,7 @@ export class SupabaseNotificationSettingsRepository extends BaseRepository imple
         throw new Error(`Failed to find users with enabled ${type} notifications: ${error.message}`)
       }
 
-      return (data || []).map(row => new UniqueEntityID(row.user_id))
+      return (data || []).map((row: any) => new UniqueEntityID(row.user_id))
 
     } catch (error) {
       console.error(`Error finding users with enabled ${type} notifications:`, error)

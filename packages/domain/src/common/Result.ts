@@ -36,6 +36,14 @@ export class Result<T> {
     return this._error || ''
   }
 
+  getValue(): T {
+    return this.value
+  }
+
+  getErrorValue(): string {
+    return this.errorValue
+  }
+
   static ok<U>(value?: U): Result<U> {
     return new Result<U>(true, undefined, value)
   }

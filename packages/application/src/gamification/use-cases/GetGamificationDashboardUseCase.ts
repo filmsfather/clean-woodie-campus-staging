@@ -1,5 +1,5 @@
 import { UseCase } from '../../use-cases/UseCase';
-import { Result } from '../../../domain';
+import { Result } from '@woodie/domain';
 import { GamificationDashboardDto } from '../dto/GamificationDashboardDto';
 import { 
   TokenService,
@@ -7,13 +7,13 @@ import {
   LeaderboardService,
   RewardRedemptionService,
   StudentId
-} from '../../../domain';
+} from '@woodie/domain';
 
 interface GetGamificationDashboardRequest {
   studentId: string;
 }
 
-type GetGamificationDashboardResponse = Result<GamificationDashboardDto>;
+type GetGamificationDashboardResponse = GamificationDashboardDto;
 
 export class GetGamificationDashboardUseCase 
   implements UseCase<GetGamificationDashboardRequest, GetGamificationDashboardResponse> {
@@ -25,7 +25,7 @@ export class GetGamificationDashboardUseCase
     private rewardRedemptionService: RewardRedemptionService
   ) {}
 
-  async execute(request: GetGamificationDashboardRequest): Promise<GetGamificationDashboardResponse> {
+  async execute(request: GetGamificationDashboardRequest): Promise<Result<GetGamificationDashboardResponse>> {
     const studentIdResult = StudentId.create(request.studentId);
     if (studentIdResult.isFailure) {
       return Result.fail(studentIdResult.getErrorValue());
@@ -72,7 +72,7 @@ export class GetGamificationDashboardUseCase
           categories: {}
         },
         recentAchievements: achievementsResult.isSuccess ? achievementsResult.getValue().achievements.slice(0, 5) : [],
-        unnotifiedAchievements: achievementsResult.isSuccess ? achievementsResult.getValue().achievements.filter(a => !a.notified) : [],
+        unnotifiedAchievements: achievementsResult.isSuccess ? achievementsResult.getValue().achievements.filter((a: any) => !a.notified) : [],
         myRankings: rankingsResult.isSuccess ? rankingsResult.getValue() : {
           tokenBalance: null,
           tokenEarned: null,
@@ -130,7 +130,7 @@ export class GetGamificationDashboardUseCase
 
     // 추천 로직: 가격 순으로 정렬하여 상위 3개
     const rewards = rewardsResult.getValue()
-      .sort((a, b) => a.tokenCost.value - b.tokenCost.value)
+      .sort((a: any, b: any) => a.tokenCost.value - b.tokenCost.value)
       .slice(0, 3);
 
     return Result.ok(rewards);

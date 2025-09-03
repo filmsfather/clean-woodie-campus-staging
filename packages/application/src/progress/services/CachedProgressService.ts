@@ -1,7 +1,7 @@
 import { IStudyStreakRepository } from '@woodie/domain/progress/repositories/IStudyStreakRepository'
 import { IStatisticsRepository } from '@woodie/domain/progress/repositories/IStatisticsRepository'
-import { ICacheService } from '@woodie/infrastructure/cache/ICacheService'
-import { CacheKeys, CacheTTL } from '@woodie/infrastructure/cache/CacheService'
+import { ICacheService, CacheKeyBuilder, CacheStrategies } from '../../common/interfaces/ICacheService'
+import { CacheKeys, CacheTTL } from '../../common/constants/CacheConstants'
 import { StudyStreak } from '@woodie/domain/progress/entities/StudyStreak'
 import { Statistics } from '@woodie/domain/progress/entities/Statistics'
 import { UniqueEntityID } from '@woodie/domain/common/Identifier'
@@ -55,7 +55,7 @@ export class CachedProgressService implements IProgressService {
 
       // 3. 캐시에 저장 (15분간 유지 - 스트릭은 자주 변경됨)
       if (streak) {
-        await this.cacheService.set(cacheKey, streak, CacheTTL.MEDIUM)
+        await this.cacheService.set(cacheKey, streak, { ttl: CacheTTL.MEDIUM })
       }
       
       return Result.ok(streak)
@@ -90,7 +90,7 @@ export class CachedProgressService implements IProgressService {
       // 2. 캐시 미스 시 DB에서 조회
       const statsResult = problemSetId
         ? await this.statisticsRepository.findByStudentAndProblemSet(studentId, problemSetId)
-        : await this.statisticsRepository.findByStudent(studentId)
+        : await this.statisticsRepository.findByStudentId(studentId)
 
       if (statsResult.isFailure) {
         return Result.fail(statsResult.error)
@@ -98,10 +98,13 @@ export class CachedProgressService implements IProgressService {
 
       const statistics = statsResult.value
 
+      // 배열로 변환 (단일 통계일 경우)
+      const statisticsArray = Array.isArray(statistics) ? statistics : (statistics ? [statistics] : [])
+
       // 3. 캐시에 저장 (30분간 유지 - 통계는 상대적으로 안정적)
-      await this.cacheService.set(cacheKey, statistics, CacheTTL.LONG)
+      await this.cacheService.set(cacheKey, statisticsArray, { ttl: CacheTTL.LONG })
       
-      return Result.ok(statistics)
+      return Result.ok(statisticsArray)
 
     } catch (error) {
       return Result.fail(`학생 통계 조회 실패: ${error}`)
@@ -134,7 +137,7 @@ export class CachedProgressService implements IProgressService {
       const streaks = streaksResult.value
 
       // 3. 캐시에 저장 (10분간 유지 - 순위는 자주 변경될 수 있음)
-      await this.cacheService.set(cacheKey, streaks, 600) // 10분
+      await this.cacheService.set(cacheKey, streaks, { ttl: 600 }) // 10분
       
       return Result.ok(streaks)
 
@@ -169,7 +172,7 @@ export class CachedProgressService implements IProgressService {
       const atRiskStudents = atRiskResult.value
 
       // 3. 캐시에 저장 (5분간 유지 - 위험 상태는 시간에 민감)
-      await this.cacheService.set(cacheKey, atRiskStudents, CacheTTL.SHORT)
+      await this.cacheService.set(cacheKey, atRiskStudents, { ttl: CacheTTL.SHORT })
       
       return Result.ok(atRiskStudents)
 
@@ -274,7 +277,7 @@ export class CachedProgressService implements IProgressService {
       }
 
       // 3. 캐시에 저장 (20분간 유지)
-      await this.cacheService.set(cacheKey, progress, 1200) // 20분
+      await this.cacheService.set(cacheKey, progress, { ttl: 1200 }) // 20분
       
       return Result.ok(progress)
 
@@ -291,14 +294,14 @@ export class CachedProgressService implements IProgressService {
     
     // 학생 관련 진도 캐시들 삭제
     await Promise.all([
-      this.cacheService.del(CacheKeys.STUDENT_STREAK(studentIdStr)),
-      this.cacheService.del(CacheKeys.STUDENT_ALL_STATS(studentIdStr)),
-      this.cacheService.invalidatePattern(`progress:student:${studentIdStr}:*`),
+      this.cacheService.delete(CacheKeys.STUDENT_STREAK(studentIdStr)),
+      this.cacheService.delete(CacheKeys.STUDENT_ALL_STATS(studentIdStr)),
+      this.cacheService.deleteByPattern(`progress:student:${studentIdStr}:*`),
       // 전체 순위와 위험 학생 목록도 무효화 (해당 학생의 변경이 영향을 줄 수 있음)
-      this.cacheService.invalidatePattern('progress:top_streaks:*'),
-      this.cacheService.del(CacheKeys.AT_RISK_STUDENTS()),
+      this.cacheService.deleteByPattern('progress:top_streaks:*'),
+      this.cacheService.delete(CacheKeys.AT_RISK_STUDENTS()),
       // 학생 대시보드도 무효화
-      this.cacheService.del(CacheKeys.STUDENT_DASHBOARD(studentIdStr))
+      this.cacheService.delete(CacheKeys.STUDENT_DASHBOARD(studentIdStr))
     ])
   }
 
@@ -356,7 +359,7 @@ export class CachedProgressService implements IProgressService {
       }
 
       // 3. 캐시에 저장 (15분간 유지)
-      await this.cacheService.set(cacheKey, stats, CacheTTL.MEDIUM)
+      await this.cacheService.set(cacheKey, stats, { ttl: CacheTTL.MEDIUM })
       
       return Result.ok(stats)
 

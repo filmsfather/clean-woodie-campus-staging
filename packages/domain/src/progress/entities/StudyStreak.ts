@@ -29,9 +29,9 @@ interface StreakUpdateProps {
  * - 최장 스트릭은 현재 스트릭보다 작을 수 없음
  * - 같은 날에 여러 번 학습해도 스트릭은 1일로 계산
  */
-export class StudyStreak extends AggregateRoot<UniqueEntityID> {
-  private constructor(private props: StudyStreakProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID())
+export class StudyStreak extends AggregateRoot<StudyStreakProps> {
+  private constructor(props: StudyStreakProps, id?: UniqueEntityID) {
+    super(props, id)
   }
 
   get studentId(): UniqueEntityID {

@@ -1,8 +1,8 @@
-import { ISrsService } from '@woodie/domain/srs/services/ISrsService'
+import { ISrsService } from '@woodie/domain'
 import { IReviewScheduleRepository } from '@woodie/domain/srs/repositories/IReviewScheduleRepository'
 import { IStudyRecordRepository } from '@woodie/domain/srs/repositories/IStudyRecordRepository'
-import { ICacheService } from '@woodie/infrastructure/cache/ICacheService'
-import { CacheKeys, CacheTTL } from '@woodie/infrastructure/cache/CacheService'
+import { ICacheService } from '../../infrastructure/interfaces/ICacheService'
+import { CacheKeys, CacheTTL } from '../../common/constants/CacheConstants'
 import { ReviewSchedule } from '@woodie/domain/srs/entities/ReviewSchedule'
 import { StudyRecord } from '@woodie/domain/srs/entities/StudyRecord'
 import { UniqueEntityID } from '@woodie/domain/common/Identifier'
@@ -35,7 +35,7 @@ export class CachedSrsService implements ISrsService {
       const cachedReviews = await this.cacheService.get<ReviewSchedule[]>(cacheKey)
       if (cachedReviews) {
         return Result.ok(cachedReviews.map(data => 
-          ReviewSchedule.reconstitute(data as any, new UniqueEntityID(data.id))
+          ReviewSchedule.reconstitute(data as any, new UniqueEntityID(data.id.toString()))
         ))
       }
 
@@ -64,7 +64,7 @@ export class CachedSrsService implements ISrsService {
       const cachedReviews = await this.cacheService.get<ReviewSchedule[]>(cacheKey)
       if (cachedReviews) {
         return Result.ok(cachedReviews.map(data => 
-          ReviewSchedule.reconstitute(data as any, new UniqueEntityID(data.id))
+          ReviewSchedule.reconstitute(data as any, new UniqueEntityID(data.id.toString()))
         ))
       }
 
@@ -191,10 +191,9 @@ export class CachedSrsService implements ISrsService {
    */
   async getProblemReviewPerformance(problemId: UniqueEntityID): Promise<Result<{
     totalReviews: number
-    averageEaseFactor: number
+    averagePerformance: number
+    difficultyTrend: 'improving' | 'stable' | 'declining'
     averageInterval: number
-    successRate: number
-    avgResponseTime: number
   }>> {
     const cacheKey = CacheKeys.SRS_PROBLEM_PERFORMANCE(problemId.toString())
     
@@ -211,10 +210,9 @@ export class CachedSrsService implements ISrsService {
       if (studyRecords.length === 0) {
         const emptyStats = {
           totalReviews: 0,
-          averageEaseFactor: 2.5,
-          averageInterval: 1,
-          successRate: 0,
-          avgResponseTime: 0
+          averagePerformance: 0,
+          difficultyTrend: 'stable' as const,
+          averageInterval: 1
         }
         
         // 빈 통계도 캐시에 저장 (30분간)
@@ -226,22 +224,38 @@ export class CachedSrsService implements ISrsService {
       const successfulReviews = studyRecords.filter(record => record.isCorrect).length
       const successRate = (successfulReviews / studyRecords.length) * 100
 
-      // 평균 응답 시간 계산
-      const validResponseTimes = studyRecords
-        .filter(record => record.responseTime && record.responseTime > 0)
-        .map(record => record.responseTime!)
+      // 시간 순으로 정렬하여 트렌드 계산
+      const sortedRecords = studyRecords.sort((a, b) => 
+        a.createdAt.getTime() - b.createdAt.getTime()
+      )
       
-      const avgResponseTime = validResponseTimes.length > 0
-        ? validResponseTimes.reduce((sum, time) => sum + time, 0) / validResponseTimes.length
+      // 최근 50% vs 이전 50%의 성공률로 트렌드 계산
+      const halfPoint = Math.floor(sortedRecords.length / 2)
+      const earlierRecords = sortedRecords.slice(0, halfPoint)
+      const recentRecords = sortedRecords.slice(halfPoint)
+      
+      const earlierSuccessRate = earlierRecords.length > 0 
+        ? (earlierRecords.filter(r => r.isCorrect).length / earlierRecords.length) * 100
         : 0
+      const recentSuccessRate = recentRecords.length > 0
+        ? (recentRecords.filter(r => r.isCorrect).length / recentRecords.length) * 100
+        : successRate
 
-      // TODO: ease factor와 interval은 ReviewSchedule에서 가져와야 함
+      let difficultyTrend: 'improving' | 'stable' | 'declining'
+      const trendDifference = recentSuccessRate - earlierSuccessRate
+      if (trendDifference > 10) {
+        difficultyTrend = 'improving'
+      } else if (trendDifference < -10) {
+        difficultyTrend = 'declining'
+      } else {
+        difficultyTrend = 'stable'
+      }
+
       const performance = {
         totalReviews: studyRecords.length,
-        averageEaseFactor: 2.5, // 실제로는 해당 문제의 모든 ReviewSchedule에서 계산
-        averageInterval: 1, // 실제로는 해당 문제의 모든 ReviewSchedule에서 계산
-        successRate: Math.round(successRate * 100) / 100,
-        avgResponseTime: Math.round(avgResponseTime * 100) / 100
+        averagePerformance: Math.round(successRate * 100) / 100,
+        difficultyTrend,
+        averageInterval: 1 // TODO: ReviewSchedule에서 계산해야 함
       }
 
       // 3. 캐시에 저장 (30분간 유지)
@@ -301,11 +315,12 @@ export class CachedSrsService implements ISrsService {
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
 
-      return await this.studyRecordRepository.findByStudentAndDateRange(
+      const records = await this.studyRecordRepository.findByDateRange(
         studentId, 
         today, 
         tomorrow
       )
+      return Result.ok(records)
     } catch (error) {
       return Result.fail(`오늘 학습 기록 조회 실패: ${error}`)
     }

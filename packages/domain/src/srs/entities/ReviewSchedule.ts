@@ -22,9 +22,9 @@ interface ReviewScheduleProps {
   updatedAt: Date
 }
 
-export class ReviewSchedule extends AggregateRoot<UniqueEntityID> {
-  private constructor(private props: ReviewScheduleProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID())
+export class ReviewSchedule extends AggregateRoot<ReviewScheduleProps> {
+  private constructor(props: ReviewScheduleProps, id?: UniqueEntityID) {
+    super(props, id)
   }
 
   get studentId(): UniqueEntityID {
@@ -325,7 +325,7 @@ export class ReviewSchedule extends AggregateRoot<UniqueEntityID> {
             this.id,
             this.studentId,
             this.problemId,
-            NotificationType.reviewDue(),
+            NotificationType.review(),
             earlyReminderTime,
             nextReviewAt,
             'high', // 어려운 문제라서 높은 우선순위

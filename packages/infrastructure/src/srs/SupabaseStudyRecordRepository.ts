@@ -1,5 +1,5 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { StudyRecord, ReviewFeedback, ReviewFeedbackType, IStudyRecordRepository } from '@domain/srs'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { StudyRecord, ReviewFeedback, ReviewFeedbackType, IStudyRecordRepository } from '@woodie/domain/srs'
 import { BaseRepository } from '../repositories/BaseRepository'
 
 interface StudyRecordRow {
@@ -17,9 +17,40 @@ interface StudyRecordRow {
  * Supabase 기반 StudyRecord 리포지토리 구현체
  * Domain 인터페이스를 Infrastructure에서 구현
  */
-export class SupabaseStudyRecordRepository extends BaseRepository implements IStudyRecordRepository {
+export class SupabaseStudyRecordRepository extends BaseRepository<StudyRecord> implements IStudyRecordRepository {
+  protected client: any
   private readonly tableName = 'study_records'
   private readonly schema = 'learning'
+
+  constructor(client: any) {
+    super()
+    this.client = client
+  }
+
+  async findById(id: UniqueEntityID): Promise<StudyRecord | null> {
+    const { data, error } = await this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('*')
+      .eq('id', id.toString())
+      .single()
+
+    if (error || !data) {
+      return null
+    }
+
+    return this.toDomain(data)
+  }
+
+  async delete(id: UniqueEntityID): Promise<void> {
+    const { error } = await this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .delete()
+      .eq('id', id.toString())
+
+    if (error) {
+      throw new Error(`Failed to delete study record: ${error.message}`)
+    }
+  }
 
   async save(record: StudyRecord): Promise<void> {
     const persistence = this.toPersistence(record)
@@ -45,7 +76,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository implements ISt
       return []
     }
 
-    return data.map(row => this.toDomain(row))
+    return data.map((row: StudyRecordRow) => this.toDomain(row))
   }
 
   async findByProblem(problemId: UniqueEntityID, limit = 50): Promise<StudyRecord[]> {
@@ -60,7 +91,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository implements ISt
       return []
     }
 
-    return data.map(row => this.toDomain(row))
+    return data.map((row: StudyRecordRow) => this.toDomain(row))
   }
 
   async findByStudentAndProblem(
@@ -78,7 +109,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository implements ISt
       return []
     }
 
-    return data.map(row => this.toDomain(row))
+    return data.map((row: StudyRecordRow) => this.toDomain(row))
   }
 
   async countByStudent(studentId: UniqueEntityID): Promise<number> {
@@ -111,7 +142,7 @@ export class SupabaseStudyRecordRepository extends BaseRepository implements ISt
       return []
     }
 
-    return data.map(row => this.toDomain(row))
+    return data.map((row: StudyRecordRow) => this.toDomain(row))
   }
 
   private toDomain(row: StudyRecordRow): StudyRecord {

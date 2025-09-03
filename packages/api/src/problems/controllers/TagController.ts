@@ -7,33 +7,41 @@ import {
   SimilarTagsResponse,
   ValidateTagsRequest,
   ValidateTagsResponse,
-  ApiSuccessResponse,
-  ApiErrorResponse,
   HTTP_STATUS
 } from '../interfaces/ProblemApiTypes';
 
+import { BaseController } from '../../common/controllers/BaseController';
 import { TagRecommendationService } from '@woodie/application/problems/services/TagRecommendationService';
-import { ProblemBankError, ProblemBankErrorCode } from '@woodie/application/problems/errors/ProblemBankErrors';
 
 import * as crypto from 'crypto';
 
-// 태그 관리 컨트롤러
-export class TagController {
+/**
+ * 태그 관리 컨트롤러
+ * DDD 원칙에 따라 BaseController를 상속받아 공통 기능 활용
+ */
+export class TagController extends BaseController {
   constructor(
     private tagService: TagRecommendationService
-  ) {}
+  ) {
+    super();
+  }
 
   // 태그 추천
   async getRecommendations(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
       const recommendationRequest: TagRecommendationRequest = req.body;
 
       // 입력 검증
       if (!recommendationRequest.title && !recommendationRequest.description) {
         this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.RECOMMENDATION_FAILED,
+          code: 'RECOMMENDATION_FAILED',
           message: 'Either title or description is required for tag recommendation'
         }, requestId);
         return;
@@ -42,7 +50,7 @@ export class TagController {
       const maxRecommendations = recommendationRequest.maxRecommendations || 5;
       if (maxRecommendations < 1 || maxRecommendations > 10) {
         this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.RECOMMENDATION_FAILED,
+          code: 'RECOMMENDATION_FAILED',
           message: 'maxRecommendations must be between 1 and 10'
         }, requestId);
         return;
@@ -56,10 +64,10 @@ export class TagController {
       );
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'RECOMMENDATION_FAILED',
+          message: typeof error === 'string' ? error : 'Failed to get tag recommendations'
         }, requestId);
         return;
       }
@@ -72,59 +80,55 @@ export class TagController {
       this.sendSuccessResponse(res, HTTP_STATUS.OK, response, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getRecommendations');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
-  // 유사한 태그 찾기
+  // 유사한 태그 조회
   async getSimilarTags(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
+
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
       const query: SimilarTagsQuery = req.query as any;
 
-      if (!query.inputTag || query.inputTag.trim().length === 0) {
+      if (!query.inputTag) {
         this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
-          message: 'inputTag parameter is required'
+          code: 'INVALID_TAG_QUERY',
+          message: 'Tag parameter is required'
         }, requestId);
         return;
       }
 
-      const maxSuggestions = query.maxSuggestions ? parseInt(query.maxSuggestions) : 5;
-      if (isNaN(maxSuggestions) || maxSuggestions < 1 || maxSuggestions > 10) {
-        this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
-          message: 'maxSuggestions must be a number between 1 and 10'
-        }, requestId);
-        return;
-      }
+      const maxResults = Math.min(parseInt(query.maxSuggestions as string) || 5, 10);
 
-      const result = await this.tagService.findSimilarTags(
-        query.inputTag,
-        user.teacherId,
-        maxSuggestions
-      );
+      const result = await this.tagService.findSimilarTags(query.inputTag, user.teacherId, maxResults);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'SIMILAR_TAGS_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to find similar tags'
         }, requestId);
         return;
       }
 
       const response: SimilarTagsResponse = {
-        similarTags: result.value,
         inputTag: query.inputTag,
-        message: `Found ${result.value.length} similar tags`
+        similarTags: result.value,
+        message: 'Similar tags retrieved successfully'
       };
 
       this.sendSuccessResponse(res, HTTP_STATUS.OK, response, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getSimilarTags');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
@@ -133,249 +137,154 @@ export class TagController {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
-      const validateRequest: ValidateTagsRequest = req.body;
 
-      if (!validateRequest.tags || !Array.isArray(validateRequest.tags)) {
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
+      const validationRequest: ValidateTagsRequest = req.body;
+
+      if (!Array.isArray(validationRequest.tags) || validationRequest.tags.length === 0) {
         this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
-          message: 'tags array is required'
+          code: 'INVALID_TAGS',
+          message: 'Tags array is required and must not be empty'
         }, requestId);
         return;
       }
 
-      if (validateRequest.tags.length === 0) {
-        this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
-          message: 'tags array cannot be empty'
-        }, requestId);
-        return;
-      }
-
-      if (validateRequest.tags.length > 20) {
-        this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
-          message: 'Cannot validate more than 20 tags at once'
-        }, requestId);
-        return;
-      }
-
-      const result = await this.tagService.validateTagSet(
-        validateRequest.tags,
-        user.teacherId
-      );
+      const result = await this.tagService.validateTagSet(validationRequest.tags, user.teacherId);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'TAG_VALIDATION_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to validate tags'
         }, requestId);
         return;
       }
 
-      const validation = result.value;
       const response: ValidateTagsResponse = {
-        validTags: validation.validTags,
-        invalidTags: validation.invalidTags,
-        suggestions: validation.suggestions,
-        message: `Validated ${validateRequest.tags.length} tags: ${validation.validTags.length} valid, ${validation.invalidTags.length} invalid`
+        validTags: result.value.validTags || [],
+        invalidTags: result.value.invalidTags || [],
+        suggestions: result.value.suggestions || [],
+        message: 'Tag validation completed'
       };
 
       this.sendSuccessResponse(res, HTTP_STATUS.OK, response, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'validateTags');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
-  // 태그 사용 통계
+  // 태그 사용 통계 - 라우트에서 호출되는 메소드
   async getTagUsage(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
-      const { includeInactive } = req.query;
 
-      const includeInactiveProblems = includeInactive === 'true';
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
 
-      const result = await this.tagService.analyzeTagUsage(
-        user.teacherId,
-        includeInactiveProblems
-      );
+      // 실제 TagRecommendationService에서 지원하는 메소드 사용
+      const result = await this.tagService.analyzeTagUsage(user.teacherId);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'TAG_USAGE_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to get tag usage'
         }, requestId);
         return;
       }
 
       this.sendSuccessResponse(res, HTTP_STATUS.OK, {
         tagUsage: result.value,
-        totalUniqueTags: result.value.length,
-        includeInactive: includeInactiveProblems,
-        message: 'Tag usage analysis completed successfully'
+        message: 'Tag usage retrieved successfully'
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getTagUsage');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
-  // 태그 분포 정보
+  // 태그 분포 - 라우트에서 호출되는 메소드
   async getTagDistribution(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
-      const { tags } = req.query;
 
-      const tagFilter = tags ? (tags as string).split(',').map(t => t.trim()).filter(t => t.length > 0) : undefined;
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
 
-      const result = await this.tagService.getTagDistribution(
-        user.teacherId,
-        tagFilter
-      );
+      // 실제 TagRecommendationService에서 지원하는 메소드 사용
+      const result = await this.tagService.getTagDistribution(user.teacherId);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'TAG_DISTRIBUTION_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to get tag distribution'
         }, requestId);
         return;
       }
 
-      const distribution = result.value;
-      const totalProblems = distribution.reduce((sum, item) => sum + item.count, 0);
-
       this.sendSuccessResponse(res, HTTP_STATUS.OK, {
-        distribution,
-        summary: {
-          totalTags: distribution.length,
-          totalProblems,
-          averageProblemsPerTag: distribution.length > 0 ? totalProblems / distribution.length : 0
-        },
-        filter: tagFilter || [],
+        tagDistribution: result.value,
         message: 'Tag distribution retrieved successfully'
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'getTagDistribution');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
   }
 
-  // 태그 자동완성 (검색)
+  // 태그 검색 - 라우트에서 호출되는 메소드
   async searchTags(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
-      const { q, limit } = req.query;
 
-      if (!q || (q as string).trim().length === 0) {
+      if (!this.requireAuthentication(res, user, requestId)) {
+        return;
+      }
+
+      const { query } = req.query as { query?: string };
+      
+      if (!query || query.length < 2) {
         this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
-          message: 'Query parameter "q" is required'
+          code: 'INVALID_SEARCH_QUERY',
+          message: 'Search query must be at least 2 characters long'
         }, requestId);
         return;
       }
 
-      const query = (q as string).trim();
-      const maxResults = limit ? parseInt(limit as string) : 10;
-
-      if (isNaN(maxResults) || maxResults < 1 || maxResults > 50) {
-        this.sendErrorResponse(res, HTTP_STATUS.BAD_REQUEST, {
-          code: ProblemBankErrorCode.TAG_MANAGEMENT_ERROR,
-          message: 'limit must be a number between 1 and 50'
-        }, requestId);
-        return;
-      }
-
-      // 유사 태그 검색으로 자동완성 구현
-      const result = await this.tagService.findSimilarTags(
-        query,
-        user.teacherId,
-        maxResults
-      );
+      // findSimilarTags를 사용하여 검색 기능 구현
+      const result = await this.tagService.findSimilarTags(query, user.teacherId, 20);
 
       if (result.isFailure) {
-        const error = result.error as ProblemBankError;
-        this.sendErrorResponse(res, error.toHttpStatus(), {
-          code: error.code,
-          message: error.message
+        const error = result.error;
+        this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+          code: 'TAG_SEARCH_ERROR',
+          message: typeof error === 'string' ? error : 'Failed to search tags'
         }, requestId);
         return;
       }
 
       this.sendSuccessResponse(res, HTTP_STATUS.OK, {
-        suggestions: result.value,
-        query,
-        count: result.value.length,
-        message: `Found ${result.value.length} tag suggestions`
+        tags: result.value,
+        query: query,
+        message: 'Tag search completed successfully'
       }, requestId);
 
     } catch (error) {
-      this.handleUnexpectedError(res, error as Error, 'searchTags');
+      const requestId = req.requestContext?.requestId || crypto.randomUUID();
+      this.handleError(res, error, requestId);
     }
-  }
-
-  // === Private 헬퍼 메서드들 ===
-
-  private sendSuccessResponse<T>(
-    res: Response,
-    statusCode: number,
-    data: T,
-    requestId: string
-  ): void {
-    const response: ApiSuccessResponse<T> = {
-      success: true,
-      data,
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId,
-        version: '1.0.0'
-      }
-    };
-
-    res.status(statusCode).json(response);
-  }
-
-  private sendErrorResponse(
-    res: Response,
-    statusCode: number,
-    error: { code: string; message: string; details?: any },
-    requestId: string
-  ): void {
-    const response: ApiErrorResponse = {
-      success: false,
-      error,
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId,
-        version: '1.0.0'
-      }
-    };
-
-    res.status(statusCode).json(response);
-  }
-
-  private handleUnexpectedError(res: Response, error: Error, operation: string): void {
-    console.error(`Unexpected error in ${operation}:`, error);
-    
-    const response: ApiErrorResponse = {
-      success: false,
-      error: {
-        code: ProblemBankErrorCode.UNEXPECTED_ERROR,
-        message: 'An unexpected error occurred',
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: crypto.randomUUID(),
-        version: '1.0.0'
-      }
-    };
-
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
   }
 }

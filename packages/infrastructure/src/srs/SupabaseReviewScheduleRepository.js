@@ -1,9 +1,14 @@
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { ReviewSchedule, ReviewState, ReviewInterval, EaseFactor } from '@domain/srs';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { ReviewSchedule, ReviewState, ReviewInterval, EaseFactor } from '@woodie/domain/srs';
 import { BaseRepository } from '../repositories/BaseRepository';
 export class SupabaseReviewScheduleRepository extends BaseRepository {
+    client; // Supabase client
     tableName = 'review_schedules';
     schema = 'learning';
+    constructor(client) {
+        super();
+        this.client = client;
+    }
     async findById(id) {
         const { data, error } = await this.client
             .from(`${this.schema}.${this.tableName}`)
@@ -38,7 +43,7 @@ export class SupabaseReviewScheduleRepository extends BaseRepository {
         if (error || !data) {
             return [];
         }
-        return data.map(row => this.toDomain(row));
+        return data.map((row) => this.toDomain(row));
     }
     async findTodayReviews(studentId, currentDate) {
         const endOfDay = new Date(currentDate);
@@ -53,7 +58,7 @@ export class SupabaseReviewScheduleRepository extends BaseRepository {
         if (error || !data) {
             return [];
         }
-        return data.map(row => this.toDomain(row));
+        return data.map((row) => this.toDomain(row));
     }
     async findOverdueReviews(studentId, currentDate) {
         const yesterdayEnd = new Date(currentDate);
@@ -68,7 +73,7 @@ export class SupabaseReviewScheduleRepository extends BaseRepository {
         if (error || !data) {
             return [];
         }
-        return data.map(row => this.toDomain(row));
+        return data.map((row) => this.toDomain(row));
     }
     async save(reviewSchedule) {
         const persistence = this.toPersistence(reviewSchedule);

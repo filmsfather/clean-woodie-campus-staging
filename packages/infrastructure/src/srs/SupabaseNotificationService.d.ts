@@ -1,17 +1,21 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { Result } from '@domain/common/Result';
-import { INotificationService, NotificationMessage, ChannelSubscription } from '@domain/srs/interfaces/INotificationService';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { Result } from '@woodie/domain/common/Result';
+import { INotificationService, NotificationMessage, ChannelSubscription } from '@woodie/domain/srs/interfaces/INotificationService';
 import { BaseRepository } from '../repositories/BaseRepository';
 /**
  * Supabase Realtime 기반 알림 서비스 구현체
  * WebSocket을 통한 실시간 알림 전송 및 채널 관리
  */
-export declare class SupabaseNotificationService extends BaseRepository implements INotificationService {
+export declare class SupabaseNotificationService extends BaseRepository<NotificationMessage> implements INotificationService {
+    protected client: SupabaseClient;
     private activeChannels;
     private reconnectAttempts;
     private readonly maxReconnectAttempts;
-    constructor(client?: SupabaseClient);
+    constructor(client: SupabaseClient);
+    findById(id: UniqueEntityID): Promise<NotificationMessage | null>;
+    save(entity: NotificationMessage): Promise<void>;
+    delete(id: UniqueEntityID): Promise<void>;
     /**
      * 사용자별 알림 채널 생성 및 구독
      * 채널명: notifications:{userId}

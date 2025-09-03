@@ -29,6 +29,9 @@ jobs:
     - name: Build domain package
       run: pnpm --filter @woodie/domain run build
     
+    - name: Build application package  
+      run: pnpm --filter @woodie/application run build
+    
     - name: Build infrastructure package  
       run: pnpm --filter @woodie/infrastructure run build
     
@@ -40,6 +43,21 @@ jobs:
         VITE_APP_NAME: "Clean Woodie Campus (Staging)"
         VITE_ENABLE_DEV_TOOLS: true
         VITE_ENABLE_ANALYTICS: false
+        # 새로 구현된 UseCase UI 표면 Feature Flags
+        VITE_FEATURE_SIGNIN: true
+        VITE_FEATURE_SIGNUP: true
+        VITE_FEATURE_PROFILE: true
+        VITE_FEATURE_REVIEW_SYSTEM: true
+        VITE_FEATURE_REVIEW_STATISTICS: true
+        VITE_FEATURE_CLASS_PROGRESS: true
+        VITE_FEATURE_STREAK_RANKINGS: true
+        VITE_FEATURE_LEADERBOARDS: true
+        VITE_FEATURE_REWARDS: true
+        VITE_FEATURE_TOKENS: true
+        # MSW는 스테이징에서 비활성화
+        VITE_MSW_ENABLED: false
+        # Storybook은 스테이징에서 접근 가능
+        VITE_STORYBOOK_ENABLED: true
       run: pnpm --filter @woodie/web run build --mode staging
     
     # Temporarily disable Vercel deploy to test build only

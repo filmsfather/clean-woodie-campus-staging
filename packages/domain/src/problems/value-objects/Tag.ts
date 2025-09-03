@@ -14,6 +14,11 @@ export class Tag extends ValueObject<TagProps> {
     return this.props.name;
   }
 
+  // Alias for name (used in some cached services)
+  get value(): string {
+    return this.props.name;
+  }
+
   // 주 생성자
   public static create(name: string): Result<Tag> {
     if (!name || typeof name !== 'string') {

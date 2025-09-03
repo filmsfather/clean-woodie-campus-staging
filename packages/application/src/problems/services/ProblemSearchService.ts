@@ -45,7 +45,7 @@ export class ProblemSearchService {
       // 입력 검증
       const validationResult = this.validateSearchRequest(filter, pagination, sort);
       if (validationResult.isFailure) {
-        return validationResult;
+        return Result.fail(validationResult.error);
       }
 
       // 캐시 확인 (검색 결과 캐싱)
@@ -80,7 +80,7 @@ export class ProblemSearchService {
           correlationId,
           duration: Date.now() - startTime
         });
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       // Domain → DTO 변환
@@ -113,7 +113,7 @@ export class ProblemSearchService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -161,7 +161,7 @@ export class ProblemSearchService {
           correlationId
         });
 
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       const problem = problemResult.value;
@@ -174,7 +174,7 @@ export class ProblemSearchService {
           teacherId,
           correlationId
         });
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       // Domain → DTO 변환
@@ -205,7 +205,7 @@ export class ProblemSearchService {
         correlationId
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -230,14 +230,14 @@ export class ProblemSearchService {
       );
 
       if (problemResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.notFound(problemId));
+        return Result.fail(ProblemBankErrorFactory.notFound(problemId).message);
       }
 
       const problem = problemResult.value;
 
       // 권한 확인
       if (!problem.isOwnedBy(teacherId)) {
-        return Result.fail(ProblemBankErrorFactory.unauthorized(teacherId, problemId));
+        return Result.fail(ProblemBankErrorFactory.unauthorized(teacherId, problemId).message);
       }
 
       // 유사 문제 검색
@@ -248,7 +248,7 @@ export class ProblemSearchService {
       );
 
       if (similarResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(similarResult.error));
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(similarResult.error).message);
       }
 
       // Domain → DTO 변환
@@ -274,7 +274,7 @@ export class ProblemSearchService {
         correlationId
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -288,17 +288,19 @@ export class ProblemSearchService {
     // 페이지네이션 검증
     if (pagination) {
       if (pagination.limit <= 0 || pagination.limit > 100) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.PAGINATION_ERROR,
           'Limit must be between 1 and 100'
-        ));
+        );
+        return Result.fail(error.message);
       }
 
       if (pagination.strategy === 'offset' && pagination.page !== undefined && pagination.page < 1) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.PAGINATION_ERROR,
           'Page number must be greater than 0'
-        ));
+        );
+        return Result.fail(error.message);
       }
     }
 
@@ -308,17 +310,19 @@ export class ProblemSearchService {
       const validDirections = ['ASC', 'DESC'];
 
       if (!validFields.includes(sort.field)) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.SORT_PARAMETER_INVALID,
           `Invalid sort field: ${sort.field}`
-        ));
+        );
+        return Result.fail(error.message);
       }
 
       if (!validDirections.includes(sort.direction)) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.SORT_PARAMETER_INVALID,
           `Invalid sort direction: ${sort.direction}`
-        ));
+        );
+        return Result.fail(error.message);
       }
     }
 
@@ -326,10 +330,11 @@ export class ProblemSearchService {
     if (filter.difficulties) {
       const invalidDifficulties = filter.difficulties.filter(d => d < 1 || d > 5);
       if (invalidDifficulties.length > 0) {
-        return Result.fail(new ProblemBankError(
+        const error = new ProblemBankError(
           ProblemBankErrorCode.INVALID_SEARCH_FILTER,
           `Invalid difficulty levels: ${invalidDifficulties.join(', ')}`
-        ));
+        );
+        return Result.fail(error.message);
       }
     }
 

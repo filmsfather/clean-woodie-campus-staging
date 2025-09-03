@@ -1,5 +1,5 @@
-import { ReviewNotificationScheduledEvent } from '@domain/srs/events/ReviewNotificationScheduledEvent';
-import { NotificationManagementService } from '@application/srs/services/NotificationManagementService';
+import { ReviewNotificationScheduledEvent } from '@woodie/domain/srs/events/ReviewNotificationScheduledEvent';
+import { NotificationManagementService } from '../../../application/src/srs/services/NotificationManagementService';
 /**
  * ReviewNotificationScheduled 이벤트 핸들러
  * 복습 일정 변경 시 발생하는 알림 이벤트를 처리하여 실시간 알림 전송

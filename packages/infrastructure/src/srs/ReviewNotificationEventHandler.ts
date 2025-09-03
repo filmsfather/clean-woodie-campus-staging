@@ -1,7 +1,13 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { ReviewNotificationScheduledEvent } from '@domain/srs/events/ReviewNotificationScheduledEvent'
-import { NotificationManagementService } from '@application/srs/services/NotificationManagementService'
-import { NotificationType } from '@domain/srs/value-objects/NotificationType'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { ReviewNotificationScheduledEvent } from '@woodie/domain/srs/events/ReviewNotificationScheduledEvent'
+import { NotificationType } from '@woodie/domain/srs/value-objects/NotificationType'
+
+// Infrastructure 레이어용 알림 관리 인터페이스 (Application 의존성 제거)
+export interface INotificationManagementService {
+  sendReviewDueNotification(studentId: UniqueEntityID, problemTitle: string): Promise<void>
+  sendReviewOverdueNotification(studentId: UniqueEntityID, problemTitle: string, overdueDays: number): Promise<void>
+  sendDailySummaryNotification(studentId: UniqueEntityID, reviewCount: number, streakDays: number): Promise<void>
+}
 
 /**
  * ReviewNotificationScheduled 이벤트 핸들러
@@ -14,7 +20,7 @@ import { NotificationType } from '@domain/srs/value-objects/NotificationType'
  */
 export class ReviewNotificationEventHandler {
   constructor(
-    private notificationService: NotificationManagementService
+    private notificationService: INotificationManagementService
   ) {}
 
   /**
@@ -25,7 +31,7 @@ export class ReviewNotificationEventHandler {
       console.log(`📅 Processing notification event: ${event.eventType} for schedule ${event.scheduleId}`)
 
       // 1. 즉시 전송이 필요한 알림인지 확인
-      if (event.shouldSendImmediately()) {
+      if (event.shouldSendImmediately) {
         await this.sendImmediateNotification(event)
       } else {
         await this.scheduleDelayedNotification(event)
@@ -54,16 +60,13 @@ export class ReviewNotificationEventHandler {
   private async sendImmediateNotification(event: ReviewNotificationScheduledEvent): Promise<void> {
     const { title, body } = this.generateNotificationContent(event)
 
-    const result = await this.notificationService.sendImmediateNotification(
-      event.studentId,
-      event.notificationType,
-      title,
-      body,
-      event.getNotificationData()
-    )
-
-    if (result.isFailure) {
-      throw new Error(`Failed to send immediate notification: ${result.error}`)
+    try {
+      await this.notificationService.sendReviewDueNotification(
+        event.studentId,
+        title
+      )
+    } catch (error) {
+      throw new Error(`Failed to send immediate notification: ${error}`)
     }
 
     console.log(`📬 Immediate notification sent to student ${event.studentId}`)
@@ -114,7 +117,7 @@ export class ReviewNotificationEventHandler {
     const metadata = event.metadata || {}
     
     switch (event.notificationType.value) {
-      case 'review_due':
+      case 'review':
         if (metadata.notificationReason === 'difficult_problem_early_reminder') {
           return {
             title: '🎯 어려운 문제 복습 알림',
@@ -127,7 +130,7 @@ export class ReviewNotificationEventHandler {
           }
         }
 
-      case 'review_overdue':
+      case 'overdue':
         const overdueHours = metadata.overdueHours || 0
         let urgencyMessage = ''
         
@@ -144,7 +147,7 @@ export class ReviewNotificationEventHandler {
           body: `${urgencyMessage} 기억이 흐려지기 전에 복습해보세요.`
         }
 
-      case 'daily_summary':
+      case 'summary':
         return {
           title: '📊 오늘의 학습 요약',
           body: '오늘 하루 학습 현황을 확인해보세요!'
@@ -176,8 +179,8 @@ export class ReviewNotificationEventHandler {
    */
   async handleBatch(events: ReviewNotificationScheduledEvent[]): Promise<void> {
     // 1. 즉시 전송과 지연 전송 분리
-    const immediateEvents = events.filter(e => e.shouldSendImmediately())
-    const delayedEvents = events.filter(e => !e.shouldSendImmediately())
+    const immediateEvents = events.filter(e => e.shouldSendImmediately)
+    const delayedEvents = events.filter(e => !e.shouldSendImmediately)
 
     // 2. 즉시 전송 알림들을 배치로 처리
     if (immediateEvents.length > 0) {
@@ -194,15 +197,21 @@ export class ReviewNotificationEventHandler {
         }
       })
 
-      const result = await this.notificationService.sendScheduledNotifications(
-        scheduleNotificationRequests
-      )
-
-      if (result.isSuccess) {
-        console.log(`✅ Sent ${result.getValue()} immediate notifications in batch`)
-      } else {
-        console.error(`❌ Failed to send batch notifications: ${result.error}`)
+      // sendScheduledNotifications 메서드는 인터페이스에 없으므로 개별적으로 처리
+      let successCount = 0
+      for (const request of scheduleNotificationRequests) {
+        try {
+          await this.notificationService.sendReviewDueNotification(
+            new UniqueEntityID(request.data.studentId),
+            request.title // problemTitle 대신 title 사용
+          )
+          successCount++
+        } catch (error) {
+          console.error(`❌ Failed to send notification to ${request.data.studentId}: ${error}`)
+        }
       }
+      
+      console.log(`✅ Sent ${successCount}/${scheduleNotificationRequests.length} notifications in batch`)
     }
 
     // 3. 지연 전송 알림들 스케줄링

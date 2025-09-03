@@ -34,9 +34,9 @@ interface StatisticsUpdateProps {
  * - 모든 수치는 0 이상이어야 함
  * - 평균 응답 시간은 총 소요 시간과 완료한 문제 수로부터 계산됨
  */
-export class Statistics extends AggregateRoot<UniqueEntityID> {
-  private constructor(private props: StatisticsProps, id?: UniqueEntityID) {
-    super(id || new UniqueEntityID())
+export class Statistics extends AggregateRoot<StatisticsProps> {
+  private constructor(props: StatisticsProps, id?: UniqueEntityID) {
+    super(props, id)
   }
 
   get studentId(): UniqueEntityID {

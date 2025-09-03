@@ -1,6 +1,6 @@
-import { Result } from '@domain/common/Result';
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { Statistics, IStatisticsRepository } from '@domain/progress';
+import { Result } from '@woodie/domain/common/Result';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { Statistics, IStatisticsRepository } from '@woodie/domain/progress';
 import { SupabaseClient } from '@supabase/supabase-js';
 /**
  * Supabase 기반 Statistics 리포지토리 구현체

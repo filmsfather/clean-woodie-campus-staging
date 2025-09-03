@@ -3,7 +3,101 @@
  * CDN 최적화, 이미지 압축, 파일 버전 관리 등을 담당
  */
 
-import { IAssetManager, AssetMetadata, AssetUploadResult, ResponsiveImage, ImageTransformation, AssetUsageStats, CacheInvalidationResult, AssetCleanupResult } from '@woodie/application/infrastructure/interfaces/IAssetManager'
+// Infrastructure 레이어용 Asset Manager 인터페이스들
+export interface AssetMetadata {
+  id: string
+  originalName: string
+  fileName: string
+  mimeType: string
+  size: number
+  url: string
+  cdnUrl?: string
+  uploadedBy: string
+  uploadedAt: Date
+  lastAccessedAt?: Date
+  accessCount: number
+  tags: string[]
+  isPublic: boolean
+  expiresAt?: Date
+  hash?: string
+  optimizedVersions?: {
+    format: string
+    size: number
+    url: string
+  }[]
+  width?: number
+  height?: number
+}
+
+export interface AssetUploadResult {
+  success: boolean
+  asset?: AssetMetadata
+  error?: string
+  warnings?: string[]
+}
+
+export interface ResponsiveImage {
+  originalUrl: string
+  variants: {
+    size: number
+    url: string
+    format: string
+    quality: number
+  }[]
+}
+
+export interface ImageTransformation {
+  width?: number
+  height?: number
+  format?: 'webp' | 'avif' | 'jpeg' | 'png'
+  quality?: number
+  crop?: 'fill' | 'fit' | 'scale'
+  blur?: number
+  sharpen?: boolean
+}
+
+export interface AssetUsageStats {
+  totalAssets: number
+  totalSize: number
+  byType: Record<string, { count: number; size: number }>
+  mostAccessed: AssetMetadata[]
+  recentlyUploaded: AssetMetadata[]
+  expiringSoon: AssetMetadata[]
+}
+
+export interface CacheInvalidationResult {
+  success: boolean
+  invalidatedUrls: string[]
+  failedUrls: string[]
+  totalProcessed: number
+}
+
+export interface AssetCleanupResult {
+  success: boolean
+  deletedAssets: number
+  freedSpace: number
+  errors: string[]
+}
+
+export interface IAssetManager {
+  uploadAsset(file: Buffer, metadata: Partial<AssetMetadata>): Promise<AssetUploadResult>
+  getAsset(id: string): Promise<AssetMetadata | null>
+  deleteAsset(id: string): Promise<boolean>
+  listAssets(filters?: { 
+    userId?: string
+    mimeType?: string 
+    tags?: string[]
+    isPublic?: boolean
+    limit?: number
+    offset?: number
+  }): Promise<AssetMetadata[]>
+  generateResponsiveImages(assetId: string, sizes: number[]): Promise<ResponsiveImage>
+  transformImage(assetId: string, transformation: ImageTransformation): Promise<string>
+  getUsageStats(userId?: string): Promise<AssetUsageStats>
+  invalidateCache(pattern: string): Promise<CacheInvalidationResult>
+  cleanupExpiredAssets(): Promise<AssetCleanupResult>
+  updateAssetMetadata(id: string, updates: Partial<AssetMetadata>): Promise<boolean>
+}
 
 export interface CDNConfig {
   baseUrl: string
@@ -37,18 +131,9 @@ export class StaticAssetManager implements IAssetManager {
    * 파일 업로드 및 최적화
    */
   async uploadAsset(
-    file: Buffer | ReadableStream,
-    filename: string,
-    options?: {
-      optimize?: boolean
-      generateThumbnails?: boolean
-      customCacheControl?: string
-    }
-  ): Promise<{
-    url: string
-    hash: string
-    metadata: AssetMetadata
-  }> {
+    file: Buffer,
+    metadata: Partial<AssetMetadata>
+  ): Promise<AssetUploadResult> {
     try {
       // 1. 파일 해시 생성
       const hash = await this.generateFileHash(file)
@@ -57,40 +142,53 @@ export class StaticAssetManager implements IAssetManager {
       const existingAsset = this.assetCache.get(hash)
       if (existingAsset) {
         return {
-          url: this.buildCDNUrl(hash, filename),
-          hash,
-          metadata: existingAsset
+          success: true,
+          asset: existingAsset
         }
       }
 
-      // 3. 메타데이터 추출
-      const metadata = await this.extractMetadata(file, filename)
-      metadata.hash = hash
+      // 3. 메타데이터 생성
+      const asset: AssetMetadata = {
+        id: hash,
+        originalName: metadata.originalName || 'unknown',
+        fileName: metadata.fileName || 'unknown',
+        mimeType: metadata.mimeType || 'application/octet-stream',
+        size: file.length,
+        url: this.buildCDNUrl(hash, metadata.fileName || 'unknown'),
+        uploadedBy: metadata.uploadedBy || 'system',
+        uploadedAt: new Date(),
+        accessCount: 0,
+        tags: metadata.tags || [],
+        isPublic: metadata.isPublic ?? true,
+        hash
+      }
 
       // 4. 이미지 최적화 (이미지 파일인 경우)
-      if (this.isImageFile(filename) && options?.optimize && this.config.imageOptimization.enabled) {
-        const optimizedVersions = await this.optimizeImage(file, metadata)
-        metadata.optimizedVersions = optimizedVersions
+      if (this.isImageFile(asset.fileName) && this.config.imageOptimization.enabled) {
+        const optimizedVersions = await this.optimizeImage(file, asset)
+        asset.optimizedVersions = optimizedVersions
       }
 
       // 5. CDN에 업로드
-      await this.uploadToCDN(file, hash, filename, options?.customCacheControl)
+      await this.uploadToCDN(file, hash, asset.fileName)
 
       // 6. 메타데이터 캐시에 저장
-      this.assetCache.set(hash, metadata)
+      this.assetCache.set(hash, asset)
 
       // 7. 데이터베이스에 메타데이터 저장 (영구 저장)
-      await this.saveAssetMetadata(metadata)
+      await this.saveAssetMetadata(asset)
 
       return {
-        url: this.buildCDNUrl(hash, filename),
-        hash,
-        metadata
+        success: true,
+        asset
       }
 
     } catch (error) {
-      this.logger.error('Asset upload failed', { filename, error })
-      throw new Error(`파일 업로드 실패: ${error}`)
+      this.logger.error('Asset upload failed', { error })
+      return {
+        success: false,
+        error: `파일 업로드 실패: ${error}`
+      }
     }
   }
 
@@ -142,16 +240,10 @@ export class StaticAssetManager implements IAssetManager {
    * 이미지 변환 및 리사이징
    */
   async transformImage(
-    hash: string,
-    transformations: {
-      width?: number
-      height?: number
-      quality?: number
-      format?: 'webp' | 'avif' | 'jpeg' | 'png'
-      crop?: 'fill' | 'fit' | 'crop'
-    }
+    assetId: string,
+    transformation: ImageTransformation
   ): Promise<string> {
-    const transformKey = this.generateTransformKey(hash, transformations)
+    const transformKey = this.generateTransformKey(assetId, transformation)
     
     // 1. 기존 변환 결과 확인
     const existingUrl = await this.getTransformedImageUrl(transformKey)
@@ -160,17 +252,17 @@ export class StaticAssetManager implements IAssetManager {
     }
 
     // 2. 원본 이미지 다운로드
-    const originalImage = await this.downloadFromCDN(hash)
+    const originalImage = await this.downloadFromCDN(assetId)
     if (!originalImage) {
       throw new Error('원본 이미지를 찾을 수 없습니다')
     }
 
     // 3. 이미지 변환 (실제로는 Sharp, ImageMagick 등 사용)
-    const transformedImage = await this.performImageTransformation(originalImage, transformations)
+    const transformedImage = await this.performImageTransformation(originalImage, transformation)
 
     // 4. 변환된 이미지 업로드
     const transformedHash = await this.generateFileHash(transformedImage)
-    const transformedFilename = `${hash}_${transformKey}.${transformations.format || 'jpeg'}`
+    const transformedFilename = `${assetId}_${transformKey}.${transformation.format || 'jpeg'}`
     
     await this.uploadToCDN(transformedImage, transformedHash, transformedFilename)
 
@@ -187,7 +279,7 @@ export class StaticAssetManager implements IAssetManager {
   async recordAssetAccess(hash: string): Promise<void> {
     const metadata = this.assetCache.get(hash)
     if (metadata) {
-      metadata.lastAccessed = new Date()
+      metadata.lastAccessedAt = new Date()
       metadata.accessCount++
       
       // 데이터베이스 업데이트 (비동기)
@@ -209,7 +301,7 @@ export class StaticAssetManager implements IAssetManager {
     let freedSpace = 0
 
     for (const [hash, metadata] of this.assetCache) {
-      if (metadata.lastAccessed < cutoffDate && metadata.accessCount < 10) {
+      if (metadata.lastAccessedAt && metadata.lastAccessedAt < cutoffDate && metadata.accessCount < 10) {
         try {
           await this.deleteFromCDN(hash)
           await this.deleteAssetMetadata(hash)
@@ -330,17 +422,13 @@ export class StaticAssetManager implements IAssetManager {
   /**
    * 메타데이터 추출
    */
-  private async extractMetadata(file: Buffer | ReadableStream, filename: string): Promise<AssetMetadata> {
+  private async extractMetadata(file: Buffer | ReadableStream, filename: string): Promise<Partial<AssetMetadata>> {
     const stats = Buffer.isBuffer(file) ? { size: file.length } : { size: 0 }
     
-    const metadata: AssetMetadata = {
+    const metadata: Partial<AssetMetadata> = {
       originalName: filename,
-      hash: '',
       size: stats.size,
-      mimeType: this.getMimeType(filename),
-      uploadedAt: new Date(),
-      lastAccessed: new Date(),
-      accessCount: 0
+      mimeType: this.getMimeType(filename)
     }
 
     // 이미지 파일인 경우 차원 정보 추출
@@ -371,7 +459,6 @@ export class StaticAssetManager implements IAssetManager {
           
           optimizedVersions.push({
             format,
-            quality,
             size: optimized.length,
             url: this.buildCDNUrl(optimizedHash, optimizedFilename)
           })
@@ -528,5 +615,194 @@ export class StaticAssetManager implements IAssetManager {
 
   private async cacheTransformResult(transformKey: string, url: string): Promise<void> {
     // 변환 결과 캐싱
+  }
+
+  // 인터페이스에서 요구하는 메서드들 구현
+  async getAsset(id: string): Promise<AssetMetadata | null> {
+    return this.assetCache.get(id) || null
+  }
+
+  async deleteAsset(id: string): Promise<boolean> {
+    try {
+      await this.deleteFromCDN(id)
+      await this.deleteAssetMetadata(id)
+      this.assetCache.delete(id)
+      return true
+    } catch (error) {
+      this.logger.error('Asset deletion failed', { id, error })
+      return false
+    }
+  }
+
+  async listAssets(filters?: { 
+    userId?: string
+    mimeType?: string 
+    tags?: string[]
+    isPublic?: boolean
+    limit?: number
+    offset?: number
+  }): Promise<AssetMetadata[]> {
+    let assets = Array.from(this.assetCache.values())
+    
+    if (filters?.mimeType) {
+      assets = assets.filter(asset => asset.mimeType === filters.mimeType)
+    }
+    
+    if (filters?.isPublic !== undefined) {
+      assets = assets.filter(asset => asset.isPublic === filters.isPublic)
+    }
+    
+    if (filters?.tags?.length) {
+      assets = assets.filter(asset => 
+        filters.tags!.some(tag => asset.tags.includes(tag))
+      )
+    }
+
+    const offset = filters?.offset || 0
+    const limit = filters?.limit || 100
+    
+    return assets.slice(offset, offset + limit)
+  }
+
+  async generateResponsiveImages(assetId: string, sizes: number[]): Promise<ResponsiveImage> {
+    const asset = this.assetCache.get(assetId)
+    if (!asset) {
+      throw new Error('Asset not found')
+    }
+
+    const variants: ResponsiveImage['variants'] = []
+    
+    for (const size of sizes) {
+      for (const format of this.config.imageOptimization.formats) {
+        for (const quality of this.config.imageOptimization.qualities) {
+          const transformedUrl = await this.transformImage(assetId, {
+            width: size,
+            format,
+            quality,
+            crop: 'fit'
+          })
+          
+          variants.push({
+            size,
+            url: transformedUrl,
+            format,
+            quality
+          })
+        }
+      }
+    }
+
+    return {
+      originalUrl: asset.url,
+      variants
+    }
+  }
+
+  async getUsageStats(userId?: string): Promise<AssetUsageStats> {
+    const assets = Array.from(this.assetCache.values())
+    
+    const byType: Record<string, { count: number; size: number }> = {}
+    let totalSize = 0
+    
+    for (const asset of assets) {
+      totalSize += asset.size
+      
+      if (!byType[asset.mimeType]) {
+        byType[asset.mimeType] = { count: 0, size: 0 }
+      }
+      byType[asset.mimeType].count++
+      byType[asset.mimeType].size += asset.size
+    }
+
+    const mostAccessed = assets
+      .sort((a, b) => b.accessCount - a.accessCount)
+      .slice(0, 10)
+    
+    const recentlyUploaded = assets
+      .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime())
+      .slice(0, 10)
+    
+    const expiringSoon = assets
+      .filter(asset => asset.expiresAt && asset.expiresAt > new Date())
+      .sort((a, b) => a.expiresAt!.getTime() - b.expiresAt!.getTime())
+      .slice(0, 10)
+
+    return {
+      totalAssets: assets.length,
+      totalSize,
+      byType,
+      mostAccessed,
+      recentlyUploaded,
+      expiringSoon
+    }
+  }
+
+  async invalidateCache(pattern: string): Promise<CacheInvalidationResult> {
+    try {
+      const invalidatedUrls: string[] = []
+      const failedUrls: string[] = []
+      
+      // 실제로는 CDN API를 호출하여 캐시 무효화
+      await this.performCDNInvalidation(pattern)
+      invalidatedUrls.push(pattern)
+      
+      return {
+        success: true,
+        invalidatedUrls,
+        failedUrls,
+        totalProcessed: invalidatedUrls.length + failedUrls.length
+      }
+    } catch (error) {
+      return {
+        success: false,
+        invalidatedUrls: [],
+        failedUrls: [pattern],
+        totalProcessed: 1
+      }
+    }
+  }
+
+  async cleanupExpiredAssets(): Promise<AssetCleanupResult> {
+    const now = new Date()
+    let deletedAssets = 0
+    let freedSpace = 0
+    const errors: string[] = []
+
+    for (const [id, asset] of this.assetCache) {
+      if (asset.expiresAt && asset.expiresAt <= now) {
+        try {
+          await this.deleteAsset(id)
+          deletedAssets++
+          freedSpace += asset.size
+        } catch (error) {
+          errors.push(`Failed to delete asset ${id}: ${error}`)
+        }
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      deletedAssets,
+      freedSpace,
+      errors
+    }
+  }
+
+  async updateAssetMetadata(id: string, updates: Partial<AssetMetadata>): Promise<boolean> {
+    const asset = this.assetCache.get(id)
+    if (!asset) {
+      return false
+    }
+
+    Object.assign(asset, updates)
+    this.assetCache.set(id, asset)
+    
+    try {
+      await this.saveAssetMetadata(asset)
+      return true
+    } catch (error) {
+      this.logger.error('Failed to update asset metadata', { id, error })
+      return false
+    }
   }
 }

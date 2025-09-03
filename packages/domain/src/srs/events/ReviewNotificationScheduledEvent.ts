@@ -37,7 +37,7 @@ export class ReviewNotificationScheduledEvent extends BaseDomainEvent {
       scheduleId,
       studentId,
       problemId,
-      NotificationType.reviewDue(),
+      NotificationType.review(),
       reminderTime,
       reviewDueAt,
       'medium'
@@ -58,11 +58,55 @@ export class ReviewNotificationScheduledEvent extends BaseDomainEvent {
       scheduleId,
       studentId,
       problemId,
-      NotificationType.reviewOverdue(),
+      NotificationType.overdue(),
       new Date(), // 즉시 알림
       reviewDueAt,
       'high',
       { overdueHours }
     )
+  }
+
+  /**
+   * 즉시 전송 여부 확인
+   */
+  get shouldSendImmediately(): boolean {
+    return this.scheduledFor <= new Date()
+  }
+
+  /**
+   * 애그리게이트 ID (스케줄 ID를 사용)
+   */
+  get aggregateId(): UniqueEntityID {
+    return this.scheduleId
+  }
+
+  /**
+   * 알림 데이터 생성
+   */
+  getNotificationData(): {
+    studentId: string;
+    problemId: string;
+    notificationType: string;
+    scheduledFor: Date;
+    reviewDueAt: Date;
+    priority: string;
+    metadata?: Record<string, any>;
+  } {
+    return {
+      studentId: this.studentId.toString(),
+      problemId: this.problemId.toString(),
+      notificationType: this.notificationType.value,
+      scheduledFor: this.scheduledFor,
+      reviewDueAt: this.reviewDueAt,
+      priority: this.priority,
+      metadata: this.metadata
+    }
+  }
+
+  /**
+   * 알림까지 남은 시간 계산
+   */
+  getTimeUntilNotification(): number {
+    return Math.max(0, this.scheduledFor.getTime() - Date.now())
   }
 }

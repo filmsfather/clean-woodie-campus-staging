@@ -1,6 +1,6 @@
-import { Result } from '@domain/common/Result'
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { Statistics, IStatisticsRepository } from '@domain/progress'
+import { Result } from '@woodie/domain/common/Result'
+import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { Statistics, IStatisticsRepository } from '@woodie/domain/progress'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 interface StatisticsRow {
@@ -390,7 +390,7 @@ export class SupabaseStatisticsRepository implements IStatisticsRepository {
    */
   private toDomain(row: StatisticsRow): Result<Statistics> {
     try {
-      return Statistics.reconstitute({
+      const statistics = Statistics.reconstitute({
         studentId: new UniqueEntityID(row.student_id),
         problemSetId: new UniqueEntityID(row.problem_set_id),
         totalProblems: row.total_problems,
@@ -401,6 +401,8 @@ export class SupabaseStatisticsRepository implements IStatisticsRepository {
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at)
       }, new UniqueEntityID(row.id))
+      
+      return Result.ok<Statistics>(statistics)
     } catch (err) {
       return Result.fail<Statistics>(`Failed to convert row to domain: ${err}`)
     }

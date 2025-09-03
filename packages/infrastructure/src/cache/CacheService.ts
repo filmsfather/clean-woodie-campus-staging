@@ -10,8 +10,15 @@
  */
 
 import Redis from 'ioredis'
-import { Logger } from '@woodie/domain'
-import { ICacheService, CacheStats } from '@woodie/application/infrastructure/interfaces/ICacheService'
+import { ICacheService, CacheOptions, CacheStats } from '@woodie/application/infrastructure/interfaces/ICacheService'
+
+// Infrastructure 레이어용 로거 인터페이스 (임시)
+export interface ILogger {
+  info(message: string, meta?: any): void
+  error(message: string, meta?: any): void
+  warn(message: string, meta?: any): void
+  debug(message: string, meta?: any): void
+}
 
 export interface CacheConfig {
   host?: string
@@ -19,17 +26,16 @@ export interface CacheConfig {
   password?: string
   db?: number
   keyPrefix?: string
-  retryDelayOnFailover?: number
   lazyConnect?: boolean
 }
 
 export class CacheService implements ICacheService {
   private readonly redis: Redis
-  private readonly logger: Logger
+  private readonly logger: ILogger
   private readonly stats: CacheStats
   private readonly keyPrefix: string
 
-  constructor(config: CacheConfig, logger: Logger) {
+  constructor(config: CacheConfig, logger: ILogger) {
     this.logger = logger
     this.keyPrefix = config.keyPrefix || 'woodie:'
     this.stats = {
@@ -46,15 +52,10 @@ export class CacheService implements ICacheService {
       port: config.port || parseInt(process.env.REDIS_PORT || '6379'),
       password: config.password || process.env.REDIS_PASSWORD,
       db: config.db || parseInt(process.env.REDIS_DB || '0'),
-      retryDelayOnFailover: config.retryDelayOnFailover || 100,
       lazyConnect: config.lazyConnect ?? true,
-      // 연결 실패 시 재시도 설정
-      retryConnect: (times) => {
-        const delay = Math.min(times * 50, 2000)
-        return delay
-      },
       // 명령 실행 시간이 긴 경우 로깅
       commandTimeout: 5000,
+      maxRetriesPerRequest: 3
     })
 
     // Redis 이벤트 리스너 설정
@@ -62,9 +63,9 @@ export class CacheService implements ICacheService {
   }
 
   /**
-   * Redis 연결 상태 확인
+   * Redis 연결 상태 확인 (내부 유틸리티 메서드)
    */
-  async isConnected(): Promise<boolean> {
+  private async isConnected(): Promise<boolean> {
     try {
       await this.redis.ping()
       return true
@@ -100,10 +101,18 @@ export class CacheService implements ICacheService {
   /**
    * 캐시에 값 저장
    */
-  async set<T>(key: string, value: T, ttlSeconds?: number): Promise<boolean> {
+  async set<T>(key: string, value: T, optionsOrTtl?: CacheOptions | number): Promise<boolean> {
     try {
       const fullKey = this.buildKey(key)
       const data = JSON.stringify(value)
+      
+      // Handle both CacheOptions and number types
+      let ttlSeconds: number | undefined
+      if (typeof optionsOrTtl === 'number') {
+        ttlSeconds = optionsOrTtl
+      } else if (optionsOrTtl && typeof optionsOrTtl === 'object') {
+        ttlSeconds = optionsOrTtl.ttl
+      }
       
       let result: string | null
       if (ttlSeconds) {
@@ -230,39 +239,6 @@ export class CacheService implements ICacheService {
     }
   }
 
-  /**
-   * Hash 데이터 저장
-   */
-  async hset(key: string, field: string, value: any): Promise<boolean> {
-    try {
-      const fullKey = this.buildKey(key)
-      const data = JSON.stringify(value)
-      const result = await this.redis.hset(fullKey, field, data)
-      return result >= 0
-    } catch (error) {
-      this.logger.error('Cache hset error', { key, field, error })
-      return false
-    }
-  }
-
-  /**
-   * Hash 데이터 조회
-   */
-  async hget<T>(key: string, field: string): Promise<T | null> {
-    try {
-      const fullKey = this.buildKey(key)
-      const data = await this.redis.hget(fullKey, field)
-      
-      if (data === null) {
-        return null
-      }
-      
-      return JSON.parse(data) as T
-    } catch (error) {
-      this.logger.error('Cache hget error', { key, field, error })
-      return null
-    }
-  }
 
   /**
    * 캐시 통계 조회
@@ -354,6 +330,7 @@ export const CacheKeys = {
   // Progress Tracking
   STUDENT_STREAK: (studentId: string) => `progress:streak:${studentId}`,
   STUDENT_ALL_STATS: (studentId: string) => `progress:stats:all:${studentId}`,
+  STUDENT_STATS: (studentId: string, period: string) => `progress:stats:${studentId}:${period}`,
   STUDENT_PROBLEM_SET_STATS: (studentId: string, problemSetId: string) => 
     `progress:stats:${studentId}:${problemSetId}`,
   TOP_STREAKS: (limit: number) => `progress:top_streaks:${limit}`,

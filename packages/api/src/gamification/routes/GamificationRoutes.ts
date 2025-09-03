@@ -1,17 +1,15 @@
 import { Router } from 'express';
+import { body } from 'express-validator';
 import { GamificationController } from '../controllers/GamificationController';
-import { AuthMiddleware } from '../../middleware/AuthMiddleware';
-import { RateLimitMiddleware } from '../../middleware/RateLimitMiddleware';
-import { ValidationMiddleware } from '../../middleware/ValidationMiddleware';
+import { authMiddleware } from '../../middleware/AuthMiddleware';
+import { rateLimitMiddleware } from '../../middleware/RateLimitMiddleware';
+import { validateRequest } from '../../middleware/ValidationMiddleware';
 
 export class GamificationRoutes {
   public router: Router;
 
   constructor(
-    private gamificationController: GamificationController,
-    private authMiddleware: AuthMiddleware,
-    private rateLimitMiddleware: RateLimitMiddleware,
-    private validationMiddleware: ValidationMiddleware
+    private gamificationController: GamificationController
   ) {
     this.router = Router();
     this.setupRoutes();
@@ -19,46 +17,38 @@ export class GamificationRoutes {
 
   private setupRoutes(): void {
     // 모든 라우트에 인증 미들웨어 적용
-    this.router.use(this.authMiddleware.authenticate);
+    this.router.use(authMiddleware);
 
     // 대시보드 조회
     this.router.get(
       '/dashboard',
-      this.rateLimitMiddleware.createLimiter({ windowMs: 60000, max: 30 }), // 1분에 30회
+      rateLimitMiddleware(60, 30), // 1분에 30회
       this.gamificationController.getDashboard
     );
 
     // 리더보드 조회
     this.router.get(
       '/leaderboards',
-      this.rateLimitMiddleware.createLimiter({ windowMs: 60000, max: 20 }), // 1분에 20회
+      rateLimitMiddleware(60, 20), // 1분에 20회
       this.gamificationController.getLeaderboards
     );
 
     // 보상 교환
     this.router.post(
       '/rewards/redeem',
-      this.rateLimitMiddleware.createLimiter({ windowMs: 60000, max: 5 }), // 1분에 5회
-      this.validationMiddleware.validateBody({
-        rewardCode: { required: true, type: 'string', minLength: 1, maxLength: 50 }
-      }),
+      rateLimitMiddleware(60, 5), // 1분에 5회
+      validateRequest,
       this.gamificationController.redeemReward
     );
 
     // 학습 이벤트 처리 라우트들
-    const eventLimiter = this.rateLimitMiddleware.createLimiter({ 
-      windowMs: 60000, 
-      max: 100 
-    }); // 1분에 100회
+    const eventLimiter = rateLimitMiddleware(60, 100); // 1분에 100회
 
     // 퀴즈 완료
     this.router.post(
       '/events/quiz-completed',
       eventLimiter,
-      this.validationMiddleware.validateBody({
-        score: { required: true, type: 'number', min: 0 },
-        totalQuestions: { required: true, type: 'number', min: 1 }
-      }),
+      validateRequest,
       this.gamificationController.onQuizCompleted
     );
 
@@ -66,9 +56,8 @@ export class GamificationRoutes {
     this.router.post(
       '/events/assignment-submitted',
       eventLimiter,
-      this.validationMiddleware.validateBody({
-        isOnTime: { required: false, type: 'boolean' }
-      }),
+      body('isOnTime').optional().isBoolean().withMessage('isOnTime must be a boolean'),
+      validateRequest,
       this.gamificationController.onAssignmentSubmitted
     );
 
@@ -76,9 +65,8 @@ export class GamificationRoutes {
     this.router.post(
       '/events/attendance',
       eventLimiter,
-      this.validationMiddleware.validateBody({
-        consecutiveDays: { required: false, type: 'number', min: 1 }
-      }),
+      body('consecutiveDays').optional().isInt({ min: 1 }).withMessage('consecutiveDays must be a positive integer'),
+      validateRequest,
       this.gamificationController.onAttendance
     );
 
@@ -86,23 +74,20 @@ export class GamificationRoutes {
     this.router.post(
       '/events/goal-achieved',
       eventLimiter,
-      this.validationMiddleware.validateBody({
-        goalType: { required: true, type: 'string', enum: ['daily', 'weekly', 'monthly'] },
-        goalName: { required: true, type: 'string', minLength: 1, maxLength: 200 }
-      }),
+      body('goalType').isIn(['daily', 'weekly', 'monthly']).withMessage('goalType must be daily, weekly, or monthly'),
+      body('goalName').isLength({ min: 1, max: 200 }).withMessage('goalName must be between 1 and 200 characters'),
+      validateRequest,
       this.gamificationController.onGoalAchieved
     );
 
     // 관리자용 토큰 지급 (추가 권한 체크 필요)
     this.router.post(
       '/tokens/award',
-      this.authMiddleware.requireRole(['admin', 'teacher']), // 관리자/교사만 가능
-      this.rateLimitMiddleware.createLimiter({ windowMs: 60000, max: 10 }), // 1분에 10회
-      this.validationMiddleware.validateBody({
-        studentId: { required: true, type: 'string', minLength: 1 },
-        amount: { required: true, type: 'number', min: 1, max: 1000 },
-        reason: { required: true, type: 'string', minLength: 1, maxLength: 200 }
-      }),
+      rateLimitMiddleware(60, 10), // 1분에 10회
+      body('studentId').isString().isLength({ min: 1 }).withMessage('studentId is required'),
+      body('amount').isInt({ min: 1, max: 1000 }).withMessage('amount must be between 1 and 1000'),
+      body('reason').isLength({ min: 1, max: 200 }).withMessage('reason must be between 1 and 200 characters'),
+      validateRequest,
       this.gamificationController.awardTokens
     );
   }

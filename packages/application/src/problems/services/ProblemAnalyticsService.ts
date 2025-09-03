@@ -56,12 +56,11 @@ export class ProblemAnalyticsService {
       
       if (statisticsResult.isFailure) {
         const error = ProblemBankErrorFactory.fromRepositoryError(statisticsResult.error);
-        this.logger.error('Failed to get teacher statistics', error.toLogObject(), {
-          teacherId,
+        this.logger.error('Failed to get teacher statistics', { ...error.toLogObject(), teacherId }, {
           correlationId,
           duration: Date.now() - startTime
         });
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       const stats = statisticsResult.value;
@@ -121,7 +120,7 @@ export class ProblemAnalyticsService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -159,15 +158,15 @@ export class ProblemAnalyticsService {
 
       // 결과 검증
       if (tagStatsResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.tagAnalysisFailed(teacherId, new Error(tagStatsResult.error)));
+        return Result.fail(ProblemBankErrorFactory.tagAnalysisFailed(teacherId, new Error(tagStatsResult.error)).message);
       }
 
       if (uniqueTagsResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.tagAnalysisFailed(teacherId, new Error(uniqueTagsResult.error)));
+        return Result.fail(ProblemBankErrorFactory.tagAnalysisFailed(teacherId, new Error(uniqueTagsResult.error)).message);
       }
 
       if (tagDistributionResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.tagAnalysisFailed(teacherId, new Error(tagDistributionResult.error)));
+        return Result.fail(ProblemBankErrorFactory.tagAnalysisFailed(teacherId, new Error(tagDistributionResult.error)).message);
       }
 
       const tagStats = tagStatsResult.value;
@@ -229,7 +228,7 @@ export class ProblemAnalyticsService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -268,7 +267,7 @@ export class ProblemAnalyticsService {
           { teacherId, correlationId },
           new Error(distributionResult.error)
         );
-        return Result.fail(error);
+        return Result.fail(error.message);
       }
 
       const distribution = distributionResult.value;
@@ -310,7 +309,7 @@ export class ProblemAnalyticsService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 
@@ -328,7 +327,7 @@ export class ProblemAnalyticsService {
       const distributionResult = await this.problemRepository.getTeacherTypeDistribution(teacherId);
       
       if (distributionResult.isFailure) {
-        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(distributionResult.error));
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(distributionResult.error).message);
       }
 
       const typeStats = distributionResult.value.map(stat => ({
@@ -359,7 +358,7 @@ export class ProblemAnalyticsService {
         duration: Date.now() - startTime
       });
 
-      return Result.fail(problemBankError);
+      return Result.fail(problemBankError.message);
     }
   }
 

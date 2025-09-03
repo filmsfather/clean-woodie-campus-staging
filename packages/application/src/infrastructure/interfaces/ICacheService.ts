@@ -10,6 +10,11 @@ export interface CacheStats {
   hitRate: number
 }
 
+export interface CacheOptions {
+  ttl?: number;
+  tags?: string[];
+}
+
 export interface ICacheService {
   /**
    * 캐시에서 값 조회
@@ -17,9 +22,9 @@ export interface ICacheService {
   get<T>(key: string): Promise<T | null>
 
   /**
-   * 캐시에 값 저장
+   * 캐시에 값 저장 (overloaded for CacheOptions and TTL)
    */
-  set<T>(key: string, value: T, ttlSeconds?: number): Promise<boolean>
+  set<T>(key: string, value: T, optionsOrTtl?: CacheOptions | number): Promise<boolean>
 
   /**
    * 캐시에서 키 삭제

@@ -1,6 +1,6 @@
-import { Result } from '@domain/common/Result';
-import { UniqueEntityID } from '@domain/common/Identifier';
-import { Statistics } from '@domain/progress';
+import { Result } from '@woodie/domain/common/Result';
+import { UniqueEntityID } from '@woodie/domain/common/Identifier';
+import { Statistics } from '@woodie/domain/progress';
 /**
  * Supabase 기반 Statistics 리포지토리 구현체
  * Domain 인터페이스를 Infrastructure에서 구현
@@ -307,7 +307,7 @@ export class SupabaseStatisticsRepository {
      */
     toDomain(row) {
         try {
-            return Statistics.reconstitute({
+            const statistics = Statistics.reconstitute({
                 studentId: new UniqueEntityID(row.student_id),
                 problemSetId: new UniqueEntityID(row.problem_set_id),
                 totalProblems: row.total_problems,
@@ -318,6 +318,7 @@ export class SupabaseStatisticsRepository {
                 createdAt: new Date(row.created_at),
                 updatedAt: new Date(row.updated_at)
             }, new UniqueEntityID(row.id));
+            return Result.ok(statistics);
         }
         catch (err) {
             return Result.fail(`Failed to convert row to domain: ${err}`);

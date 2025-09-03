@@ -1,6 +1,4 @@
-import { UniqueEntityID } from '@domain/common/Identifier'
-import { Result } from '@domain/common/Result'
-import { ReviewFeedback, ReviewFeedbackType } from '@domain/srs'
+import { UniqueEntityID, Result, ReviewFeedback, ReviewFeedbackType } from '@woodie/domain'
 import { ReviewQueueService, ReviewCompletionResult } from '../services/ReviewQueueService'
 
 // Use Case 입력 DTO

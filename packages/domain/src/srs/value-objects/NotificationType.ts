@@ -3,9 +3,9 @@ import { ValueObject } from '../../value-objects/ValueObject'
 
 // 알림 타입 열거형
 export type NotificationTypeValue = 
-  | 'review_due'         // 복습 시간 알림
-  | 'review_overdue'     // 연체 복습 알림  
-  | 'daily_summary'      // 일일 요약 알림
+  | 'overdue'            // 연체 복습 알림  
+  | 'review'             // 복습 시간 알림
+  | 'summary'            // 일일 요약 알림
   | 'milestone'          // 마일스톤 알림
 
 interface NotificationTypeProps {
@@ -31,9 +31,9 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
    */
   public static create(type: NotificationTypeValue): Result<NotificationType> {
     const validTypes: NotificationTypeValue[] = [
-      'review_due', 
-      'review_overdue', 
-      'daily_summary', 
+      'overdue', 
+      'review', 
+      'summary', 
       'milestone'
     ]
 
@@ -47,22 +47,22 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
   /**
    * 기본 복습 알림 타입
    */
-  public static reviewDue(): NotificationType {
-    return new NotificationType({ value: 'review_due' })
+  public static review(): NotificationType {
+    return new NotificationType({ value: 'review' })
   }
 
   /**
    * 연체 복습 알림 타입
    */
-  public static reviewOverdue(): NotificationType {
-    return new NotificationType({ value: 'review_overdue' })
+  public static overdue(): NotificationType {
+    return new NotificationType({ value: 'overdue' })
   }
 
   /**
    * 일일 요약 알림 타입
    */
-  public static dailySummary(): NotificationType {
-    return new NotificationType({ value: 'daily_summary' })
+  public static summary(): NotificationType {
+    return new NotificationType({ value: 'summary' })
   }
 
   /**
@@ -76,7 +76,7 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
    * 긴급도 확인 (연체 알림이 가장 긴급)
    */
   public isUrgent(): boolean {
-    return this.props.value === 'review_overdue'
+    return this.props.value === 'overdue'
   }
 
   /**
@@ -84,10 +84,10 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
    */
   public getPriority(): number {
     const priorityMap: Record<NotificationTypeValue, number> = {
-      'review_overdue': 1,  // 최고 우선순위
-      'review_due': 2,
+      'overdue': 1,    // 최고 우선순위
+      'review': 2,
       'milestone': 3,
-      'daily_summary': 4    // 최저 우선순위
+      'summary': 4     // 최저 우선순위
     }
     
     return priorityMap[this.props.value]
@@ -96,17 +96,7 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
   /**
    * 알림 카테고리 반환 (UI 분류용)
    */
-  public getCategory(): 'review' | 'summary' | 'achievement' {
-    switch (this.props.value) {
-      case 'review_due':
-      case 'review_overdue':
-        return 'review'
-      case 'daily_summary':
-        return 'summary'
-      case 'milestone':
-        return 'achievement'
-      default:
-        return 'review'
-    }
+  public getCategory(): 'overdue' | 'review' | 'summary' | 'milestone' {
+    return this.props.value
   }
 }

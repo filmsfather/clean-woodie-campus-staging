@@ -1,0 +1,1 @@
+{"version":3,"file":"IEventDispatcher.d.ts","sourceRoot":"","sources":["IEventDispatcher.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,WAAW,EAAE,MAAM,eAAe,CAAA;AAE3C;;;GAGG;AACH,MAAM,WAAW,gBAAgB;IAC/B,QAAQ,CAAC,KAAK,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC,CAAA;IAC3C,WAAW,CAAC,MAAM,EAAE,WAAW,EAAE,GAAG,OAAO,CAAC,IAAI,CAAC,CAAA;CAClD"}
