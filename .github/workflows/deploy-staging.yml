@@ -37,7 +37,10 @@ jobs:
     #   run: pnpm run test:all
     
     - name: Build packages
-      run: pnpm run build
+      run: |
+        # Build domain and infrastructure packages only
+        cd packages/domain && pnpm run build
+        cd ../infrastructure && pnpm run build
 
   deploy-staging:
     needs: test
@@ -71,7 +74,7 @@ jobs:
         VITE_ENABLE_ANALYTICS: false
       run: |
         cd packages/web
-        pnpm run build
+        pnpm run build --mode staging
     
     - name: Deploy to Vercel
       uses: vercel/action@v1
