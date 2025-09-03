@@ -1,13 +1,14 @@
-name: Deploy
+# Temporarily disabled - using staging-deploy.yml instead
+# name: Deploy
 
-on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '**/*.md'
-      - '.github/**'
-      - '!.github/workflows/**'
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths-ignore:
+#       - '**/*.md'
+#       - '.github/**'
+#       - '!.github/workflows/**'
   workflow_dispatch:
 
 concurrency:
