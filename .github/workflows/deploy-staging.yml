@@ -12,24 +12,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 9
-        run_install: false
-    
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'pnpm'
-        cache-dependency-path: 'pnpm-lock.yaml'
     
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+    - name: Enable Corepack
+      run: corepack enable
+    
+    - name: Setup pnpm
+      run: corepack prepare pnpm@latest --activate
     
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -54,24 +47,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 9
-        run_install: false
-    
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'pnpm'
-        cache-dependency-path: 'pnpm-lock.yaml'
     
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+    - name: Enable Corepack
+      run: corepack enable
+    
+    - name: Setup pnpm
+      run: corepack prepare pnpm@latest --activate
     
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
