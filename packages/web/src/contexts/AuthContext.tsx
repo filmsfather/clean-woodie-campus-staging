@@ -15,11 +15,26 @@ interface AuthUser {
   isActive: boolean;
 }
 
+interface SignUpRequest {
+  email: string;
+  password: string;
+  name: string;
+  role: 'student' | 'teacher' | 'admin';
+  classId?: string;
+  context?: {
+    ip?: string;
+    userAgent?: string;
+    locale?: string;
+    redirectUrl?: string;
+  };
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (user: AuthUser, accessToken: string, refreshToken: string) => void;
+  signUp: (request: SignUpRequest) => Promise<void>;
   logout: () => void;
   updateUser: (updates: Partial<AuthUser>) => void;
 }
@@ -87,6 +102,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(user);
   };
 
+  const signUp = async (request: SignUpRequest): Promise<void> => {
+    // Mock 회원가입 구현 (실제 환경에서는 SignUpUseCase 호출)
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
+    
+    // 회원가입 후 자동 로그인
+    const newUser: AuthUser = {
+      id: Date.now().toString(),
+      email: request.email,
+      name: request.name,
+      displayName: request.name,
+      role: request.role,
+      gradeLevel: request.role === 'student' ? 10 : undefined,
+      isActive: true
+    };
+    
+    const mockAccessToken = 'mock-access-token-' + Date.now();
+    const mockRefreshToken = 'mock-refresh-token-' + Date.now();
+    
+    login(newUser, mockAccessToken, mockRefreshToken);
+  };
+
   const logout = () => {
     tokenStorage.clearTokens();
     setUser(null);
@@ -101,6 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     isAuthenticated: !!user,
     login,
+    signUp,
     logout,
     updateUser
   };
