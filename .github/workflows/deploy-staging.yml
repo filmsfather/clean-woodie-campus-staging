@@ -36,11 +36,11 @@ jobs:
     # - name: Run tests
     #   run: pnpm run test:all
     
-    - name: Build packages
+    - name: Build TypeScript packages
       run: |
-        # Build domain and infrastructure packages only
-        cd packages/domain && pnpm run build
-        cd ../infrastructure && pnpm run build
+        # Build domain and infrastructure packages only (no --mode flag for TypeScript)
+        pnpm --filter @woodie/domain run build
+        pnpm --filter @woodie/infrastructure run build
 
   deploy-staging:
     needs: test
@@ -64,7 +64,13 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-    - name: Build for staging
+    - name: Build TypeScript packages first
+      run: |
+        # Build dependencies first
+        pnpm --filter @woodie/domain run build
+        pnpm --filter @woodie/infrastructure run build
+    
+    - name: Build web for staging
       env:
         VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
         VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
@@ -73,8 +79,8 @@ jobs:
         VITE_ENABLE_DEV_TOOLS: true
         VITE_ENABLE_ANALYTICS: false
       run: |
-        cd packages/web
-        pnpm run build --mode staging
+        # Only build web package with Vite
+        pnpm --filter @woodie/web run build --mode staging
     
     - name: Deploy to Vercel
       uses: vercel/action@v1
