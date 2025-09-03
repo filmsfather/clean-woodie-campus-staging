@@ -1,0 +1,125 @@
+import { Entity } from '../../entities/Entity';
+import { UniqueEntityID } from '../../common/Identifier';
+import { Result } from '../../common/Result';
+import { AchievementCode } from '../value-objects/AchievementCode';
+import { AchievementName } from '../value-objects/AchievementName';
+import { AchievementDescription } from '../value-objects/AchievementDescription';
+import { TokenAmount } from '../value-objects/TokenAmount';
+
+export interface AchievementProps {
+  code: AchievementCode;
+  name: AchievementName;
+  description: AchievementDescription;
+  iconUrl?: string;
+  tokenReward: TokenAmount;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+/**
+ * 업적 정의 엔티티
+ * 시스템에서 제공하는 업적의 정의를 나타냅니다
+ */
+export class Achievement extends Entity<AchievementProps> {
+  get code(): AchievementCode {
+    return this.props.code;
+  }
+
+  get name(): AchievementName {
+    return this.props.name;
+  }
+
+  get description(): AchievementDescription {
+    return this.props.description;
+  }
+
+  get iconUrl(): string | undefined {
+    return this.props.iconUrl;
+  }
+
+  get tokenReward(): TokenAmount {
+    return this.props.tokenReward;
+  }
+
+  get isActive(): boolean {
+    return this.props.isActive;
+  }
+
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
+
+  public static create(props: AchievementProps, id?: UniqueEntityID): Result<Achievement> {
+    // 비즈니스 규칙 검증
+    if (props.tokenReward.value < 0) {
+      return Result.fail('Token reward cannot be negative');
+    }
+
+    if (props.tokenReward.value > 10000) {
+      return Result.fail('Token reward cannot exceed 10,000');
+    }
+
+    // 아이콘 URL 검증 (선택사항)
+    if (props.iconUrl && props.iconUrl.trim().length > 500) {
+      return Result.fail('Icon URL cannot exceed 500 characters');
+    }
+
+    const achievement = new Achievement(props, id);
+    return Result.ok(achievement);
+  }
+
+  /**
+   * 업적을 비활성화합니다
+   */
+  public deactivate(): void {
+    this.props.isActive = false;
+  }
+
+  /**
+   * 업적을 활성화합니다
+   */
+  public activate(): void {
+    this.props.isActive = true;
+  }
+
+  /**
+   * 업적 정보를 업데이트합니다
+   */
+  public update(updates: {
+    name?: AchievementName;
+    description?: AchievementDescription;
+    iconUrl?: string;
+    tokenReward?: TokenAmount;
+  }): Result<void> {
+    if (updates.name) {
+      this.props.name = updates.name;
+    }
+
+    if (updates.description) {
+      this.props.description = updates.description;
+    }
+
+    if (updates.iconUrl !== undefined) {
+      if (updates.iconUrl.trim().length > 500) {
+        return Result.fail('Icon URL cannot exceed 500 characters');
+      }
+      this.props.iconUrl = updates.iconUrl.trim() || undefined;
+    }
+
+    if (updates.tokenReward) {
+      if (updates.tokenReward.value < 0 || updates.tokenReward.value > 10000) {
+        return Result.fail('Token reward must be between 0 and 10,000');
+      }
+      this.props.tokenReward = updates.tokenReward;
+    }
+
+    return Result.ok();
+  }
+
+  /**
+   * 보상이 있는 업적인지 확인합니다
+   */
+  public hasReward(): boolean {
+    return this.props.tokenReward.value > 0;
+  }
+}

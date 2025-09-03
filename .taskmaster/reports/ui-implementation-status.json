@@ -1,0 +1,404 @@
+{
+  "analysisDate": "2025-09-02",
+  "version": "1.0.0",
+  "description": "기존 web 패키지 UI 구현 상태 점검 결과",
+  "uiImplementationStatus": {
+    "foundComponents": 77,
+    "categorization": {
+      "uiComponents": {
+        "count": 19,
+        "components": [
+          "Button", "Card", "Input", "Grid", "Badge", "Progress", 
+          "FloatingActionButton", "Dropdown", "Form", "Textarea", 
+          "Select", "Checkbox", "Radio", "Modal"
+        ],
+        "status": "완전 구현",
+        "coverage": "100%"
+      },
+      "layoutComponents": {
+        "count": 5,
+        "components": [
+          "MainLayout", "Header", "Sidebar", "Breadcrumb"
+        ],
+        "status": "완전 구현",
+        "coverage": "100%"
+      },
+      "authComponents": {
+        "count": 2,
+        "components": [
+          "RoleGuard", "Unauthorized"
+        ],
+        "status": "완전 구현",
+        "coverage": "100%"
+      },
+      "dashboardComponents": {
+        "student": {
+          "count": 10,
+          "components": [
+            "StudentDashboard", "ReviewPage", "MyProgressPage", "TodayStudyPage", 
+            "ProblemSolvingPage", "ReviewQueueCard", "StudyStreakCard", 
+            "QuickStatsGrid", "TodayTasksSection", "WelcomeSection"
+          ],
+          "status": "완전 구현",
+          "coverage": "100%"
+        },
+        "teacher": {
+          "count": 1,
+          "components": ["TeacherDashboard"],
+          "status": "기본 골격만 구현",
+          "coverage": "30%"
+        },
+        "admin": {
+          "count": 1,
+          "components": ["AdminDashboard"],
+          "status": "완전 구현",
+          "coverage": "100%"
+        }
+      },
+      "problemComponents": {
+        "editor": {
+          "count": 9,
+          "components": [
+            "ProblemEditor", "MultipleChoiceEditor", "ShortAnswerEditor", 
+            "TrueFalseEditor", "LongAnswerEditor", "MatchingEditor", 
+            "FillBlankEditor", "OrderingEditor", "AnswerKeyPreview"
+          ],
+          "status": "완전 구현",
+          "coverage": "100%"
+        },
+        "solver": {
+          "count": 11,
+          "components": [
+            "ProblemSolverContainer", "MultipleChoiceAnswer", "ShortAnswerInput",
+            "TrueFalseButtons", "LongAnswerTextarea", "MatchingInterface",
+            "FillBlankInputs", "OrderingInterface", "ProblemNavigation",
+            "ProgressTracker", "ProblemTimer"
+          ],
+          "status": "완전 구현",
+          "coverage": "100%"
+        },
+        "results": {
+          "count": 3,
+          "components": [
+            "GradingResults", "AnswerComparison", "FeedbackDisplay"
+          ],
+          "status": "완전 구현",
+          "coverage": "100%"
+        },
+        "analytics": {
+          "count": 3,
+          "components": [
+            "AnalyticsDashboard", "ProblemPerformanceChart", "StudentPerformanceAnalysis"
+          ],
+          "status": "완전 구현",
+          "coverage": "100%"
+        },
+        "grading": {
+          "count": 3,
+          "components": [
+            "GradingWorkflow", "TeacherGradingInterface", "BulkGradingInterface"
+          ],
+          "status": "완전 구현",
+          "coverage": "100%"
+        },
+        "management": {
+          "count": 4,
+          "components": [
+            "ProblemBankBrowser", "TagManager", "FilterPanel", "ProblemValidator"
+          ],
+          "status": "완전 구현",
+          "coverage": "100%"
+        }
+      },
+      "problemSetComponents": {
+        "count": 6,
+        "components": [
+          "ProblemSetBuilder", "ProblemSetList", "ProblemPicker", 
+          "SortableProblemItem", "ProblemSetAssignment", "StudentAssignmentManager"
+        ],
+        "status": "완전 구현",
+        "coverage": "100%"
+      },
+      "gamificationComponents": {
+        "count": 2,
+        "components": [
+          "GamificationDashboard", "LeaderboardCard"
+        ],
+        "status": "완전 구현",
+        "coverage": "100%"
+      }
+    }
+  },
+  "missingUIComponents": [
+    {
+      "featureName": "사용자 프로필 관리",
+      "targetRoles": ["student", "teacher", "admin"],
+      "missingComponents": [
+        {
+          "componentName": "ProfileEditor",
+          "description": "개인 프로필 정보 편집 UI",
+          "priority": "high",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "ProfileImageUpload",
+          "description": "프로필 이미지 업로드 및 크롭 UI",
+          "priority": "medium",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "ProfileSettings",
+          "description": "프로필 관련 설정 UI",
+          "priority": "medium",
+          "estimatedEffort": "small"
+        }
+      ]
+    },
+    {
+      "featureName": "초대 관리 시스템",
+      "targetRoles": ["admin", "teacher"],
+      "missingComponents": [
+        {
+          "componentName": "InviteCreator",
+          "description": "새로운 초대장 생성 UI",
+          "priority": "medium",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "InviteManager",
+          "description": "초대장 목록 관리 및 상태 추적 UI",
+          "priority": "medium",
+          "estimatedEffort": "large"
+        },
+        {
+          "componentName": "InviteAcceptance",
+          "description": "초대 수락 처리 UI",
+          "priority": "medium",
+          "estimatedEffort": "small"
+        }
+      ]
+    },
+    {
+      "featureName": "문제집 고급 기능",
+      "targetRoles": ["teacher"],
+      "missingComponents": [
+        {
+          "componentName": "ProblemSetAnalytics",
+          "description": "문제집 성과 분석 대시보드",
+          "priority": "high",
+          "estimatedEffort": "large"
+        },
+        {
+          "componentName": "ProblemSetSearch",
+          "description": "고급 문제집 검색 및 필터링 UI",
+          "priority": "medium",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "ProblemSetCloner",
+          "description": "문제집 복제 및 수정 UI",
+          "priority": "low",
+          "estimatedEffort": "medium"
+        }
+      ]
+    },
+    {
+      "featureName": "진도 추적 고급 기능",
+      "targetRoles": ["teacher", "admin"],
+      "missingComponents": [
+        {
+          "componentName": "ClassProgressDashboard",
+          "description": "학급 전체 진도 현황 대시보드",
+          "priority": "high",
+          "estimatedEffort": "large"
+        },
+        {
+          "componentName": "IndividualProgressDetail",
+          "description": "개별 학생 진도 상세 분석 UI",
+          "priority": "medium",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "LearningGapAnalysis",
+          "description": "학습 격차 분석 및 시각화 UI",
+          "priority": "medium",
+          "estimatedEffort": "large"
+        }
+      ]
+    },
+    {
+      "featureName": "SRS 시스템 관리",
+      "targetRoles": ["admin"],
+      "missingComponents": [
+        {
+          "componentName": "SRSConfigurationPanel",
+          "description": "SRS 알고리즘 설정 UI",
+          "priority": "low",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "ReviewIntervalVisualizer",
+          "description": "복습 간격 시각화 UI",
+          "priority": "low",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "SRSPerformanceMonitor",
+          "description": "SRS 성능 모니터링 UI",
+          "priority": "low",
+          "estimatedEffort": "medium"
+        }
+      ]
+    },
+    {
+      "featureName": "배치 작업 모니터링",
+      "targetRoles": ["admin"],
+      "missingComponents": [
+        {
+          "componentName": "BatchJobMonitor",
+          "description": "배치 작업 실행 현황 모니터링 대시보드",
+          "priority": "low",
+          "estimatedEffort": "large"
+        },
+        {
+          "componentName": "JobExecutionHistory",
+          "description": "작업 실행 이력 및 로그 뷰어",
+          "priority": "low",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "JobScheduler",
+          "description": "작업 스케줄링 관리 UI",
+          "priority": "low",
+          "estimatedEffort": "large"
+        }
+      ]
+    },
+    {
+      "featureName": "교사 대시보드 확장",
+      "targetRoles": ["teacher"],
+      "missingComponents": [
+        {
+          "componentName": "ClassOverview",
+          "description": "반별 학습 현황 개요",
+          "priority": "high",
+          "estimatedEffort": "large"
+        },
+        {
+          "componentName": "StudentPerformanceGrid",
+          "description": "학생별 성과 그리드 뷰",
+          "priority": "high",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "AssignmentStatusTracker",
+          "description": "과제 진행 현황 추적 UI",
+          "priority": "medium",
+          "estimatedEffort": "medium"
+        }
+      ]
+    },
+    {
+      "featureName": "고급 게임화 기능",
+      "targetRoles": ["student"],
+      "missingComponents": [
+        {
+          "componentName": "AchievementProgressTracker",
+          "description": "성취 진행률 상세 표시 UI",
+          "priority": "medium",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "TokenTransactionHistory",
+          "description": "토큰 거래 내역 상세 UI",
+          "priority": "low",
+          "estimatedEffort": "medium"
+        },
+        {
+          "componentName": "RewardDetailModal",
+          "description": "보상 상세 정보 모달",
+          "priority": "low",
+          "estimatedEffort": "small"
+        }
+      ]
+    }
+  ],
+  "implementationGaps": {
+    "highPriority": [
+      {
+        "feature": "사용자 프로필 관리",
+        "reason": "모든 역할의 사용자가 필요로 하는 기본 기능",
+        "components": ["ProfileEditor"]
+      },
+      {
+        "feature": "문제집 분석 기능",
+        "reason": "교사의 교육 효과 측정에 필수적",
+        "components": ["ProblemSetAnalytics"]
+      },
+      {
+        "feature": "교사 대시보드",
+        "reason": "현재 기본 골격만 있어 실제 사용 불가",
+        "components": ["ClassOverview", "StudentPerformanceGrid"]
+      },
+      {
+        "feature": "진도 추적 관리",
+        "reason": "학급 관리를 위한 필수 기능",
+        "components": ["ClassProgressDashboard"]
+      }
+    ],
+    "mediumPriority": [
+      {
+        "feature": "초대 관리",
+        "reason": "사용자 온보딩 프로세스 개선",
+        "components": ["InviteCreator", "InviteManager"]
+      },
+      {
+        "feature": "고급 검색 기능",
+        "reason": "문제집 활용도 향상",
+        "components": ["ProblemSetSearch"]
+      }
+    ],
+    "lowPriority": [
+      {
+        "feature": "시스템 관리 도구",
+        "reason": "관리자 전용 고급 기능",
+        "components": ["BatchJobMonitor", "SRSConfigurationPanel"]
+      }
+    ]
+  },
+  "recommendations": {
+    "immediate": [
+      "교사 대시보드 완성 (ClassOverview, StudentPerformanceGrid)",
+      "사용자 프로필 관리 시스템 구현 (ProfileEditor)"
+    ],
+    "shortTerm": [
+      "문제집 분석 대시보드 구현 (ProblemSetAnalytics)",
+      "학급 진도 추적 대시보드 구현 (ClassProgressDashboard)"
+    ],
+    "longTerm": [
+      "초대 관리 시스템 완성",
+      "배치 작업 모니터링 시스템 구현",
+      "고급 게임화 기능 추가"
+    ]
+  },
+  "summary": {
+    "totalComponentsFound": 77,
+    "fullyImplementedCategories": [
+      "UI 기본 컴포넌트",
+      "학생 대시보드",
+      "관리자 대시보드", 
+      "문제 관련 모든 기능",
+      "문제집 기본 기능",
+      "게임화 기본 기능"
+    ],
+    "partiallyImplementedCategories": [
+      "교사 대시보드 (30% 완성)"
+    ],
+    "missingComponents": 23,
+    "estimatedImplementationEffort": {
+      "high": 4,
+      "medium": 12,
+      "low": 7
+    }
+  }
+}

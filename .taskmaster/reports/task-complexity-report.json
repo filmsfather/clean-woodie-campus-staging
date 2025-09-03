@@ -1,0 +1,21 @@
+{
+	"meta": {
+		"generatedAt": "2025-08-30T17:30:09.145Z",
+		"tasksAnalyzed": 1,
+		"totalTasks": 12,
+		"analysisCount": 1,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 2,
+			"taskTitle": "인증 및 사용자 관리 시스템 구현",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Supabase Auth를 활용한 인증 및 사용자 관리 시스템을 구현하기 위한 세부 작업을 정의해주세요. 이메일/비밀번호 인증, 초대 시스템, 사용자 역할 관리, RLS 정책 설정, 프로필 관리, 관리자 기능 등을 포함해야 합니다.",
+			"reasoning": "이 작업은 인증, 권한 관리, 초대 시스템, 이메일 발송, 보안 정책 등 여러 복잡한 요소를 포함하고 있습니다. 현재 4개의 서브태스크가 있지만, 초대 토큰 관리와 이메일 발송을 분리하고, 관리자 기능을 별도로 구현하는 것이 좋을 것 같습니다. 또한 Supabase Auth와의 통합, 보안 테스트, 사용자 경험 최적화 등 추가적인 고려사항이 있어 복잡도가 높습니다."
+		}
+	]
+}

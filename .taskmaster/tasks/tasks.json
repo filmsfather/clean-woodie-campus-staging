@@ -1,0 +1,904 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "프로젝트 기반 구조 설정",
+        "description": "Monorepo 구조 설정, Supabase 프로젝트 생성, 도메인 베이스 클래스 구현 및 CI/CD 파이프라인 구축",
+        "details": "pnpm workspace를 사용하여 Monorepo 구조를 설정합니다. 이 구조는 domain, application, infrastructure, web, api 등의 레이어를 포함해야 합니다. Supabase 프로젝트를 생성하고 초기 설정을 완료합니다. 도메인 레이어에 필요한 기본 클래스(Entity, ValueObject, AggregateRoot 등)를 구현하고, GitHub Actions를 사용하여 CI/CD 파이프라인을 구축합니다. 클린 아키텍처 원칙에 따라 의존성 방향이 외부에서 내부로 향하도록 설정합니다.\n\n```typescript\n// 프로젝트 구조\n/\n├── packages/\n│   ├── domain/          // 순수 비즈니스 로직\n│   ├── application/     // 유스케이스\n│   ├── infrastructure/  // 외부 의존성\n│   ├── web/             // React 프론트엔드\n│   └── api/             // Express API\n├── pnpm-workspace.yaml\n├── package.json\n└── tsconfig.json\n\n// domain/entities/Entity.ts 예시\nexport abstract class Entity<T> {\n  protected readonly _id: T;\n  \n  constructor(id: T) {\n    this._id = id;\n  }\n  \n  get id(): T {\n    return this._id;\n  }\n  \n  equals(entity: Entity<T>): boolean {\n    if (entity === null || entity === undefined) {\n      return false;\n    }\n    return this._id === entity.id;\n  }\n}\n```",
+        "testStrategy": "각 레이어의 설정이 올바르게 되었는지 확인하는 단위 테스트를 작성합니다. 특히 도메인 베이스 클래스의 기능이 예상대로 작동하는지 테스트합니다. CI/CD 파이프라인이 코드 변경 시 자동으로 빌드 및 테스트를 실행하는지 확인합니다. Supabase 연결이 올바르게 설정되었는지 확인하는 통합 테스트를 작성합니다.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "pnpm workspace 기반 Monorepo 구조 설정",
+            "description": "프로젝트의 기본 구조를 pnpm workspace를 사용하여 Monorepo 형태로 설정합니다.",
+            "dependencies": [],
+            "details": "1. 프로젝트 루트 디렉토리 생성 및 초기화\n2. pnpm-workspace.yaml 파일 생성 및 구성\n3. packages 디렉토리 내에 domain, application, infrastructure, web, api 레이어 생성\n4. 각 패키지별 package.json 설정 및 의존성 정의\n5. 공통 tsconfig.json 및 각 패키지별 tsconfig.json 구성\n6. 패키지 간 참조 설정 및 빌드 스크립트 구성",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "도메인 레이어 기본 클래스 구현",
+            "description": "클린 아키텍처와 DDD 원칙에 따른 도메인 레이어의 기본 클래스들을 구현합니다.",
+            "dependencies": [],
+            "details": "1. Entity 추상 클래스 구현 (ID 관리 및 동등성 비교)\n2. ValueObject 추상 클래스 구현 (불변성 및 값 기반 동등성)\n3. AggregateRoot 클래스 구현 (도메인 이벤트 관리)\n4. Repository 인터페이스 정의\n5. 도메인 이벤트 및 이벤트 버스 구현\n6. Guard 클래스 및 Result 객체 구현 (유효성 검사 및 오류 처리)",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Supabase 프로젝트 생성 및 초기 설정",
+            "description": "Supabase 프로젝트를 생성하고 데이터베이스 스키마, 인증 설정 등 초기 설정을 완료합니다.",
+            "dependencies": [],
+            "details": "1. Supabase 계정 생성 및 새 프로젝트 생성\n2. 데이터베이스 스키마 설계 및 초기 테이블 생성\n3. 인증 설정 (이메일/비밀번호 인증 활성화)\n4. RLS(Row Level Security) 정책 초기 설정\n5. API 키 및 환경 변수 설정\n6. 로컬 개발 환경을 위한 Supabase 로컬 설정",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "GitHub Actions CI/CD 파이프라인 구축",
+            "description": "GitHub Actions를 사용하여 지속적 통합 및 배포 파이프라인을 구축합니다.",
+            "dependencies": [],
+            "details": "1. GitHub 저장소 설정 및 브랜치 전략 수립\n2. 린트 및 타입 체크를 위한 CI 워크플로우 구성\n3. 테스트 자동화 워크플로우 구성\n4. 빌드 및 배포 워크플로우 구성\n5. 환경별(개발, 스테이징, 프로덕션) 배포 설정\n6. GitHub Secrets를 사용한 환경 변수 및 API 키 관리",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "레이어 간 의존성 설정 및 테스트",
+            "description": "클린 아키텍처 원칙에 따라 레이어 간 의존성 방향을 설정하고 테스트합니다.",
+            "dependencies": [],
+            "details": "1. 의존성 방향이 외부에서 내부로 향하도록 패키지 간 참조 설정\n2. 의존성 주입 패턴 구현 및 적용\n3. 각 레이어 간 통합을 위한 어댑터 구현\n4. 레이어 간 통신을 위한 DTO(Data Transfer Object) 설계\n5. 각 레이어의 독립적인 테스트 작성\n6. 전체 아키텍처 통합 테스트 구현 및 실행",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "인증 및 사용자 관리 시스템 구현",
+        "description": "Supabase Auth를 활용한 이메일/비밀번호 인증, 관리자 초대 생성/발송, 초대 링크를 통한 가입 및 RLS 정책 구현",
+        "details": "Supabase Auth를 사용하여 이메일/비밀번호 인증 시스템을 구현합니다. 초대 기반 사용자 시스템을 위해 `users.invite_tokens` 테이블을 생성하고, 관리자가 이메일과 역할로 초대를 생성할 수 있는 기능을 구현합니다. 초대 이메일 발송 시스템을 구축하고, 초대 링크를 통한 가입 프로세스를 구현합니다. 사용자 역할(Student/Teacher/Admin)에 따른 Row Level Security(RLS) 정책을 설정합니다.\n\n```sql\n-- 초대 토큰 테이블 생성\nCREATE TABLE users.invite_tokens (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  email VARCHAR(255) NOT NULL,\n  role VARCHAR(20) NOT NULL,\n  class_id UUID,\n  token VARCHAR(255) UNIQUE NOT NULL,\n  expires_at TIMESTAMPTZ NOT NULL,\n  used_at TIMESTAMPTZ,\n  created_by UUID REFERENCES auth.users(id),\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 사용자 프로필 테이블 생성\nCREATE TABLE users.profiles (\n  id UUID PRIMARY KEY REFERENCES auth.users(id),\n  role VARCHAR(20) NOT NULL,\n  name VARCHAR(100) NOT NULL,\n  class_id UUID,\n  is_active BOOLEAN DEFAULT true,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n```\n\n```typescript\n// 초대 생성 유스케이스\nexport class CreateInviteUseCase {\n  constructor(private inviteRepository: InviteRepository) {}\n  \n  async execute(dto: CreateInviteDto): Promise<Result<InviteDto>> {\n    const token = generateRandomToken();\n    const expiresAt = addDays(new Date(), 7);\n    \n    const invite = new Invite({\n      email: dto.email,\n      role: dto.role,\n      classId: dto.classId,\n      token,\n      expiresAt,\n      createdBy: dto.adminId\n    });\n    \n    const result = await this.inviteRepository.save(invite);\n    if (result.isFailure) {\n      return Result.fail(result.error);\n    }\n    \n    // 이메일 발송 로직\n    await sendInviteEmail(dto.email, token);\n    \n    return Result.ok(InviteMapper.toDto(invite));\n  }\n}\n```",
+        "testStrategy": "초대 생성, 이메일 발송, 초대 링크를 통한 가입 프로세스의 각 단계를 테스트합니다. 만료된 토큰이 거부되는지, 이미 사용된 토큰이 재사용될 수 없는지 확인합니다. RLS 정책이 올바르게 적용되어 권한이 없는 사용자가 데이터에 접근할 수 없는지 테스트합니다. 모든 인증 관련 API 엔드포인트에 대한 통합 테스트를 작성합니다.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Supabase Auth 기반 이메일/비밀번호 인증 구현",
+            "description": "Supabase Auth를 활용하여 이메일/비밀번호 기반 인증 시스템을 구현합니다. 로그인, 회원가입, 비밀번호 재설정 기능을 포함합니다.",
+            "dependencies": [],
+            "details": "1. Supabase Auth 클라이언트 설정\n2. 이메일/비밀번호 회원가입 기능 구현\n3. 로그인 기능 구현\n4. 비밀번호 재설정 기능 구현\n5. 인증 상태 관리 및 보호된 라우트 설정\n6. 인증 관련 UI 컴포넌트 개발",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "초대 토큰 시스템 및 이메일 발송 기능 개발",
+            "description": "관리자가 새 사용자를 초대할 수 있는 토큰 시스템과 초대 이메일 발송 기능을 구현합니다.",
+            "dependencies": [],
+            "details": "1. `users.invite_tokens` 테이블 생성 및 관리\n2. 초대 토큰 생성 로직 구현\n3. 이메일 발송 서비스 연동\n4. 초대 이메일 템플릿 개발\n5. 초대 링크를 통한 가입 프로세스 구현\n6. 토큰 만료 및 사용 여부 검증 로직 구현",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "사용자 역할별 RLS 정책 설정",
+            "description": "사용자 역할(Student/Teacher/Admin)에 따른 Row Level Security(RLS) 정책을 설정하여 데이터 접근 권한을 관리합니다.",
+            "dependencies": [],
+            "details": "1. 사용자 역할 정의 및 관리 시스템 구현\n2. 각 테이블별 RLS 정책 설계\n3. Admin 역할에 대한 RLS 정책 구현\n4. Teacher 역할에 대한 RLS 정책 구현\n5. Student 역할에 대한 RLS 정책 구현\n6. RLS 정책 테스트 및 검증",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "사용자 프로필 관리 기능 구현",
+            "description": "사용자 프로필 정보를 관리하고 업데이트할 수 있는 기능을 구현합니다.",
+            "dependencies": [],
+            "details": "1. `users.profiles` 테이블 생성 및 관리\n2. 사용자 프로필 생성 로직 구현\n3. 프로필 정보 조회 API 개발\n4. 프로필 정보 업데이트 기능 구현\n5. 프로필 관리 UI 컴포넌트 개발\n6. 프로필 이미지 업로드 및 관리 기능 구현",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "문제 관리 시스템 구현",
+        "description": "Problem 도메인 엔티티 구현, JSONB 기반 유연한 콘텐츠 구조, 태그/난이도 시스템 및 교사별 문제 뱅크 구현",
+        "details": "Problem 도메인 엔티티를 구현하고, PostgreSQL의 JSONB 타입을 활용하여 다양한 문제 유형을 지원하는 유연한 콘텐츠 구조를 설계합니다. 문제에 태그와 난이도를 부여할 수 있는 시스템을 구현하고, 교사별로 문제를 관리할 수 있는 문제 뱅크를 구축합니다. 문제 CRUD 작업을 위한 API를 개발합니다.\n\n```sql\n-- 문제 테이블 생성\nCREATE TABLE learning.problems (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  teacher_id UUID REFERENCES auth.users(id),\n  content JSONB NOT NULL,\n  correct_answer JSONB NOT NULL,\n  type VARCHAR(50) NOT NULL,\n  difficulty INT CHECK (difficulty BETWEEN 1 AND 5),\n  tags TEXT[],\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 인덱스 최적화\nCREATE INDEX idx_problems_teacher ON learning.problems(teacher_id);\nCREATE INDEX idx_problems_type ON learning.problems(type);\nCREATE INDEX idx_problems_tags ON learning.problems USING gin(tags);\n\n-- RLS 정책\nALTER TABLE learning.problems ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY \"teachers_own_problems\" ON learning.problems\n  FOR ALL USING (auth.uid() = teacher_id);\n\nCREATE POLICY \"students_read_problems\" ON learning.problems\n  FOR SELECT USING (\n    EXISTS (\n      SELECT 1 FROM users.profiles\n      WHERE id = auth.uid() AND role = 'student'\n    )\n  );\n```\n\n```typescript\n// Problem 도메인 엔티티\nexport class Problem extends AggregateRoot<UUID> {\n  private _teacherId: UUID;\n  private _content: ProblemContent;\n  private _correctAnswer: AnswerContent;\n  private _type: ProblemType;\n  private _difficulty: Difficulty;\n  private _tags: Tag[];\n  private _createdAt: Date;\n  private _updatedAt: Date;\n  \n  // 생성자, getter, setter 구현\n  \n  // 비즈니스 로직 메서드\n  public checkAnswer(answer: AnswerContent): boolean {\n    return this._correctAnswer.equals(answer);\n  }\n  \n  public updateContent(content: ProblemContent): void {\n    this._content = content;\n    this._updatedAt = new Date();\n  }\n  \n  // 팩토리 메서드\n  public static create(props: ProblemProps): Result<Problem> {\n    // 유효성 검증 로직\n    return Result.ok(new Problem(props));\n  }\n}\n```",
+        "testStrategy": "Problem 도메인 엔티티의 모든 메서드와 비즈니스 로직을 단위 테스트합니다. JSONB 기반 콘텐츠 구조가 다양한 문제 유형을 올바르게 지원하는지 확인합니다. 태그와 난이도 시스템이 예상대로 작동하는지 테스트합니다. RLS 정책이 올바르게 적용되어 교사가 자신의 문제만 관리할 수 있고, 학생은 읽기만 가능한지 확인합니다. 문제 CRUD API에 대한 통합 테스트를 작성합니다.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Problem 도메인 엔티티 구현",
+            "description": "문제 도메인 엔티티와 관련 값 객체 구현",
+            "dependencies": [],
+            "details": "Problem 애그리게이트 루트와 관련 값 객체(ProblemContent, AnswerContent, ProblemType, Difficulty, Tag)를 구현합니다. 문제 생성, 수정, 답안 검증 등의 비즈니스 로직을 포함하며, 도메인 이벤트를 발행할 수 있도록 설계합니다. 팩토리 메서드와 유효성 검증 로직을 구현하여 일관된 객체 생성을 보장합니다.",
+            "status": "done",
+            "testStrategy": "Problem 도메인 엔티티의 모든 메서드와 비즈니스 로직에 대한 단위 테스트를 작성합니다. 특히 답안 검증 로직, 유효성 검증, 도메인 이벤트 발행이 올바르게 작동하는지 확인합니다."
+          },
+          {
+            "id": 2,
+            "title": "JSONB 기반 유연한 콘텐츠 구조 설계",
+            "description": "다양한 문제 유형을 지원하는 JSONB 기반 콘텐츠 스키마 설계",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "PostgreSQL의 JSONB 타입을 활용하여 객관식, 주관식, 서술형, 매칭 등 다양한 문제 유형을 지원하는 유연한 콘텐츠 구조를 설계합니다. 각 문제 유형별 JSON 스키마를 정의하고, 타입스크립트 인터페이스와 매핑합니다. 콘텐츠 검증을 위한 유틸리티 함수를 구현하고, 문제 유형에 따른 렌더링 전략을 설계합니다.",
+            "status": "done",
+            "testStrategy": "각 문제 유형별 JSON 스키마가 올바르게 정의되었는지 검증하는 테스트를 작성합니다. 콘텐츠 검증 유틸리티가 유효하지 않은 데이터를 올바르게 거부하는지 확인합니다. 다양한 문제 유형의 데이터를 저장하고 조회하는 통합 테스트를 수행합니다."
+          },
+          {
+            "id": 3,
+            "title": "태그 및 난이도 시스템 구현",
+            "description": "문제에 태그와 난이도를 부여하고 관리하는 시스템 개발",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "문제에 태그를 추가, 수정, 삭제할 수 있는 기능을 구현합니다. 태그 자동 완성 및 추천 시스템을 개발하고, 태그 기반 검색 및 필터링 기능을 구현합니다. 1-5 단계의 난이도 시스템을 구현하고, 난이도별 문제 분류 및 통계 기능을 개발합니다. 태그와 난이도에 대한 인덱스를 최적화하여 검색 성능을 향상시킵니다.",
+            "status": "done",
+            "testStrategy": "태그 추가, 수정, 삭제 기능이 올바르게 작동하는지 테스트합니다. 태그 기반 검색 및 필터링이 예상대로 결과를 반환하는지 확인합니다. 난이도 시스템이 올바르게 작동하고 통계가 정확하게 계산되는지 검증합니다. 대량의 태그와 문제가 있을 때 검색 성능을 측정합니다."
+          },
+          {
+            "id": 4,
+            "title": "교사별 문제 뱅크 구현",
+            "description": "교사가 자신의 문제를 관리할 수 있는 문제 뱅크 시스템 개발",
+            "dependencies": [
+              "3.1",
+              "3.2",
+              "3.3"
+            ],
+            "details": "교사별로 문제를 생성, 조회, 수정, 삭제할 수 있는 문제 뱅크 시스템을 구현합니다. Row Level Security(RLS) 정책을 설정하여 교사가 자신의 문제만 관리할 수 있도록 합니다. 문제 복제, 가져오기, 내보내기 기능을 개발하고, 문제 뱅크 내에서 태그, 난이도, 유형별로 필터링 및 정렬할 수 있는 기능을 구현합니다. 페이지네이션과 무한 스크롤을 지원하여 대량의 문제를 효율적으로 탐색할 수 있도록 합니다.",
+            "status": "done",
+            "testStrategy": "RLS 정책이 올바르게 적용되어 교사가 자신의 문제만 접근할 수 있는지 확인합니다. 문제 복제, 가져오기, 내보내기 기능이 예상대로 작동하는지 테스트합니다. 필터링 및 정렬 기능이 올바른 결과를 반환하는지 검증합니다. 대량의 문제가 있을 때 페이지네이션과 무한 스크롤의 성능을 측정합니다."
+          },
+          {
+            "id": 5,
+            "title": "문제 CRUD API 개발",
+            "description": "문제 생성, 조회, 수정, 삭제를 위한 API 엔드포인트 개발",
+            "dependencies": [
+              "3.1",
+              "3.2",
+              "3.3",
+              "3.4"
+            ],
+            "details": "문제 생성, 조회, 수정, 삭제를 위한 RESTful API 엔드포인트를 개발합니다. 요청 유효성 검증 미들웨어를 구현하고, 권한 검사를 통해 인증된 사용자만 접근할 수 있도록 합니다. 대량 문제 가져오기/내보내기를 위한 배치 처리 API를 구현하고, 문제 검색 및 필터링을 위한 쿼리 파라미터를 지원합니다. API 응답 캐싱을 구현하여 성능을 최적화하고, API 문서화를 위한 Swagger/OpenAPI 스펙을 작성합니다.",
+            "status": "done",
+            "testStrategy": "모든 API 엔드포인트에 대한 통합 테스트를 작성하여 예상대로 작동하는지 확인합니다. 권한이 없는 사용자의 접근이 올바르게 차단되는지 테스트합니다. 대량 데이터 처리 시 성능과 안정성을 검증합니다. 캐싱이 올바르게 작동하여 반복 요청의 응답 시간이 개선되는지 확인합니다."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "문제집 및 배정 시스템 구현",
+        "description": "ProblemSet 애그리게이트 구현, 드래그앤드롭 문제 정렬, 반/개별 학생 배정 및 마감일 관리 기능 개발",
+        "details": "ProblemSet 애그리게이트를 구현하여 여러 문제를 하나의 문제집으로 묶을 수 있는 기능을 개발합니다. 드래그앤드롭으로 문제 순서를 정렬할 수 있는 UI를 구현하고, 문제집을 반 전체 또는 개별 학생에게 배정할 수 있는 기능을 개발합니다. 문제집의 마감일을 설정하고 관리할 수 있는 기능을 구현합니다.\n\n```sql\n-- 문제집 테이블\nCREATE TABLE learning.problem_sets (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  teacher_id UUID REFERENCES auth.users(id),\n  title VARCHAR(255) NOT NULL,\n  description TEXT,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 문제집-문제 연결 테이블\nCREATE TABLE learning.problem_set_items (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  problem_set_id UUID REFERENCES learning.problem_sets(id) ON DELETE CASCADE,\n  problem_id UUID REFERENCES learning.problems(id) ON DELETE CASCADE,\n  order_index INT NOT NULL,\n  UNIQUE(problem_set_id, problem_id),\n  UNIQUE(problem_set_id, order_index)\n);\n\n-- 문제집 배정 테이블\nCREATE TABLE learning.assignments (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  problem_set_id UUID REFERENCES learning.problem_sets(id) ON DELETE CASCADE,\n  class_id UUID,\n  student_id UUID REFERENCES auth.users(id),\n  due_date TIMESTAMPTZ,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  CHECK (class_id IS NOT NULL OR student_id IS NOT NULL)\n);\n```\n\n```typescript\n// ProblemSet 애그리게이트\nexport class ProblemSet extends AggregateRoot<UUID> {\n  private _teacherId: UUID;\n  private _title: string;\n  private _description: string;\n  private _items: ProblemSetItem[];\n  private _createdAt: Date;\n  private _updatedAt: Date;\n  \n  // 생성자, getter, setter 구현\n  \n  // 비즈니스 로직 메서드\n  public addProblem(problemId: UUID, orderIndex?: number): void {\n    // 중복 체크\n    if (this._items.some(item => item.problemId.equals(problemId))) {\n      throw new Error('Problem already exists in this set');\n    }\n    \n    // 순서 인덱스 결정\n    const index = orderIndex ?? this._items.length;\n    \n    // 기존 항목 재정렬\n    this._items.forEach(item => {\n      if (item.orderIndex >= index) {\n        item.updateOrderIndex(item.orderIndex + 1);\n      }\n    });\n    \n    // 새 항목 추가\n    this._items.push(new ProblemSetItem({\n      id: UUID.generate(),\n      problemSetId: this.id,\n      problemId,\n      orderIndex: index\n    }));\n    \n    this._updatedAt = new Date();\n  }\n  \n  public reorderProblems(orderedProblemIds: UUID[]): void {\n    // 문제 순서 재정렬 로직\n  }\n  \n  // 팩토리 메서드\n  public static create(props: ProblemSetProps): Result<ProblemSet> {\n    // 유효성 검증 로직\n    return Result.ok(new ProblemSet(props));\n  }\n}\n```",
+        "testStrategy": "ProblemSet 애그리게이트의 모든 메서드와 비즈니스 로직을 단위 테스트합니다. 드래그앤드롭으로 문제 순서를 변경할 때 데이터베이스에 올바르게 반영되는지 확인합니다. 반 전체 또는 개별 학생에게 문제집을 배정하는 기능이 올바르게 작동하는지 테스트합니다. 마감일 설정 및 관리 기능이 예상대로 작동하는지 확인합니다. 문제집 관련 API에 대한 통합 테스트를 작성합니다.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ProblemSet 애그리게이트 구현",
+            "description": "ProblemSet 도메인 엔티티와 관련 비즈니스 로직 구현",
+            "dependencies": [],
+            "details": "ProblemSet 애그리게이트 루트 클래스와 ProblemSetItem 엔티티를 구현합니다. 문제 추가, 제거, 순서 변경 등의 비즈니스 로직을 구현하고, 유효성 검증 로직을 추가합니다. 또한 ProblemSetRepository 인터페이스를 정의하고 Supabase 기반 구현체를 개발합니다. 팩토리 메서드와 도메인 이벤트를 통합하여 DDD 원칙을 준수합니다.",
+            "status": "done",
+            "testStrategy": "ProblemSet 애그리게이트의 모든 메서드와 비즈니스 로직에 대한 단위 테스트를 작성합니다. 특히 문제 추가, 제거, 순서 변경 로직이 올바르게 작동하는지 검증합니다. 리포지토리 구현체에 대한 통합 테스트를 작성하여 데이터베이스 연동이 정상적으로 작동하는지 확인합니다."
+          },
+          {
+            "id": 2,
+            "title": "드래그앤드롭 문제 정렬 UI 구현",
+            "description": "문제집 내 문제들을 드래그앤드롭으로 재정렬할 수 있는 UI 개발",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "React DnD 또는 react-beautiful-dnd 라이브러리를 사용하여 문제집 내 문제들을 드래그앤드롭으로 재정렬할 수 있는 UI를 구현합니다. 순서 변경 시 애니메이션 효과를 적용하고, 순서 변경 후 자동으로 서버에 변경사항을 저장하는 기능을 구현합니다. 모바일 환경에서도 정상 작동하도록 터치 이벤트를 지원합니다.",
+            "status": "done",
+            "testStrategy": "드래그앤드롭 기능이 정상적으로 작동하는지 확인하는 UI 테스트를 작성합니다. 순서 변경 후 데이터베이스에 올바르게 반영되는지 확인하는 통합 테스트를 구현합니다. 다양한 디바이스와 브라우저에서 UI가 일관되게 작동하는지 크로스 브라우저 테스트를 수행합니다."
+          },
+          {
+            "id": 3,
+            "title": "문제집 배정 시스템 구현",
+            "description": "문제집을 반 전체 또는 개별 학생에게 배정하는 기능 개발",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "문제집을 반 전체 또는 개별 학생에게 배정할 수 있는 Assignment 도메인 모델을 구현합니다. 배정 시 마감일을 설정할 수 있는 기능을 추가하고, 배정된 문제집 목록을 조회하는 API를 개발합니다. 또한 배정 상태(배정됨, 진행 중, 완료됨, 마감됨)를 관리하는 로직을 구현합니다. RLS 정책을 설정하여 교사는 자신이 배정한 문제집만 관리할 수 있도록 합니다.",
+            "status": "done",
+            "testStrategy": "Assignment 도메인 모델의 모든 메서드와 비즈니스 로직에 대한 단위 테스트를 작성합니다. 반 전체 및 개별 학생 배정 기능이 올바르게 작동하는지 확인하는 통합 테스트를 구현합니다. RLS 정책이 예상대로 작동하는지 검증하는 보안 테스트를 수행합니다."
+          },
+          {
+            "id": 4,
+            "title": "마감일 관리 시스템 구현",
+            "description": "문제집 배정의 마감일 설정 및 관리 기능 개발",
+            "dependencies": [
+              "4.3"
+            ],
+            "details": "문제집 배정 시 마감일을 설정하고 관리할 수 있는 기능을 구현합니다. 마감일 알림 시스템을 개발하여 마감일 전에 학생들에게 알림을 보내는 기능을 추가합니다. 교사가 마감일을 연장하거나 변경할 수 있는 기능을 구현하고, 마감일이 지난 문제집에 대한 처리 로직을 개발합니다. 타임존을 고려하여 마감일을 정확하게 계산하는 로직을 구현합니다.",
+            "status": "done",
+            "testStrategy": "마감일 설정 및 변경 기능이 올바르게 작동하는지 확인하는 단위 테스트를 작성합니다. 알림 시스템이 예상대로 작동하는지 검증하는 통합 테스트를 구현합니다. 다양한 타임존 시나리오에서 마감일 계산이 정확한지 확인하는 테스트를 수행합니다."
+          },
+          {
+            "id": 5,
+            "title": "문제집 관리 UI 개발",
+            "description": "문제집 생성, 편집, 배정 및 마감일 관리를 위한 교사용 UI 개발",
+            "dependencies": [
+              "4.1",
+              "4.2",
+              "4.3",
+              "4.4"
+            ],
+            "details": "교사가 문제집을 생성, 편집, 배정하고 마감일을 관리할 수 있는 직관적인 UI를 개발합니다. 문제집 목록 페이지, 문제집 상세 페이지, 문제집 편집 페이지, 배정 관리 페이지 등의 컴포넌트를 구현합니다. 반응형 디자인을 적용하여 다양한 디바이스에서 사용할 수 있도록 하고, 사용자 경험을 최적화합니다. 또한 학생용 문제집 목록 및 상세 페이지를 개발하여 배정된 문제집을 확인하고 풀 수 있는 기능을 구현합니다.",
+            "status": "done",
+            "testStrategy": "모든 UI 컴포넌트에 대한 단위 테스트를 작성합니다. 주요 사용자 플로우(문제집 생성부터 배정까지)에 대한 E2E 테스트를 구현합니다. 다양한 디바이스와 화면 크기에서 UI가 올바르게 표시되는지 확인하는 반응형 테스트를 수행합니다. 사용자 경험을 평가하기 위한 사용성 테스트를 진행합니다."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "간격 반복 시스템(SRS) 구현",
+        "description": "에빙하우스 망각곡선 기반 복습 알고리즘 구현, 피드백 기반 조정 메커니즘, 실시간 복습 알림 및 복습 큐 관리 시스템 개발",
+        "details": "에빙하우스 망각곡선 이론을 기반으로 한 간격 반복 시스템(SRS)을 구현합니다. 사용자 피드백(AGAIN/HARD/GOOD/EASY)에 따라 복습 간격을 조정하는 알고리즘을 개발하고, Supabase Realtime을 활용하여 실시간 복습 알림 시스템을 구축합니다. 사용자별 복습 큐를 관리하는 시스템을 개발합니다.\n\n```sql\n-- 학습 기록 테이블\nCREATE TABLE learning.study_records (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  student_id UUID REFERENCES auth.users(id),\n  problem_id UUID REFERENCES learning.problems(id),\n  is_correct BOOLEAN NOT NULL,\n  answer_content JSONB,\n  time_taken INT, -- 초 단위\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 복습 일정 테이블\nCREATE TABLE learning.review_schedules (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  student_id UUID REFERENCES auth.users(id),\n  problem_id UUID REFERENCES learning.problems(id),\n  current_interval INT NOT NULL, -- 일 단위\n  ease_factor FLOAT NOT NULL DEFAULT 2.5,\n  review_count INT NOT NULL DEFAULT 0,\n  last_reviewed_at TIMESTAMPTZ,\n  next_review_at TIMESTAMPTZ NOT NULL,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW(),\n  UNIQUE(student_id, problem_id)\n);\n\n-- 인덱스\nCREATE INDEX idx_review_next ON learning.review_schedules(student_id, next_review_at);\n```\n\n```typescript\n// 간격 반복 서비스\nexport class SpacedRepetitionService {\n  constructor(private reviewRepository: ReviewScheduleRepository) {}\n  \n  // 새 문제 학습 후 복습 일정 생성\n  async scheduleInitialReview(studentId: UUID, problemId: UUID): Promise<Result<ReviewSchedule>> {\n    const nextReviewAt = addHours(new Date(), 24); // 첫 복습은 24시간 후\n    \n    const reviewSchedule = ReviewSchedule.create({\n      id: UUID.generate(),\n      studentId,\n      problemId,\n      currentInterval: 1, // 1일\n      easeFactor: 2.5, // 기본 난이도 계수\n      reviewCount: 0,\n      nextReviewAt\n    });\n    \n    return this.reviewRepository.save(reviewSchedule);\n  }\n  \n  // 복습 후 다음 일정 계산\n  async processReviewFeedback(\n    scheduleId: UUID,\n    feedback: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY'\n  ): Promise<Result<ReviewSchedule>> {\n    const scheduleResult = await this.reviewRepository.findById(scheduleId);\n    if (scheduleResult.isFailure) {\n      return Result.fail(scheduleResult.error);\n    }\n    \n    const schedule = scheduleResult.getValue();\n    let newInterval: number;\n    let newEaseFactor = schedule.easeFactor;\n    \n    switch (feedback) {\n      case 'AGAIN': // 다시\n        newInterval = 0.1; // 5분 후 (일 단위로 표현)\n        newEaseFactor = Math.max(1.3, schedule.easeFactor - 0.2);\n        break;\n      case 'HARD': // 어려움\n        newInterval = schedule.currentInterval * 1.2;\n        newEaseFactor = Math.max(1.3, schedule.easeFactor - 0.15);\n        break;\n      case 'GOOD': // 좋음\n        newInterval = schedule.currentInterval * schedule.easeFactor;\n        break;\n      case 'EASY': // 쉬움\n        newInterval = schedule.currentInterval * schedule.easeFactor * 1.3;\n        newEaseFactor = schedule.easeFactor + 0.15;\n        break;\n    }\n    \n    const nextReviewAt = addDays(new Date(), newInterval);\n    \n    schedule.updateSchedule({\n      currentInterval: newInterval,\n      easeFactor: newEaseFactor,\n      reviewCount: schedule.reviewCount + 1,\n      lastReviewedAt: new Date(),\n      nextReviewAt\n    });\n    \n    return this.reviewRepository.save(schedule);\n  }\n  \n  // 오늘의 복습 항목 조회\n  async getTodayReviews(studentId: UUID): Promise<Result<ReviewSchedule[]>> {\n    return this.reviewRepository.findDueReviews(studentId, new Date());\n  }\n}\n```",
+        "testStrategy": "간격 반복 알고리즘의 각 피드백 유형(AGAIN/HARD/GOOD/EASY)에 따른 간격 계산이 올바르게 이루어지는지 단위 테스트합니다. 복습 일정이 예상대로 생성되고 업데이트되는지 확인합니다. 실시간 알림 시스템이 적시에 알림을 전송하는지 테스트합니다. 복습 큐 관리 시스템이 오늘의 복습 항목을 올바르게 조회하는지 확인합니다. 다양한 학습 시나리오에서 SRS가 예상대로 작동하는지 통합 테스트를 작성합니다.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "에빙하우스 망각곡선 기반 복습 알고리즘 구현",
+            "description": "에빙하우스 망각곡선 이론을 기반으로 한 간격 반복 알고리즘을 구현합니다. 사용자 피드백(AGAIN/HARD/GOOD/EASY)에 따라 복습 간격과 난이도 계수를 조정하는 핵심 로직을 개발합니다.",
+            "dependencies": [],
+            "details": "SpacedRepetitionService 클래스를 구현하여 초기 복습 일정 생성(scheduleInitialReview), 피드백 기반 일정 업데이트(processReviewFeedback) 메서드를 개발합니다. AGAIN(다시): 5분 후 재복습, 난이도 계수 -0.2, HARD(어려움): 현재 간격 × 1.2, 난이도 계수 -0.15, GOOD(좋음): 현재 간격 × 난이도 계수, EASY(쉬움): 현재 간격 × 난이도 계수 × 1.3, 난이도 계수 +0.15로 설정합니다. 난이도 계수는 최소 1.3으로 제한하고, 복습 횟수와 마지막 복습 시간을 추적합니다.",
+            "status": "done",
+            "testStrategy": "각 피드백 유형(AGAIN/HARD/GOOD/EASY)에 따른 간격 계산이 정확한지 단위 테스트합니다. 난이도 계수 조정 로직과 최소값 제한이 올바르게 작동하는지 확인합니다. 다양한 복습 시나리오에서 알고리즘이 예상대로 작동하는지 테스트합니다."
+          },
+          {
+            "id": 2,
+            "title": "복습 일정 데이터베이스 스키마 및 리포지토리 구현",
+            "description": "복습 일정을 관리하기 위한 데이터베이스 테이블과 인덱스를 생성하고, 복습 일정 데이터에 접근하는 리포지토리 패턴을 구현합니다.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "learning.review_schedules 테이블을 생성하여 학생별 문제별 복습 일정을 저장합니다. student_id와 problem_id의 유니크 제약조건을 설정하고, next_review_at 필드에 인덱스를 생성합니다. ReviewScheduleRepository 클래스를 구현하여 save, findById, findDueReviews 메서드를 제공합니다. findDueReviews는 특정 학생의 오늘 복습해야 할 항목들을 조회하는 기능을 구현합니다. 도메인 엔티티 ReviewSchedule을 생성하여 복습 일정 업데이트 로직을 캡슐화합니다.",
+            "status": "done",
+            "testStrategy": "데이터베이스 테이블 생성과 인덱스가 올바르게 설정되었는지 확인합니다. 리포지토리의 각 메서드가 예상대로 데이터를 저장하고 조회하는지 테스트합니다. 복습 일정 조회 쿼리의 성능을 확인합니다."
+          },
+          {
+            "id": 3,
+            "title": "복습 큐 관리 시스템 구현",
+            "description": "사용자별 복습 큐를 관리하는 시스템을 구현합니다. 오늘의 복습 항목 조회, 복습 완료 처리, 복습 우선순위 관리 기능을 개발합니다.",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "ReviewQueueService 클래스를 구현하여 getTodayReviews(오늘의 복습 항목 조회), markReviewCompleted(복습 완료 처리), getReviewStatistics(복습 통계 조회) 메서드를 제공합니다. 복습 항목을 우선순위별로 정렬하는 로직을 구현합니다(마감일이 가까운 순, 복습 횟수가 적은 순). 복습 완료 시 학습 기록을 생성하고 다음 복습 일정을 업데이트하는 트랜잭션 처리를 구현합니다. 복습 진행률과 성취도를 계산하는 통계 기능을 개발합니다.",
+            "status": "done",
+            "testStrategy": "오늘의 복습 항목이 올바르게 조회되고 우선순위별로 정렬되는지 테스트합니다. 복습 완료 처리 시 트랜잭션이 올바르게 실행되는지 확인합니다. 복습 통계 계산이 정확한지 검증합니다."
+          },
+          {
+            "id": 4,
+            "title": "실시간 복습 알림 시스템 구현",
+            "description": "Supabase Realtime을 활용하여 실시간 복습 알림 시스템을 구현합니다. 복습 시간이 된 항목에 대해 실시간으로 알림을 전송하는 기능을 개발합니다.",
+            "dependencies": [
+              "5.3"
+            ],
+            "details": "NotificationService 클래스를 구현하여 Supabase Realtime 채널을 통한 실시간 알림 기능을 제공합니다. 복습 일정 테이블의 변경사항을 감지하여 복습 시간이 된 항목에 대해 알림을 전송합니다. 사용자별 알림 채널을 생성하고 구독 관리 기능을 구현합니다. 알림 타입별(복습 알림, 긴급 복습, 일일 요약) 메시지 포맷을 정의합니다. 브라우저 푸시 알림과 연동하여 사용자가 앱을 사용하지 않을 때도 알림을 받을 수 있도록 구현합니다. 알림 설정(알림 켜기/끄기, 알림 시간 설정)을 관리하는 기능을 개발합니다.",
+            "status": "done",
+            "testStrategy": "Realtime 채널 구독과 메시지 전송이 올바르게 작동하는지 테스트합니다. 복습 시간이 된 항목에 대해 적시에 알림이 전송되는지 확인합니다. 사용자별 알림 설정이 올바르게 적용되는지 테스트합니다."
+          },
+          {
+            "id": 5,
+            "title": "SRS 통합 API 및 사용자 인터페이스 구현",
+            "description": "간격 반복 시스템의 모든 기능을 통합하는 API 엔드포인트와 사용자 인터페이스를 구현합니다. 복습 화면, 진행률 표시, 피드백 입력 등의 UI 컴포넌트를 개발합니다.",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3",
+              "5.4"
+            ],
+            "details": "SRS 관련 API 엔드포인트를 구현합니다: GET /api/reviews/today (오늘의 복습 항목), POST /api/reviews/:id/feedback (복습 피드백 제출), GET /api/reviews/statistics (복습 통계). 복습 화면 UI를 구현하여 문제 표시, 답안 입력, 피드백 버튼(AGAIN/HARD/GOOD/EASY)을 제공합니다. 복습 진행률을 시각적으로 표시하는 프로그레스 바와 통계 차트를 구현합니다. 복습 알림을 표시하는 알림 컴포넌트와 알림 설정 화면을 개발합니다. 복습 히스토리와 성취도를 확인할 수 있는 대시보드를 구현합니다. 모바일 반응형 디자인을 적용하여 다양한 디바이스에서 사용할 수 있도록 합니다.",
+            "status": "done",
+            "testStrategy": "모든 API 엔드포인트가 올바른 응답을 반환하는지 테스트합니다. UI 컴포넌트가 사용자 상호작용에 적절히 반응하는지 확인합니다. 복습 플로우 전체가 원활하게 작동하는지 통합 테스트를 수행합니다. 다양한 디바이스와 브라우저에서 UI가 올바르게 표시되는지 테스트합니다."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "진도 추적 시스템 구현",
+        "description": "정답률/완료율 계산, 학습 스트릭 추적, 학생 및 교사용 대시보드, 통계 집계 기능 개발",
+        "details": "학생의 학습 진도를 추적하는 시스템을 구현합니다. 문제별 정답률과 문제집별 완료율을 계산하는 로직을 개발하고, 연속 학습일(스트릭)을 추적하는 기능을 구현합니다. 학생용 대시보드와 교사용 대시보드를 개발하여 학습 현황을 시각화하고, 다양한 통계를 집계하는 기능을 구현합니다.\n\n```sql\n-- 학습 스트릭 테이블\nCREATE TABLE learning.study_streaks (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  student_id UUID REFERENCES auth.users(id),\n  current_streak INT NOT NULL DEFAULT 0,\n  longest_streak INT NOT NULL DEFAULT 0,\n  last_study_date DATE,\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 통계 집계 테이블\nCREATE TABLE learning.statistics (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  student_id UUID REFERENCES auth.users(id),\n  problem_set_id UUID REFERENCES learning.problem_sets(id),\n  total_problems INT NOT NULL DEFAULT 0,\n  completed_problems INT NOT NULL DEFAULT 0,\n  correct_answers INT NOT NULL DEFAULT 0,\n  average_time INT, -- 초 단위\n  last_updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n```\n\n```typescript\n// 진도 추적 서비스\nexport class ProgressTrackingService {\n  constructor(\n    private studyRecordRepository: StudyRecordRepository,\n    private streakRepository: StudyStreakRepository,\n    private statisticsRepository: StatisticsRepository\n  ) {}\n  \n  // 학습 기록 추가 및 통계 업데이트\n  async recordStudyActivity(\n    studentId: UUID,\n    problemId: UUID,\n    problemSetId: UUID,\n    isCorrect: boolean,\n    timeTaken: number\n  ): Promise<Result<void>> {\n    // 학습 기록 저장\n    const studyRecord = StudyRecord.create({\n      id: UUID.generate(),\n      studentId,\n      problemId,\n      isCorrect,\n      timeTaken,\n      createdAt: new Date()\n    });\n    \n    await this.studyRecordRepository.save(studyRecord);\n    \n    // 스트릭 업데이트\n    await this.updateStreak(studentId);\n    \n    // 통계 업데이트\n    await this.updateStatistics(studentId, problemSetId, isCorrect, timeTaken);\n    \n    return Result.ok();\n  }\n  \n  // 스트릭 업데이트\n  private async updateStreak(studentId: UUID): Promise<void> {\n    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD\n    \n    const streakResult = await this.streakRepository.findByStudentId(studentId);\n    let streak;\n    \n    if (streakResult.isFailure) {\n      // 새 스트릭 생성\n      streak = StudyStreak.create({\n        id: UUID.generate(),\n        studentId,\n        currentStreak: 1,\n        longestStreak: 1,\n        lastStudyDate: today\n      });\n    } else {\n      streak = streakResult.getValue();\n      \n      if (streak.lastStudyDate !== today) {\n        const yesterday = new Date();\n        yesterday.setDate(yesterday.getDate() - 1);\n        const yesterdayStr = yesterday.toISOString().split('T')[0];\n        \n        if (streak.lastStudyDate === yesterdayStr) {\n          // 연속 학습\n          const newCurrentStreak = streak.currentStreak + 1;\n          streak.updateStreak({\n            currentStreak: newCurrentStreak,\n            longestStreak: Math.max(newCurrentStreak, streak.longestStreak),\n            lastStudyDate: today\n          });\n        } else {\n          // 스트릭 끊김\n          streak.updateStreak({\n            currentStreak: 1,\n            lastStudyDate: today\n          });\n        }\n      }\n    }\n    \n    await this.streakRepository.save(streak);\n  }\n  \n  // 통계 업데이트\n  private async updateStatistics(\n    studentId: UUID,\n    problemSetId: UUID,\n    isCorrect: boolean,\n    timeTaken: number\n  ): Promise<void> {\n    // 통계 업데이트 로직\n  }\n  \n  // 대시보드 데이터 조회\n  async getStudentDashboard(studentId: UUID): Promise<Result<StudentDashboardDto>> {\n    // 대시보드 데이터 조회 로직\n  }\n  \n  async getTeacherDashboard(teacherId: UUID, classId?: UUID): Promise<Result<TeacherDashboardDto>> {\n    // 교사용 대시보드 데이터 조회 로직\n  }\n}\n```",
+        "testStrategy": "정답률과 완료율 계산 로직이 올바르게 작동하는지 단위 테스트합니다. 스트릭 추적 시스템이 연속 학습일을 정확하게 계산하는지 확인합니다. 다양한 시나리오(연속 학습, 하루 건너뛰기 등)에서 스트릭 계산이 예상대로 이루어지는지 테스트합니다. 대시보드가 필요한 모든 통계 데이터를 올바르게 표시하는지 확인합니다. 통계 집계 기능이 대량의 데이터를 효율적으로 처리할 수 있는지 성능 테스트를 수행합니다.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4,
+          5
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "학습 스트릭 및 통계 도메인 모델 구현",
+            "description": "StudyStreak, Statistics 도메인 엔티티와 관련 값 객체들을 구현하고, 스트릭 계산 및 통계 업데이트 비즈니스 로직을 개발합니다.",
+            "dependencies": [],
+            "details": "StudyStreak 엔티티에 현재 스트릭, 최장 스트릭, 마지막 학습일 관리 로직을 구현합니다. Statistics 엔티티에 문제집별 완료율, 정답률 계산 로직을 구현합니다. 스트릭 계산 시 연속 학습일 판단 로직과 스트릭 끊김 처리 로직을 포함합니다. 통계 집계 시 평균 소요 시간 계산 및 실시간 업데이트 로직을 구현합니다.",
+            "status": "done",
+            "testStrategy": "스트릭 계산 로직이 연속 학습, 하루 건너뛰기, 여러 날 건너뛰기 시나리오에서 올바르게 작동하는지 단위 테스트합니다. 통계 계산 로직이 다양한 학습 패턴에서 정확한 완료율과 정답률을 계산하는지 테스트합니다."
+          },
+          {
+            "id": 2,
+            "title": "진도 추적 데이터베이스 스키마 및 리포지토리 구현",
+            "description": "study_streaks, statistics 테이블을 생성하고, 해당 테이블들에 대한 리포지토리 패턴을 구현합니다.",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "Supabase에 study_streaks, statistics 테이블을 생성하고 적절한 인덱스를 설정합니다. StudyStreakRepository와 StatisticsRepository를 구현하여 CRUD 작업을 처리합니다. 학생별 스트릭 조회, 문제집별 통계 조회 등의 복잡한 쿼리를 최적화합니다. RLS 정책을 설정하여 학생은 자신의 데이터만, 교사는 담당 학급 데이터만 접근할 수 있도록 합니다.",
+            "status": "done",
+            "testStrategy": "리포지토리의 모든 CRUD 작업이 올바르게 동작하는지 통합 테스트합니다. RLS 정책이 적절하게 적용되어 권한 없는 접근이 차단되는지 테스트합니다. 대량 데이터에서의 쿼리 성능을 테스트합니다."
+          },
+          {
+            "id": 3,
+            "title": "진도 추적 서비스 및 유스케이스 구현",
+            "description": "ProgressTrackingService를 구현하여 학습 활동 기록, 스트릭 업데이트, 통계 집계 기능을 개발합니다.",
+            "dependencies": [
+              "6.1",
+              "6.2"
+            ],
+            "details": "학습 활동 기록 시 자동으로 스트릭과 통계를 업데이트하는 서비스를 구현합니다. 트랜잭션을 사용하여 데이터 일관성을 보장합니다. 배치 처리를 통한 대량 통계 업데이트 기능을 구현합니다. 캐싱을 활용하여 자주 조회되는 통계 데이터의 성능을 최적화합니다. 학습 패턴 분석 및 추천 기능을 위한 기초 데이터를 수집합니다.",
+            "status": "done",
+            "testStrategy": "학습 활동 기록 시 모든 관련 데이터가 올바르게 업데이트되는지 통합 테스트합니다. 동시성 상황에서 데이터 일관성이 유지되는지 테스트합니다. 배치 처리 성능을 측정하고 최적화합니다."
+          },
+          {
+            "id": 4,
+            "title": "학생용 진도 대시보드 구현",
+            "description": "학생이 자신의 학습 진도, 스트릭, 통계를 확인할 수 있는 대시보드 UI를 구현합니다.",
+            "dependencies": [
+              "6.3"
+            ],
+            "details": "현재 스트릭과 최장 스트릭을 시각적으로 표시하는 컴포넌트를 구현합니다. 문제집별 완료율과 정답률을 차트로 표시하는 기능을 개발합니다. 학습 시간 통계와 일별/주별/월별 학습 패턴을 시각화합니다. 목표 설정 및 달성도 추적 기능을 구현합니다. 반응형 디자인을 적용하여 모바일에서도 최적화된 경험을 제공합니다.",
+            "status": "done",
+            "testStrategy": "모든 통계 데이터가 올바르게 표시되는지 UI 테스트합니다. 다양한 화면 크기에서 반응형 디자인이 적절하게 작동하는지 테스트합니다. 실시간 데이터 업데이트가 UI에 반영되는지 확인합니다."
+          },
+          {
+            "id": 5,
+            "title": "교사용 진도 관리 대시보드 구현",
+            "description": "교사가 담당 학급 학생들의 학습 진도를 모니터링하고 관리할 수 있는 대시보드를 구현합니다.",
+            "dependencies": [
+              "6.3"
+            ],
+            "details": "학급 전체의 학습 현황을 한눈에 볼 수 있는 개요 화면을 구현합니다. 학생별 상세 진도 현황과 비교 분석 기능을 개발합니다. 문제집별 학급 평균 정답률과 완료율 통계를 제공합니다. 학습이 부진한 학생을 식별하고 알림하는 기능을 구현합니다. 학급 전체 및 개별 학생의 학습 리포트 생성 기능을 개발합니다. 데이터 내보내기 기능을 구현합니다.",
+            "status": "done",
+            "testStrategy": "교사가 담당하지 않는 학급 데이터에 접근할 수 없는지 권한 테스트합니다. 대량의 학생 데이터를 효율적으로 처리하고 표시하는지 성능 테스트합니다. 리포트 생성 기능이 정확한 데이터를 포함하는지 테스트합니다."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "게임화 시스템 구현",
+        "description": "토큰 시스템, 리더보드, 업적/배지, 보상 교환 기능을 통한 학습 동기부여 메커니즘 개발",
+        "details": "학습 동기를 부여하기 위한 게임화 시스템을 구현합니다. 학습 활동에 따라 토큰을 지급하는 시스템을 개발하고, 학생들의 성취를 비교할 수 있는 리더보드를 구현합니다. 특정 조건을 달성했을 때 업적과 배지를 부여하는 기능과 획득한 토큰으로 보상을 교환할 수 있는 시스템을 개발합니다.\n\n```sql\n-- 토큰 테이블\nCREATE TABLE gamification.tokens (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  student_id UUID REFERENCES auth.users(id),\n  balance INT NOT NULL DEFAULT 0,\n  total_earned INT NOT NULL DEFAULT 0,\n  total_spent INT NOT NULL DEFAULT 0,\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 업적 정의 테이블\nCREATE TABLE gamification.achievement_definitions (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  code VARCHAR(50) UNIQUE NOT NULL,\n  name VARCHAR(100) NOT NULL,\n  description TEXT,\n  icon_url TEXT,\n  token_reward INT NOT NULL DEFAULT 0,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 사용자 업적 테이블\nCREATE TABLE gamification.user_achievements (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  student_id UUID REFERENCES auth.users(id),\n  achievement_id UUID REFERENCES gamification.achievement_definitions(id),\n  earned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n  UNIQUE(student_id, achievement_id)\n);\n\n-- 보상 정의 테이블\nCREATE TABLE gamification.reward_definitions (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  code VARCHAR(50) UNIQUE NOT NULL,\n  name VARCHAR(100) NOT NULL,\n  description TEXT,\n  token_cost INT NOT NULL,\n  is_active BOOLEAN NOT NULL DEFAULT true,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- 보상 교환 기록 테이블\nCREATE TABLE gamification.reward_redemptions (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  student_id UUID REFERENCES auth.users(id),\n  reward_id UUID REFERENCES gamification.reward_definitions(id),\n  token_cost INT NOT NULL,\n  redeemed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\n```\n\n```typescript\n// 게임화 서비스\nexport class GamificationService {\n  constructor(\n    private tokenRepository: TokenRepository,\n    private achievementRepository: AchievementRepository,\n    private userAchievementRepository: UserAchievementRepository,\n    private rewardRepository: RewardRepository,\n    private redemptionRepository: RedemptionRepository\n  ) {}\n  \n  // 토큰 지급\n  async awardTokens(studentId: UUID, amount: number, reason: string): Promise<Result<number>> {\n    if (amount <= 0) {\n      return Result.fail('Token amount must be positive');\n    }\n    \n    const tokenResult = await this.tokenRepository.findByStudentId(studentId);\n    let token;\n    \n    if (tokenResult.isFailure) {\n      // 새 토큰 계정 생성\n      token = Token.create({\n        id: UUID.generate(),\n        studentId,\n        balance: amount,\n        totalEarned: amount,\n        totalSpent: 0\n      });\n    } else {\n      token = tokenResult.getValue();\n      token.addTokens(amount);\n    }\n    \n    await this.tokenRepository.save(token);\n    \n    // 토큰 관련 업적 확인\n    await this.checkTokenAchievements(studentId, token.totalEarned);\n    \n    return Result.ok(token.balance);\n  }\n  \n  // 업적 확인 및 부여\n  async checkAchievement(studentId: UUID, achievementCode: string): Promise<Result<boolean>> {\n    const achievementResult = await this.achievementRepository.findByCode(achievementCode);\n    if (achievementResult.isFailure) {\n      return Result.fail(`Achievement ${achievementCode} not found`);\n    }\n    \n    const achievement = achievementResult.getValue();\n    \n    // 이미 획득한 업적인지 확인\n    const existingResult = await this.userAchievementRepository.findByStudentAndAchievement(\n      studentId,\n      achievement.id\n    );\n    \n    if (existingResult.isSuccess) {\n      return Result.ok(false); // 이미 획득함\n    }\n    \n    // 새 업적 부여\n    const userAchievement = UserAchievement.create({\n      id: UUID.generate(),\n      studentId,\n      achievementId: achievement.id,\n      earnedAt: new Date()\n    });\n    \n    await this.userAchievementRepository.save(userAchievement);\n    \n    // 보상 토큰 지급\n    if (achievement.tokenReward > 0) {\n      await this.awardTokens(\n        studentId,\n        achievement.tokenReward,\n        `Achievement: ${achievement.name}`\n      );\n    }\n    \n    return Result.ok(true);\n  }\n  \n  // 토큰 관련 업적 확인\n  private async checkTokenAchievements(studentId: UUID, totalEarned: number): Promise<void> {\n    const thresholds = [10, 50, 100, 500, 1000];\n    \n    for (const threshold of thresholds) {\n      if (totalEarned >= threshold) {\n        await this.checkAchievement(studentId, `EARN_TOKENS_${threshold}`);\n      }\n    }\n  }\n  \n  // 보상 교환\n  async redeemReward(studentId: UUID, rewardCode: string): Promise<Result<void>> {\n    // 보상 교환 로직\n  }\n  \n  // 리더보드 조회\n  async getLeaderboard(limit: number = 10): Promise<Result<LeaderboardEntryDto[]>> {\n    // 리더보드 조회 로직\n  }\n}\n```",
+        "testStrategy": "토큰 지급 시스템이 다양한 학습 활동에 대해 올바른 양의 토큰을 지급하는지 테스트합니다. 업적 부여 조건이 정확하게 평가되고, 조건 충족 시 업적과 보상이 올바르게 지급되는지 확인합니다. 리더보드가 최신 데이터로 정확하게 정렬되어 표시되는지 테스트합니다. 보상 교환 시스템이 토큰 잔액을 확인하고 올바르게 처리하는지 확인합니다. 동시에 여러 사용자가 게임화 시스템을 사용할 때 발생할 수 있는 경쟁 조건을 테스트합니다.",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "토큰 시스템 구현",
+            "description": "학습 활동에 따라 토큰을 지급하고 관리하는 시스템을 구현합니다. 토큰 잔액, 총 획득량, 총 사용량을 추적하며, 다양한 학습 활동에 대한 토큰 지급 규칙을 정의합니다.",
+            "dependencies": [],
+            "details": "토큰 도메인 엔티티와 값 객체를 구현하고, 토큰 지급 로직을 포함한 TokenService를 개발합니다. 토큰 지급 이벤트를 처리하는 이벤트 핸들러를 구현하고, 토큰 잔액 조회 및 업데이트 API를 개발합니다. 토큰 지급 규칙(퀴즈 완료: 10토큰, 과제 제출: 20토큰 등)을 설정 가능한 형태로 구현합니다.",
+            "status": "done",
+            "testStrategy": "토큰 지급 로직이 올바른 양의 토큰을 지급하는지 단위 테스트로 확인합니다. 동시에 여러 토큰 지급 요청이 발생했을 때 경쟁 조건이 발생하지 않는지 테스트합니다. 토큰 잔액이 음수가 되지 않도록 하는 제약 조건을 테스트합니다."
+          },
+          {
+            "id": 2,
+            "title": "업적 및 배지 시스템 구현",
+            "description": "특정 조건을 달성했을 때 업적과 배지를 부여하는 시스템을 구현합니다. 업적 정의, 조건 확인, 업적 부여 및 보상 지급 기능을 포함합니다.",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "업적 정의 테이블과 사용자 업적 테이블을 기반으로 AchievementService를 구현합니다. 업적 조건 확인 로직(토큰 획득량, 퀴즈 완료 횟수, 연속 출석일 등)을 구현하고, 업적 달성 시 자동으로 배지를 부여하는 시스템을 개발합니다. 업적 달성 알림 기능과 업적 목록 조회 API를 구현합니다.",
+            "status": "done",
+            "testStrategy": "다양한 업적 조건이 정확하게 평가되는지 테스트합니다. 이미 획득한 업적이 중복으로 부여되지 않는지 확인합니다. 업적 달성 시 보상 토큰이 올바르게 지급되는지 테스트합니다."
+          },
+          {
+            "id": 3,
+            "title": "리더보드 시스템 구현",
+            "description": "학생들의 성취를 비교할 수 있는 리더보드 시스템을 구현합니다. 토큰 획득량, 업적 수, 퀴즈 점수 등 다양한 기준으로 순위를 매기는 기능을 포함합니다.",
+            "dependencies": [
+              "7.1",
+              "7.2"
+            ],
+            "details": "LeaderboardService를 구현하여 다양한 기준(총 토큰, 이번 주 토큰, 업적 수 등)으로 리더보드를 생성합니다. 실시간 순위 업데이트를 위한 캐싱 시스템을 구현하고, 클래스별, 전체별 리더보드를 제공합니다. 리더보드 조회 API와 순위 변동 알림 기능을 개발합니다.",
+            "status": "done",
+            "testStrategy": "리더보드가 최신 데이터로 정확하게 정렬되어 표시되는지 테스트합니다. 대량의 사용자 데이터에서도 성능이 유지되는지 확인합니다. 캐시 무효화가 적절한 시점에 이루어지는지 테스트합니다."
+          },
+          {
+            "id": 4,
+            "title": "보상 교환 시스템 구현",
+            "description": "획득한 토큰으로 다양한 보상을 교환할 수 있는 시스템을 구현합니다. 보상 정의, 토큰 차감, 교환 기록 관리 기능을 포함합니다.",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "RewardService를 구현하여 보상 교환 로직을 처리합니다. 토큰 잔액 확인, 보상 교환 처리, 교환 기록 저장 기능을 개발합니다. 보상 카테고리(디지털 배지, 학습 도구, 특별 권한 등)별 관리 시스템을 구현하고, 보상 교환 API와 교환 내역 조회 기능을 개발합니다.",
+            "status": "done",
+            "testStrategy": "토큰 잔액이 부족할 때 교환이 거부되는지 테스트합니다. 보상 교환 시 토큰이 정확하게 차감되는지 확인합니다. 동시에 같은 보상을 교환하려 할 때 재고 관리가 올바르게 작동하는지 테스트합니다."
+          },
+          {
+            "id": 5,
+            "title": "게임화 시스템 통합 및 UI 구현",
+            "description": "토큰, 업적, 리더보드, 보상 시스템을 통합하고, 사용자 친화적인 게임화 UI를 구현합니다. 대시보드, 프로그레스 바, 알림 시스템을 포함합니다.",
+            "dependencies": [
+              "7.1",
+              "7.2",
+              "7.3",
+              "7.4"
+            ],
+            "details": "게임화 대시보드 컴포넌트를 구현하여 토큰 잔액, 최근 업적, 리더보드 순위를 표시합니다. 업적 진행률을 시각화하는 프로그레스 바와 업적 달성 알림 시스템을 구현합니다. 보상 상점 UI와 리더보드 화면을 개발하고, 게임화 요소들 간의 상호작용을 처리하는 통합 서비스를 구현합니다.",
+            "status": "done",
+            "testStrategy": "게임화 UI 컴포넌트들이 올바른 데이터를 표시하는지 테스트합니다. 업적 달성 알림이 적절한 타이밍에 표시되는지 확인합니다. 다양한 화면 크기에서 게임화 UI가 적절하게 반응하는지 테스트합니다."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "프론트엔드 디자인 시스템 구현",
+        "description": "Tailwind CSS v4 기반 디자인 시스템, 컴포넌트 프리미티브, 반응형 레이아웃 및 테마 시스템 개발",
+        "details": "Tailwind CSS v4를 기반으로 한 디자인 시스템을 구현합니다. 재사용 가능한 컴포넌트 프리미티브(카드, 버튼, 폼 요소 등)를 개발하고, 모바일부터 데스크톱까지 대응하는 반응형 레이아웃 시스템을 구축합니다. CSS 변수를 활용한 테마 시스템을 구현하여 다크 모드 등을 지원합니다.\n\n```typescript\n// tailwind.config.ts\nexport default {\n  theme: {\n    extend: {\n      colors: {\n        // CSS 변수 기반 테마\n        brand: 'var(--color-brand)',\n        surface: 'var(--color-surface)',\n        text: {\n          primary: 'var(--color-text-primary)',\n          secondary: 'var(--color-text-secondary)'\n        }\n      },\n      spacing: {\n        // 8pt 그리드\n        'safe-top': 'env(safe-area-inset-top)',\n        'safe-bottom': 'env(safe-area-inset-bottom)',\n      },\n      typography: {\n        // 유동형 타이포그래피\n        'fluid-base': 'clamp(14px, 2vw, 16px)',\n        'fluid-lg': 'clamp(18px, 3vw, 24px)',\n      }\n    }\n  },\n  plugins: [\n    require('@tailwindcss/forms'),\n    require('@tailwindcss/typography')\n  ]\n}\n```\n\n```tsx\n// 카드 컴포넌트\nimport React from 'react';\nimport { cva, type VariantProps } from 'class-variance-authority';\n\nconst cardStyles = cva(\n  'rounded-lg overflow-hidden bg-surface shadow-sm',\n  {\n    variants: {\n      size: {\n        small: 'p-3',\n        medium: 'p-4',\n        large: 'p-6'\n      },\n      interactive: {\n        true: 'hover:shadow-md transition-shadow cursor-pointer'\n      }\n    },\n    defaultVariants: {\n      size: 'medium',\n      interactive: false\n    }\n  }\n);\n\ntype CardProps = React.HTMLAttributes<HTMLDivElement> & \n  VariantProps<typeof cardStyles> & {\n    children: React.ReactNode;\n  };\n\nexport const Card = ({\n  size,\n  interactive,\n  className,\n  children,\n  ...props\n}: CardProps) => {\n  return (\n    <div\n      className={cardStyles({ size, interactive, className })}\n      {...props}\n    >\n      {children}\n    </div>\n  );\n};\n\ntype CardHeaderProps = React.HTMLAttributes<HTMLDivElement> & {\n  children: React.ReactNode;\n};\n\nCard.Header = ({ className, children, ...props }: CardHeaderProps) => {\n  return (\n    <div\n      className={`mb-4 pb-3 border-b border-gray-200 ${className || ''}`}\n      {...props}\n    >\n      {children}\n    </div>\n  );\n};\n\ntype CardTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {\n  children: React.ReactNode;\n};\n\nCard.Title = ({ className, children, ...props }: CardTitleProps) => {\n  return (\n    <h3\n      className={`text-lg font-semibold text-text-primary ${className || ''}`}\n      {...props}\n    >\n      {children}\n    </h3>\n  );\n};\n\ntype CardBodyProps = React.HTMLAttributes<HTMLDivElement> & {\n  children: React.ReactNode;\n};\n\nCard.Body = ({ className, children, ...props }: CardBodyProps) => {\n  return (\n    <div className={className} {...props}>\n      {children}\n    </div>\n  );\n};\n\ntype CardFooterProps = React.HTMLAttributes<HTMLDivElement> & {\n  children: React.ReactNode;\n};\n\nCard.Footer = ({ className, children, ...props }: CardFooterProps) => {\n  return (\n    <div\n      className={`mt-4 pt-3 border-t border-gray-200 ${className || ''}`}\n      {...props}\n    >\n      {children}\n    </div>\n  );\n};\n\n// 반응형 그리드 컴포넌트\ntype GridProps = React.HTMLAttributes<HTMLDivElement> & {\n  children: React.ReactNode;\n  cols: {\n    base?: number;\n    sm?: number;\n    md?: number;\n    lg?: number;\n    xl?: number;\n  };\n  gap?: number;\n};\n\nexport const Grid = ({\n  children,\n  cols,\n  gap = 4,\n  className,\n  ...props\n}: GridProps) => {\n  const getColsClass = () => {\n    const classes = [];\n    if (cols.base) classes.push(`grid-cols-${cols.base}`);\n    if (cols.sm) classes.push(`sm:grid-cols-${cols.sm}`);\n    if (cols.md) classes.push(`md:grid-cols-${cols.md}`);\n    if (cols.lg) classes.push(`lg:grid-cols-${cols.lg}`);\n    if (cols.xl) classes.push(`xl:grid-cols-${cols.xl}`);\n    return classes.join(' ');\n  };\n\n  return (\n    <div\n      className={`grid ${getColsClass()} gap-${gap} ${className || ''}`}\n      {...props}\n    >\n      {children}\n    </div>\n  );\n};\n```",
+        "testStrategy": "컴포넌트 프리미티브의 모든 변형과 조합이 예상대로 렌더링되는지 단위 테스트합니다. 반응형 레이아웃이 다양한 화면 크기에서 올바르게 작동하는지 확인합니다. 테마 시스템이 다크 모드와 라이트 모드를 올바르게 전환하는지 테스트합니다. 접근성(a11y) 요구사항을 충족하는지 확인하기 위한 테스트를 수행합니다. 컴포넌트 스토리북을 구축하여 시각적 회귀 테스트를 수행합니다.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Tailwind CSS v4 설정 및 CSS 변수 기반 테마 시스템 구축",
+            "description": "Tailwind CSS v4를 설치하고 설정하며, CSS 변수를 활용한 테마 시스템을 구현합니다. 라이트/다크 모드를 지원하는 색상 시스템과 유동형 타이포그래피를 설정합니다.",
+            "dependencies": [],
+            "details": "tailwind.config.ts 파일을 생성하고 CSS 변수 기반 색상 시스템을 설정합니다. :root와 [data-theme='dark'] 선택자를 사용하여 라이트/다크 모드 변수를 정의합니다. clamp() 함수를 활용한 유동형 타이포그래피와 8pt 그리드 시스템을 구현합니다. safe-area-inset을 활용한 모바일 대응 spacing을 설정합니다.",
+            "status": "done",
+            "testStrategy": "테마 전환 시 CSS 변수가 올바르게 적용되는지 확인하고, 다양한 화면 크기에서 유동형 타이포그래피가 예상 범위 내에서 작동하는지 테스트합니다."
+          },
+          {
+            "id": 2,
+            "title": "기본 컴포넌트 프리미티브 구현 (Button, Input, Card)",
+            "description": "class-variance-authority(CVA)를 활용하여 재사용 가능한 기본 컴포넌트들을 구현합니다. Button, Input, Card 컴포넌트를 다양한 변형과 크기로 개발합니다.",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "CVA를 사용하여 타입 안전한 변형 시스템을 구축합니다. Button 컴포넌트는 primary, secondary, ghost 등의 변형과 small, medium, large 크기를 지원합니다. Input 컴포넌트는 error, disabled 상태와 다양한 타입을 지원합니다. Card 컴포넌트는 Header, Title, Body, Footer 서브컴포넌트를 포함한 합성 패턴으로 구현합니다.",
+            "status": "done",
+            "testStrategy": "각 컴포넌트의 모든 변형과 상태 조합이 올바르게 렌더링되는지 단위 테스트합니다. 접근성 속성(aria-label, role 등)이 올바르게 적용되는지 확인합니다."
+          },
+          {
+            "id": 3,
+            "title": "반응형 레이아웃 시스템 및 Grid 컴포넌트 개발",
+            "description": "모바일 퍼스트 접근법으로 반응형 레이아웃 시스템을 구축하고, 유연한 Grid 컴포넌트를 개발합니다. 브레이크포인트별 컬럼 수를 동적으로 조정할 수 있는 시스템을 구현합니다.",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Tailwind의 반응형 유틸리티를 활용하여 Grid 컴포넌트를 구현합니다. base, sm, md, lg, xl 브레이크포인트별로 다른 컬럼 수를 설정할 수 있도록 합니다. Container, Stack, Flex 등의 레이아웃 컴포넌트도 함께 구현합니다. gap, padding, margin을 일관된 spacing 시스템으로 관리합니다.",
+            "status": "done",
+            "testStrategy": "다양한 화면 크기에서 Grid가 올바른 컬럼 수로 렌더링되는지 확인합니다. 레이아웃이 깨지지 않고 콘텐츠가 적절히 배치되는지 시각적 회귀 테스트를 수행합니다."
+          },
+          {
+            "id": 4,
+            "title": "폼 컴포넌트 및 고급 UI 요소 구현",
+            "description": "Form, Select, Checkbox, Radio, Modal, Dropdown 등의 고급 UI 컴포넌트를 구현합니다. 폼 검증과 에러 처리를 포함한 완전한 폼 시스템을 구축합니다.",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "React Hook Form과 연동 가능한 폼 컴포넌트들을 구현합니다. Select는 검색 기능과 다중 선택을 지원하고, Modal은 포커스 트랩과 ESC 키 처리를 포함합니다. Dropdown은 키보드 네비게이션을 지원하고, 모든 컴포넌트는 ARIA 속성을 적절히 구현합니다. 에러 상태와 로딩 상태를 시각적으로 표현합니다.",
+            "status": "done",
+            "testStrategy": "폼 검증이 올바르게 작동하고 에러 메시지가 적절히 표시되는지 테스트합니다. 키보드 네비게이션과 스크린 리더 호환성을 확인하는 접근성 테스트를 수행합니다."
+          },
+          {
+            "id": 5,
+            "title": "Storybook 설정 및 컴포넌트 문서화",
+            "description": "Storybook을 설정하고 모든 컴포넌트에 대한 스토리를 작성합니다. 시각적 회귀 테스트 환경을 구축하고 컴포넌트 사용 가이드를 문서화합니다.",
+            "dependencies": [
+              "8.2",
+              "8.3",
+              "8.4"
+            ],
+            "details": "Storybook v7을 설정하고 각 컴포넌트의 다양한 상태와 변형을 보여주는 스토리를 작성합니다. Controls 애드온을 활용하여 실시간으로 props를 조작할 수 있도록 합니다. Chromatic 또는 유사한 도구를 사용하여 시각적 회귀 테스트를 설정합니다. 각 컴포넌트의 사용법, props, 예제 코드를 포함한 문서를 작성합니다.",
+            "status": "done",
+            "testStrategy": "모든 컴포넌트 스토리가 오류 없이 렌더링되는지 확인합니다. 시각적 회귀 테스트가 UI 변경사항을 정확히 감지하는지 검증합니다. 문서의 예제 코드가 실제로 작동하는지 테스트합니다."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "성능 최적화 및 캐싱 전략 구현",
+        "description": "Redis 캐싱, CDN 최적화, 데이터베이스 인덱싱, 집계 테이블 및 성능 모니터링 시스템 구축",
+        "details": "애플리케이션의 성능을 최적화하기 위한 다양한 전략을 구현합니다. Redis를 사용하여 대시보드 집계, 사용자 세션, 문제집 메타데이터 등을 캐싱하고, CDN을 통해 정적 자산을 효율적으로 제공합니다. 데이터베이스 쿼리 성능을 향상시키기 위한 인덱스를 최적화하고, 자주 사용되는 집계 데이터를 위한 집계 테이블을 구현합니다. 성능 지표를 모니터링하는 시스템을 구축합니다.\n\n```typescript\n// Redis 캐싱 서비스\nexport class CacheService {\n  private readonly redis: Redis;\n  \n  constructor() {\n    this.redis = new Redis(process.env.REDIS_URL);\n  }\n  \n  async get<T>(key: string): Promise<T | null> {\n    const data = await this.redis.get(key);\n    if (!data) return null;\n    return JSON.parse(data) as T;\n  }\n  \n  async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {\n    const data = JSON.stringify(value);\n    if (ttlSeconds) {\n      await this.redis.setex(key, ttlSeconds, data);\n    } else {\n      await this.redis.set(key, data);\n    }\n  }\n  \n  async del(key: string): Promise<void> {\n    await this.redis.del(key);\n  }\n  \n  async invalidatePattern(pattern: string): Promise<void> {\n    const keys = await this.redis.keys(pattern);\n    if (keys.length > 0) {\n      await this.redis.del(...keys);\n    }\n  }\n}\n\n// 캐싱 전략 구현\nexport class DashboardService {\n  constructor(\n    private statisticsRepository: StatisticsRepository,\n    private cacheService: CacheService\n  ) {}\n  \n  async getStudentDashboard(studentId: string): Promise<Result<StudentDashboardDto>> {\n    const cacheKey = `dashboard:student:${studentId}`;\n    \n    // 캐시에서 먼저 확인\n    const cachedData = await this.cacheService.get<StudentDashboardDto>(cacheKey);\n    if (cachedData) {\n      return Result.ok(cachedData);\n    }\n    \n    // 캐시에 없으면 DB에서 조회\n    const dashboardResult = await this.statisticsRepository.getStudentDashboard(studentId);\n    if (dashboardResult.isFailure) {\n      return Result.fail(dashboardResult.error);\n    }\n    \n    const dashboard = dashboardResult.getValue();\n    \n    // 캐시에 저장 (5분 TTL)\n    await this.cacheService.set(cacheKey, dashboard, 300);\n    \n    return Result.ok(dashboard);\n  }\n  \n  // 캐시 무효화 (데이터 변경 시)\n  async invalidateStudentDashboard(studentId: string): Promise<void> {\n    await this.cacheService.del(`dashboard:student:${studentId}`);\n  }\n}\n\n// 집계 테이블 업데이트 작업\nexport class AggregationJob {\n  constructor(\n    private db: Database,\n    private logger: Logger\n  ) {}\n  \n  // 일일 집계 작업\n  async runDailyAggregation(): Promise<void> {\n    this.logger.info('Starting daily aggregation job');\n    \n    try {\n      // 학생별 통계 집계\n      await this.db.query(`\n        INSERT INTO analytics.daily_student_stats (\n          date, student_id, problems_attempted, problems_solved, \n          total_time_spent, streak_length\n        )\n        SELECT\n          CURRENT_DATE - INTERVAL '1 day' as date,\n          sr.student_id,\n          COUNT(DISTINCT sr.problem_id) as problems_attempted,\n          SUM(CASE WHEN sr.is_correct THEN 1 ELSE 0 END) as problems_solved,\n          SUM(sr.time_taken) as total_time_spent,\n          ss.current_streak as streak_length\n        FROM learning.study_records sr\n        JOIN learning.study_streaks ss ON sr.student_id = ss.student_id\n        WHERE DATE(sr.created_at) = CURRENT_DATE - INTERVAL '1 day'\n        GROUP BY sr.student_id, ss.current_streak\n        ON CONFLICT (date, student_id) DO UPDATE\n        SET\n          problems_attempted = EXCLUDED.problems_attempted,\n          problems_solved = EXCLUDED.problems_solved,\n          total_time_spent = EXCLUDED.total_time_spent,\n          streak_length = EXCLUDED.streak_length\n      `);\n      \n      // 문제별 통계 집계\n      await this.db.query(`\n        INSERT INTO analytics.daily_problem_stats (\n          date, problem_id, attempts, correct_answers, \n          average_time, teacher_id\n        )\n        SELECT\n          CURRENT_DATE - INTERVAL '1 day' as date,\n          sr.problem_id,\n          COUNT(*) as attempts,\n          SUM(CASE WHEN sr.is_correct THEN 1 ELSE 0 END) as correct_answers,\n          AVG(sr.time_taken) as average_time,\n          p.teacher_id\n        FROM learning.study_records sr\n        JOIN learning.problems p ON sr.problem_id = p.id\n        WHERE DATE(sr.created_at) = CURRENT_DATE - INTERVAL '1 day'\n        GROUP BY sr.problem_id, p.teacher_id\n        ON CONFLICT (date, problem_id) DO UPDATE\n        SET\n          attempts = EXCLUDED.attempts,\n          correct_answers = EXCLUDED.correct_answers,\n          average_time = EXCLUDED.average_time\n      `);\n      \n      this.logger.info('Daily aggregation job completed successfully');\n    } catch (error) {\n      this.logger.error('Error in daily aggregation job', error);\n      throw error;\n    }\n  }\n}\n```\n\n```sql\n-- 성능 최적화를 위한 인덱스\nCREATE INDEX idx_study_records_student_problem ON learning.study_records(student_id, problem_id);\nCREATE INDEX idx_study_records_created_at ON learning.study_records(created_at);\nCREATE INDEX idx_review_schedules_student_next ON learning.review_schedules(student_id, next_review_at);\n\n-- 집계 테이블\nCREATE TABLE analytics.daily_student_stats (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  date DATE NOT NULL,\n  student_id UUID NOT NULL REFERENCES auth.users(id),\n  problems_attempted INT NOT NULL DEFAULT 0,\n  problems_solved INT NOT NULL DEFAULT 0,\n  total_time_spent INT NOT NULL DEFAULT 0,\n  streak_length INT NOT NULL DEFAULT 0,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  UNIQUE(date, student_id)\n);\n\nCREATE TABLE analytics.daily_problem_stats (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  date DATE NOT NULL,\n  problem_id UUID NOT NULL REFERENCES learning.problems(id),\n  attempts INT NOT NULL DEFAULT 0,\n  correct_answers INT NOT NULL DEFAULT 0,\n  average_time FLOAT,\n  teacher_id UUID REFERENCES auth.users(id),\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  UNIQUE(date, problem_id)\n);\n```",
+        "testStrategy": "Redis 캐싱이 예상대로 작동하는지 확인하는 단위 테스트를 작성합니다. 캐시 적중률과 미스율을 측정하는 테스트를 수행합니다. 데이터베이스 인덱스가 쿼리 성능을 향상시키는지 확인하기 위한 성능 테스트를 실행합니다. 집계 테이블이 대량의 데이터를 효율적으로 처리하는지 테스트합니다. CDN 최적화가 정적 자산 로딩 시간을 단축시키는지 확인합니다. 성능 모니터링 시스템이 주요 지표(LCP, FID, CLS, API 응답 시간 등)를 정확하게 측정하는지 테스트합니다.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Redis 캐싱 서비스 구현 및 설정",
+            "description": "Redis 연결 설정, CacheService 클래스 구현, 캐시 키 전략 정의 및 TTL 관리 시스템 구축",
+            "dependencies": [],
+            "details": "Redis 클라이언트 설정을 위한 환경 변수 구성, CacheService 클래스의 get/set/del/invalidatePattern 메서드 구현, 캐시 키 네이밍 컨벤션 정의, TTL 전략 수립 및 캐시 무효화 패턴 구현. 대시보드 집계, 사용자 세션, 문제집 메타데이터 등의 캐싱 전략을 포함합니다.",
+            "status": "done",
+            "testStrategy": "Redis 연결 테스트, 캐시 CRUD 작업 단위 테스트, TTL 만료 테스트, 캐시 무효화 패턴 테스트, 동시성 처리 테스트 수행"
+          },
+          {
+            "id": 2,
+            "title": "데이터베이스 인덱스 최적화 및 쿼리 성능 개선",
+            "description": "자주 사용되는 쿼리 패턴 분석, 최적화된 인덱스 생성, 쿼리 실행 계획 분석 및 성능 개선",
+            "dependencies": [],
+            "details": "study_records, review_schedules, problems 테이블의 쿼리 패턴 분석, 복합 인덱스 및 단일 인덱스 생성, EXPLAIN ANALYZE를 통한 쿼리 성능 측정, 느린 쿼리 로그 분석 및 최적화. 학생별 문제 조회, 리뷰 스케줄 조회, 통계 집계 쿼리 등의 성능을 개선합니다.",
+            "status": "done",
+            "testStrategy": "쿼리 실행 시간 측정, 인덱스 사용률 확인, 대용량 데이터셋에서의 성능 테스트, 동시 접속 상황에서의 성능 테스트 수행"
+          },
+          {
+            "id": 3,
+            "title": "집계 테이블 구현 및 배치 작업 시스템 구축",
+            "description": "일일/주간/월간 집계 테이블 생성, AggregationJob 클래스 구현, 스케줄링 시스템 구축",
+            "dependencies": [
+              "9.2"
+            ],
+            "details": "daily_student_stats, daily_problem_stats 등의 집계 테이블 생성, AggregationJob 클래스의 runDailyAggregation 메서드 구현, cron 기반 스케줄링 시스템 구축, 집계 데이터 정합성 검증 로직 구현. 학생별 통계, 문제별 통계, 교사별 통계 등을 포함합니다.",
+            "status": "done",
+            "testStrategy": "집계 로직 정확성 테스트, 대용량 데이터 처리 성능 테스트, 중복 실행 방지 테스트, 데이터 정합성 검증 테스트 수행"
+          },
+          {
+            "id": 4,
+            "title": "캐싱 전략을 적용한 서비스 레이어 구현",
+            "description": "DashboardService, StatisticsService 등에 캐싱 로직 적용, 캐시 무효화 전략 구현",
+            "dependencies": [
+              "9.1",
+              "9.3"
+            ],
+            "details": "학생 대시보드, 교사 대시보드, 통계 데이터 조회 서비스에 캐싱 로직 적용, 데이터 변경 시 관련 캐시 무효화 로직 구현, 캐시 워밍 전략 수립, 캐시 적중률 모니터링 시스템 구축. 실시간성이 중요하지 않은 데이터의 캐싱 전략을 포함합니다.",
+            "status": "done",
+            "testStrategy": "캐시 적중률 측정, 캐시 무효화 로직 테스트, 데이터 일관성 테스트, 캐시 성능 개선 효과 측정 테스트 수행"
+          },
+          {
+            "id": 5,
+            "title": "성능 모니터링 시스템 구축 및 CDN 최적화",
+            "description": "애플리케이션 성능 지표 모니터링 시스템 구축, CDN 설정 및 정적 자산 최적화",
+            "dependencies": [
+              "9.1",
+              "9.2",
+              "9.3",
+              "9.4"
+            ],
+            "details": "LCP, FID, CLS 등의 Core Web Vitals 모니터링, API 응답 시간 추적, 데이터베이스 쿼리 성능 모니터링, 캐시 적중률 모니터링 시스템 구축. CDN을 통한 정적 자산 배포, 이미지 최적화, 번들 크기 최적화, 지연 로딩 구현을 포함합니다.",
+            "status": "done",
+            "testStrategy": "성능 지표 수집 정확성 테스트, 알림 시스템 테스트, CDN 캐시 효과 측정, 정적 자산 로딩 시간 개선 효과 측정 테스트 수행"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "역할 기반 UI 구현",
+        "description": "학생, 교사, 관리자별 차별화된 UI 및 대시보드 구현, 권한 기반 접근 제어 및 네비게이션 시스템 개발",
+        "details": "사용자 역할(Student/Teacher/Admin)에 따라 차별화된 UI와 대시보드를 구현합니다. 각 역할에 맞는 기능과 데이터를 표시하는 화면을 개발하고, 권한 기반 접근 제어 시스템을 구축합니다. 역할에 따라 다른 네비게이션 메뉴를 제공하는 시스템을 개발합니다.\n\n```typescript\n// 역할 기반 라우팅 가드\nimport { useAuth } from '@/hooks/useAuth';\nimport { Navigate, Outlet } from 'react-router-dom';\n\ntype RoleGuardProps = {\n  allowedRoles: Array<'student' | 'teacher' | 'admin'>;\n  redirectTo?: string;\n};\n\nexport const RoleGuard = ({\n  allowedRoles,\n  redirectTo = '/unauthorized'\n}: RoleGuardProps) => {\n  const { user, isLoading } = useAuth();\n  \n  if (isLoading) {\n    return <div>Loading...</div>;\n  }\n  \n  if (!user) {\n    return <Navigate to=\"/login\" replace />;\n  }\n  \n  if (!allowedRoles.includes(user.role)) {\n    return <Navigate to={redirectTo} replace />;\n  }\n  \n  return <Outlet />;\n};\n\n// 역할 기반 네비게이션\nimport { useAuth } from '@/hooks/useAuth';\n\ntype NavItem = {\n  label: string;\n  path: string;\n  icon: React.ReactNode;\n  roles: Array<'student' | 'teacher' | 'admin'>;\n};\n\nconst navItems: NavItem[] = [\n  {\n    label: '대시보드',\n    path: '/dashboard',\n    icon: <DashboardIcon />,\n    roles: ['student', 'teacher', 'admin']\n  },\n  {\n    label: '오늘의 학습',\n    path: '/today',\n    icon: <CalendarIcon />,\n    roles: ['student']\n  },\n  {\n    label: '복습',\n    path: '/review',\n    icon: <RepeatIcon />,\n    roles: ['student']\n  },\n  {\n    label: '문제 관리',\n    path: '/problems',\n    icon: <BookIcon />,\n    roles: ['teacher']\n  },\n  {\n    label: '문제집',\n    path: '/problem-sets',\n    icon: <CollectionIcon />,\n    roles: ['teacher']\n  },\n  {\n    label: '학생 관리',\n    path: '/students',\n    icon: <UsersIcon />,\n    roles: ['teacher']\n  },\n  {\n    label: '사용자 관리',\n    path: '/users',\n    icon: <UserGroupIcon />,\n    roles: ['admin']\n  },\n  {\n    label: '시스템 설정',\n    path: '/settings',\n    icon: <CogIcon />,\n    roles: ['admin']\n  }\n];\n\nexport const Navigation = () => {\n  const { user } = useAuth();\n  \n  if (!user) return null;\n  \n  const filteredNavItems = navItems.filter(item =>\n    item.roles.includes(user.role)\n  );\n  \n  return (\n    <nav className=\"space-y-1\">\n      {filteredNavItems.map(item => (\n        <NavLink\n          key={item.path}\n          to={item.path}\n          className={({ isActive }) =>\n            `flex items-center px-4 py-2 text-sm font-medium rounded-md ${\n              isActive\n                ? 'bg-brand-100 text-brand-700'\n                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'\n            }`\n          }\n        >\n          <span className=\"mr-3 h-5 w-5\">{item.icon}</span>\n          {item.label}\n        </NavLink>\n      ))}\n    </nav>\n  );\n};\n\n// 학생 대시보드\nexport const StudentDashboard = () => {\n  const { data: dashboardData, isLoading } = useQuery(\n    ['studentDashboard'],\n    () => api.getStudentDashboard()\n  );\n  \n  if (isLoading) {\n    return <div>Loading...</div>;\n  }\n  \n  return (\n    <div className=\"space-y-6\">\n      <h1 className=\"text-2xl font-bold\">학습 대시보드</h1>\n      \n      <div className=\"grid grid-cols-1 md:grid-cols-3 gap-4\">\n        <StatCard\n          title=\"오늘의 학습\"\n          value={dashboardData.todayTasks.length}\n          icon={<CalendarIcon />}\n          description=\"완료해야 할 학습 항목\"\n          action={{\n            label: '시작하기',\n            href: '/today'\n          }}\n        />\n        \n        <StatCard\n          title=\"복습 예정\"\n          value={dashboardData.reviewCount}\n          icon={<RepeatIcon />}\n          description=\"오늘 복습할 문제 수\"\n          action={{\n            label: '복습하기',\n            href: '/review'\n          }}\n        />\n        \n        <StatCard\n          title=\"학습 스트릭\"\n          value={`${dashboardData.currentStreak}일`}\n          icon={<FireIcon />}\n          description={`최장 기록: ${dashboardData.longestStreak}일`}\n        />\n      </div>\n      \n      <div className=\"grid grid-cols-1 lg:grid-cols-2 gap-6\">\n        <Card>\n          <Card.Header>\n            <Card.Title>최근 성과</Card.Title>\n          </Card.Header>\n          <Card.Body>\n            <ProgressChart data={dashboardData.progressData} />\n          </Card.Body>\n        </Card>\n        \n        <Card>\n          <Card.Header>\n            <Card.Title>다가오는 마감</Card.Title>\n          </Card.Header>\n          <Card.Body>\n            <UpcomingDeadlines deadlines={dashboardData.upcomingDeadlines} />\n          </Card.Body>\n        </Card>\n      </div>\n    </div>\n  );\n};\n\n// 교사 대시보드\nexport const TeacherDashboard = () => {\n  // 교사용 대시보드 구현\n};\n\n// 관리자 대시보드\nexport const AdminDashboard = () => {\n  // 관리자용 대시보드 구현\n};\n```",
+        "testStrategy": "각 역할(Student/Teacher/Admin)에 대한 UI 컴포넌트가 올바르게 렌더링되는지 테스트합니다. 권한이 없는 페이지에 접근할 때 적절한 리디렉션이 이루어지는지 확인합니다. 역할 기반 네비게이션이 각 사용자 역할에 맞는 메뉴 항목만 표시하는지 테스트합니다. 각 대시보드가 해당 역할에 필요한 데이터를 올바르게 표시하는지 확인합니다. 다양한 화면 크기에서 UI가 적절하게 반응하는지 테스트합니다.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "권한 기반 라우팅 가드 시스템 구현",
+            "description": "사용자 역할에 따른 페이지 접근 제어를 위한 RoleGuard 컴포넌트와 권한 검증 로직을 구현합니다. 인증되지 않은 사용자와 권한이 없는 사용자에 대한 리디렉션 처리를 포함합니다.",
+            "dependencies": [],
+            "details": "React Router의 Outlet을 활용하여 RoleGuard 컴포넌트를 구현합니다. useAuth 훅을 통해 현재 사용자 정보를 가져오고, allowedRoles 배열과 사용자 역할을 비교하여 접근 권한을 검증합니다. 권한이 없는 경우 지정된 경로로 리디렉션하고, 로딩 상태와 미인증 상태에 대한 적절한 처리를 구현합니다. TypeScript를 사용하여 역할 타입을 엄격하게 정의합니다.",
+            "status": "done",
+            "testStrategy": "각 역할(student, teacher, admin)에 대해 허용된 페이지와 차단된 페이지 접근을 테스트합니다. 미인증 사용자의 로그인 페이지 리디렉션과 권한 없는 사용자의 unauthorized 페이지 리디렉션을 확인합니다."
+          },
+          {
+            "id": 2,
+            "title": "역할 기반 네비게이션 시스템 구현",
+            "description": "사용자 역할에 따라 다른 메뉴 항목을 표시하는 동적 네비게이션 시스템을 구현합니다. 각 역할별로 접근 가능한 메뉴만 표시하고 현재 페이지 하이라이팅을 포함합니다.",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "NavItem 타입을 정의하여 각 메뉴 항목의 라벨, 경로, 아이콘, 허용 역할을 관리합니다. 학생용(오늘의 학습, 복습), 교사용(문제 관리, 문제집, 학생 관리), 관리자용(사용자 관리, 시스템 설정) 메뉴를 구성합니다. NavLink 컴포넌트를 사용하여 현재 활성 페이지를 시각적으로 구분하고, 반응형 디자인을 적용합니다.",
+            "status": "done",
+            "testStrategy": "각 역할로 로그인했을 때 해당 역할에 맞는 메뉴만 표시되는지 확인합니다. 현재 페이지 하이라이팅이 올바르게 작동하는지 테스트하고, 모바일과 데스크톱에서 네비게이션이 적절하게 표시되는지 확인합니다."
+          },
+          {
+            "id": 3,
+            "title": "학생 대시보드 UI 구현",
+            "description": "학생의 학습 현황을 한눈에 볼 수 있는 대시보드를 구현합니다. 오늘의 학습, 복습 예정, 학습 스트릭 등의 정보를 카드 형태로 표시하고 진행률 차트를 포함합니다.",
+            "dependencies": [
+              "10.1",
+              "10.2"
+            ],
+            "details": "StatCard 컴포넌트를 사용하여 오늘의 학습 항목 수, 복습 예정 문제 수, 현재 학습 스트릭을 표시합니다. ProgressChart 컴포넌트로 최근 성과를 시각화하고, UpcomingDeadlines 컴포넌트로 다가오는 마감일을 표시합니다. React Query를 사용하여 대시보드 데이터를 효율적으로 관리하고, 로딩 상태를 적절히 처리합니다. 그리드 레이아웃을 사용하여 반응형 디자인을 구현합니다.",
+            "status": "done",
+            "testStrategy": "학생 대시보드의 모든 통계 카드가 올바른 데이터를 표시하는지 확인합니다. 차트와 그래프가 정확한 데이터를 시각화하는지 테스트하고, 다양한 화면 크기에서 레이아웃이 적절하게 조정되는지 확인합니다."
+          },
+          {
+            "id": 4,
+            "title": "교사 대시보드 UI 구현",
+            "description": "교사가 학생들의 학습 현황을 모니터링하고 문제집을 관리할 수 있는 대시보드를 구현합니다. 학생 진도, 문제집 현황, 성과 분석 등의 정보를 제공합니다.",
+            "dependencies": [
+              "10.1",
+              "10.2"
+            ],
+            "details": "교사용 대시보드에는 담당 학생들의 전체적인 학습 진도, 최근 생성한 문제집 현황, 학생별 성과 분석 차트를 포함합니다. ClassOverview 컴포넌트로 반별 학습 현황을 표시하고, ProblemSetStatus 컴포넌트로 배정한 문제집의 완료율을 보여줍니다. StudentPerformance 컴포넌트로 개별 학생의 성과를 분석할 수 있는 기능을 제공합니다. 필터링과 정렬 기능을 포함하여 데이터를 효율적으로 탐색할 수 있도록 구현합니다.",
+            "status": "done",
+            "testStrategy": "교사 대시보드의 모든 데이터가 정확하게 표시되는지 확인합니다. 학생 진도와 문제집 현황이 실시간으로 업데이트되는지 테스트하고, 필터링과 정렬 기능이 올바르게 작동하는지 확인합니다."
+          },
+          {
+            "id": 5,
+            "title": "관리자 대시보드 UI 구현",
+            "description": "시스템 전체 현황을 모니터링할 수 있는 관리자 대시보드를 구현합니다. 사용자 통계, 시스템 사용량, 성능 지표 등을 종합적으로 표시합니다.",
+            "dependencies": [
+              "10.1",
+              "10.2"
+            ],
+            "details": "관리자 대시보드에는 전체 사용자 수, 활성 사용자 수, 일일/월간 사용량 통계를 표시합니다. SystemMetrics 컴포넌트로 서버 성능과 데이터베이스 사용량을 모니터링하고, UserAnalytics 컴포넌트로 사용자 행동 분석을 제공합니다. AlertPanel 컴포넌트로 시스템 알림과 경고를 표시하고, 중요한 지표에 대한 실시간 모니터링 기능을 구현합니다. 데이터 내보내기와 보고서 생성 기능을 포함합니다.",
+            "status": "done",
+            "testStrategy": "관리자 대시보드의 모든 시스템 지표가 정확하게 표시되는지 확인합니다. 실시간 모니터링 기능이 올바르게 작동하는지 테스트하고, 알림 시스템이 적절한 상황에서 경고를 표시하는지 확인합니다."
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "배포 및 운영 환경 구축",
+        "description": "개발, 스테이징, 프로덕션 환경 설정, 모니터링 시스템 구축, 비용 최적화 전략 및 위험 완화 계획 수립",
+        "details": "개발, 스테이징, 프로덕션 환경을 설정하고, 각 환경에 맞는 배포 파이프라인을 구축합니다. 애플리케이션 성능과 오류를 모니터링하는 시스템을 구축하고, 월 예산(10만원) 내에서 운영할 수 있는 비용 최적화 전략을 수립합니다. 주요 위험 요소를 식별하고 이를 완화하기 위한 계획을 수립합니다.\n\n```yaml\n# 환경별 설정 (.env.development, .env.staging, .env.production)\n# .env.development\nNODE_ENV=development\nSUPABASE_URL=http://localhost:54321\nSUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\nREDIS_URL=redis://localhost:6379\nAPI_URL=http://localhost:3001\n\n# .env.staging\nNODE_ENV=staging\nSUPABASE_URL=https://staging-project.supabase.co\nSUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\nREDIS_URL=redis://redis-staging.railway.app:6379\nAPI_URL=https://api-staging.woodiecampus.com\n\n# .env.production\nNODE_ENV=production\nSUPABASE_URL=https://project.supabase.co\nSUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\nREDIS_URL=redis://redis-prod.railway.app:6379\nAPI_URL=https://api.woodiecampus.com\n```\n\n```typescript\n// 모니터링 설정\nimport { Logtail } from '@logtail/node';\nimport { LogtailTransport } from '@logtail/winston';\nimport winston from 'winston';\nimport { Express } from 'express';\n\n// 로깅 설정\nexport const setupLogging = () => {\n  const logtail = new Logtail(process.env.LOGTAIL_TOKEN);\n  \n  const logger = winston.createLogger({\n    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',\n    format: winston.format.combine(\n      winston.format.timestamp(),\n      winston.format.json()\n    ),\n    defaultMeta: { service: 'woodiecampus-api' },\n    transports: [\n      new winston.transports.Console(),\n      new LogtailTransport(logtail)\n    ]\n  });\n  \n  return logger;\n};\n\n// API 모니터링 미들웨어\nexport const setupMonitoring = (app: Express, logger: winston.Logger) => {\n  // 요청 로깅\n  app.use((req, res, next) => {\n    const start = Date.now();\n    \n    res.on('finish', () => {\n      const duration = Date.now() - start;\n      \n      logger.info('API Request', {\n        method: req.method,\n        url: req.originalUrl,\n        status: res.statusCode,\n        duration,\n        userAgent: req.headers['user-agent'],\n        ip: req.ip\n      });\n      \n      // 성능 지표 기록\n      if (duration > 1000) {\n        logger.warn('Slow API Request', {\n          method: req.method,\n          url: req.originalUrl,\n          duration\n        });\n      }\n    });\n    \n    next();\n  });\n  \n  // 에러 로깅\n  app.use((err, req, res, next) => {\n    logger.error('API Error', {\n      method: req.method,\n      url: req.originalUrl,\n      error: err.message,\n      stack: err.stack\n    });\n    \n    res.status(500).json({\n      error: 'Internal Server Error',\n      requestId: req.id\n    });\n  });\n};\n\n// 비용 모니터링\nexport class CostMonitor {\n  constructor(private logger: winston.Logger) {}\n  \n  async trackSupabaseUsage(): Promise<void> {\n    try {\n      // Supabase API를 통해 사용량 데이터 조회\n      const usage = await fetchSupabaseUsage();\n      \n      this.logger.info('Supabase Usage', {\n        dbSize: usage.dbSize,\n        storageSize: usage.storageSize,\n        egress: usage.egress,\n        authUsers: usage.authUsers\n      });\n      \n      // 임계값 확인\n      if (usage.storageSize > 90 * 1024 * 1024 * 1024) { // 90GB\n        this.logger.warn('Storage approaching limit', {\n          current: usage.storageSize,\n          limit: 100 * 1024 * 1024 * 1024 // 100GB\n        });\n      }\n    } catch (error) {\n      this.logger.error('Error tracking Supabase usage', { error });\n    }\n  }\n  \n  // 다른 서비스 사용량 추적 메서드\n}\n```\n\n```typescript\n// 위험 완화 전략 - Supabase 종속성 추상화\n// infrastructure/repositories/ProblemRepository.ts\nimport { Problem } from '@/domain/entities/Problem';\nimport { ProblemRepository } from '@/domain/repositories/ProblemRepository';\nimport { Result } from '@/domain/Result';\nimport { SupabaseClient } from '@supabase/supabase-js';\nimport { ProblemMapper } from '../mappers/ProblemMapper';\n\nexport class SupabaseProblemRepository implements ProblemRepository {\n  constructor(private supabase: SupabaseClient) {}\n  \n  async findById(id: string): Promise<Result<Problem>> {\n    const { data, error } = await this.supabase\n      .from('learning.problems')\n      .select('*')\n      .eq('id', id)\n      .single();\n    \n    if (error) {\n      return Result.fail(`Failed to find problem: ${error.message}`);\n    }\n    \n    if (!data) {\n      return Result.fail(`Problem with ID ${id} not found`);\n    }\n    \n    return Result.ok(ProblemMapper.toDomain(data));\n  }\n  \n  async save(problem: Problem): Promise<Result<void>> {\n    const data = ProblemMapper.toPersistence(problem);\n    \n    const { error } = await this.supabase\n      .from('learning.problems')\n      .upsert(data);\n    \n    if (error) {\n      return Result.fail(`Failed to save problem: ${error.message}`);\n    }\n    \n    return Result.ok();\n  }\n  \n  // 다른 메서드 구현\n}\n```",
+        "testStrategy": "각 환경(개발, 스테이징, 프로덕션)에서 배포 파이프라인이 올바르게 작동하는지 테스트합니다. 모니터링 시스템이 오류와 성능 이슈를 정확하게 감지하고 알림을 보내는지 확인합니다. 비용 모니터링 도구가 사용량을 정확하게 추적하고 임계값에 도달했을 때 알림을 보내는지 테스트합니다. 위험 완화 전략이 실제 시나리오에서 효과적인지 검증합니다. 장애 복구 절차를 시뮬레이션하여 시스템 복원력을 테스트합니다.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "환경별 설정 파일 및 배포 파이프라인 구축",
+            "description": "개발, 스테이징, 프로덕션 환경별 설정 파일을 생성하고, 각 환경에 맞는 자동화된 배포 파이프라인을 구축합니다.",
+            "dependencies": [],
+            "details": "환경별 .env 파일(.env.development, .env.staging, .env.production)을 생성하여 Supabase URL, API 키, Redis URL 등을 환경에 맞게 설정합니다. GitHub Actions를 사용하여 각 환경별 자동 배포 워크플로우를 구성하고, Railway 또는 Vercel을 통한 배포 스크립트를 작성합니다. 환경별 데이터베이스 마이그레이션 및 시드 데이터 설정을 포함합니다.",
+            "status": "pending",
+            "testStrategy": "각 환경에서 배포가 성공적으로 완료되는지 테스트하고, 환경별 설정값이 올바르게 적용되는지 확인합니다. 배포 파이프라인의 각 단계가 실패 시 적절한 롤백이 수행되는지 테스트합니다."
+          },
+          {
+            "id": 2,
+            "title": "애플리케이션 모니터링 시스템 구축",
+            "description": "로깅, 성능 모니터링, 에러 추적을 위한 종합적인 모니터링 시스템을 구축합니다.",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Logtail과 Winston을 사용하여 구조화된 로깅 시스템을 구현합니다. API 요청/응답 시간, 에러율, 사용자 활동을 추적하는 미들웨어를 개발합니다. 성능 지표(응답 시간, 메모리 사용량, CPU 사용률)를 수집하고 대시보드에 표시하는 시스템을 구축합니다. 임계값 초과 시 알림을 발송하는 기능을 구현합니다.",
+            "status": "pending",
+            "testStrategy": "다양한 시나리오(정상 요청, 에러 발생, 성능 저하)에서 모니터링 데이터가 정확하게 수집되는지 테스트합니다. 알림 시스템이 임계값 초과 시 적절한 알림을 발송하는지 확인합니다."
+          },
+          {
+            "id": 3,
+            "title": "비용 모니터링 및 최적화 시스템 구현",
+            "description": "월 예산 10만원 내에서 운영하기 위한 비용 모니터링 및 자동 최적화 시스템을 구현합니다.",
+            "dependencies": [
+              "11.2"
+            ],
+            "details": "Supabase, Railway, Vercel 등 각 서비스의 사용량을 추적하는 CostMonitor 클래스를 구현합니다. 데이터베이스 크기, 스토리지 사용량, API 호출 수, 대역폭 사용량을 모니터링하고 일일/주간/월간 리포트를 생성합니다. 사용량이 임계값에 도달하면 자동으로 알림을 발송하고, 필요시 자동 스케일링 또는 기능 제한을 적용하는 로직을 구현합니다.",
+            "status": "pending",
+            "testStrategy": "각 서비스의 사용량 데이터가 정확하게 수집되는지 테스트하고, 임계값 도달 시 알림 및 자동 조치가 올바르게 작동하는지 확인합니다. 비용 예측 알고리즘의 정확성을 검증합니다."
+          },
+          {
+            "id": 4,
+            "title": "위험 완화 전략 및 백업 시스템 구현",
+            "description": "주요 위험 요소를 식별하고 이를 완화하기 위한 전략과 백업 시스템을 구현합니다.",
+            "dependencies": [
+              "11.2",
+              "11.3"
+            ],
+            "details": "Supabase 종속성을 줄이기 위한 Repository 패턴 기반의 데이터 액세스 레이어를 구현합니다. 데이터베이스 백업 자동화 스크립트를 작성하고, 정기적인 백업 검증 프로세스를 구축합니다. 서비스 장애 시 대체 서비스로 전환할 수 있는 Circuit Breaker 패턴을 구현합니다. 중요 데이터의 다중 백업 전략을 수립합니다.",
+            "status": "pending",
+            "testStrategy": "백업 및 복원 프로세스가 정상적으로 작동하는지 테스트하고, 서비스 장애 시나리오에서 Circuit Breaker가 올바르게 작동하는지 확인합니다. 데이터 무결성이 유지되는지 검증합니다."
+          },
+          {
+            "id": 5,
+            "title": "운영 문서화 및 장애 대응 절차 수립",
+            "description": "시스템 운영을 위한 종합적인 문서화와 장애 발생 시 대응 절차를 수립합니다.",
+            "dependencies": [
+              "11.1",
+              "11.2",
+              "11.3",
+              "11.4"
+            ],
+            "details": "시스템 아키텍처, 배포 절차, 모니터링 가이드, 트러블슈팅 매뉴얼을 작성합니다. 장애 유형별 대응 절차(데이터베이스 장애, API 서버 장애, 네트워크 장애 등)를 문서화하고, 각 절차에 대한 체크리스트를 작성합니다. 운영팀을 위한 대시보드 사용법과 알림 대응 가이드를 작성합니다. 정기적인 시스템 점검 체크리스트를 수립합니다.",
+            "status": "pending",
+            "testStrategy": "문서화된 절차를 실제 시나리오에서 테스트하여 실행 가능성을 검증합니다. 장애 복구 시뮬레이션을 통해 대응 절차의 효과성을 확인하고, 복구 시간 목표(RTO)와 복구 지점 목표(RPO)가 달성되는지 테스트합니다."
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "최종 테스트 및 프로덕션 배포",
+        "description": "종합 테스트, 성능 최적화, 보안 점검, 사용자 수용 테스트 및 최종 프로덕션 배포 수행",
+        "details": "모든 기능에 대한 종합 테스트를 수행하고, 성능을 최적화합니다. 보안 취약점을 점검하고 필요한 조치를 취합니다. 실제 사용자를 대상으로 수용 테스트를 진행하고 피드백을 수집합니다. 최종적으로 프로덕션 환경에 배포하고 모니터링합니다.\n\n```typescript\n// 종합 테스트 스크립트\nimport { test, expect } from '@playwright/test';\n\n// 학생 플로우 테스트\ntest.describe('Student Flow', () => {\n  test('Student can login and see dashboard', async ({ page }) => {\n    await page.goto('/login');\n    await page.fill('input[name=\"email\"]', 'student@example.com');\n    await page.fill('input[name=\"password\"]', 'password123');\n    await page.click('button[type=\"submit\"]');\n    \n    // 대시보드로 리디렉션 확인\n    await expect(page).toHaveURL('/dashboard');\n    \n    // 학생용 대시보드 요소 확인\n    await expect(page.locator('h1')).toContainText('학습 대시보드');\n    await expect(page.locator('text=오늘의 학습')).toBeVisible();\n    await expect(page.locator('text=복습 예정')).toBeVisible();\n    await expect(page.locator('text=학습 스트릭')).toBeVisible();\n  });\n  \n  test('Student can solve problems', async ({ page }) => {\n    // 로그인\n    // ...\n    \n    // 오늘의 학습으로 이동\n    await page.click('text=오늘의 학습');\n    await expect(page).toHaveURL('/today');\n    \n    // 문제 풀기\n    await page.click('text=시작하기');\n    \n    // 첫 번째 문제 확인\n    await expect(page.locator('.problem-content')).toBeVisible();\n    \n    // 답변 제출\n    await page.fill('input[name=\"answer\"]', '42');\n    await page.click('button:has-text(\"제출\")');\n    \n    // 결과 확인\n    await expect(page.locator('.result-feedback')).toBeVisible();\n    \n    // 다음 문제로 이동\n    await page.click('button:has-text(\"다음 문제\")');\n    \n    // 두 번째 문제 확인\n    await expect(page.locator('.problem-content')).toBeVisible();\n  });\n  \n  // 다른 학생 플로우 테스트\n});\n\n// 교사 플로우 테스트\ntest.describe('Teacher Flow', () => {\n  // 교사 플로우 테스트\n});\n\n// 관리자 플로우 테스트\ntest.describe('Admin Flow', () => {\n  // 관리자 플로우 테스트\n});\n```\n\n```typescript\n// 보안 점검 스크립트\nimport { exec } from 'child_process';\nimport { promisify } from 'util';\n\nconst execAsync = promisify(exec);\n\n// 의존성 취약점 스캔\nasync function scanDependencies() {\n  try {\n    const { stdout, stderr } = await execAsync('npm audit --json');\n    const result = JSON.parse(stdout);\n    \n    console.log(`Found ${result.metadata.vulnerabilities.total} vulnerabilities`);\n    console.log(`Critical: ${result.metadata.vulnerabilities.critical}`);\n    console.log(`High: ${result.metadata.vulnerabilities.high}`);\n    console.log(`Moderate: ${result.metadata.vulnerabilities.moderate}`);\n    console.log(`Low: ${result.metadata.vulnerabilities.low}`);\n    \n    if (result.metadata.vulnerabilities.critical > 0 || result.metadata.vulnerabilities.high > 0) {\n      console.error('Critical or high vulnerabilities found. Fixing...');\n      await execAsync('npm audit fix');\n    }\n  } catch (error) {\n    console.error('Error scanning dependencies:', error);\n  }\n}\n\n// API 보안 점검\nasync function checkApiSecurity() {\n  // CORS 설정 확인\n  // 인증 엔드포인트 보안 확인\n  // 입력 유효성 검사 확인\n  // 속도 제한 확인\n}\n\n// 데이터베이스 보안 점검\nasync function checkDatabaseSecurity() {\n  // RLS 정책 확인\n  // 백업 설정 확인\n  // 민감 데이터 암호화 확인\n}\n\n// 프론트엔드 보안 점검\nasync function checkFrontendSecurity() {\n  // CSP 설정 확인\n  // XSS 방어 확인\n  // CSRF 방어 확인\n}\n\nasync function runSecurityChecks() {\n  await scanDependencies();\n  await checkApiSecurity();\n  await checkDatabaseSecurity();\n  await checkFrontendSecurity();\n  \n  console.log('Security checks completed');\n}\n\nrunSecurityChecks();\n```\n\n```typescript\n// 프로덕션 배포 스크립트\nimport { exec } from 'child_process';\nimport { promisify } from 'util';\n\nconst execAsync = promisify(exec);\n\nasync function deployToProduction() {\n  try {\n    // 1. 최종 테스트 실행\n    console.log('Running final tests...');\n    const { stdout: testOutput } = await execAsync('npm run test:e2e');\n    console.log(testOutput);\n    \n    // 2. 프론트엔드 빌드\n    console.log('Building frontend...');\n    await execAsync('cd packages/web && npm run build');\n    \n    // 3. 백엔드 빌드\n    console.log('Building backend...');\n    await execAsync('cd packages/api && npm run build');\n    \n    // 4. 데이터베이스 마이그레이션\n    console.log('Running database migrations...');\n    await execAsync('npm run db:migrate:production');\n    \n    // 5. 프론트엔드 배포 (Vercel)\n    console.log('Deploying frontend to Vercel...');\n    await execAsync('cd packages/web && npx vercel --prod');\n    \n    // 6. 백엔드 배포 (Railway)\n    console.log('Deploying backend to Railway...');\n    await execAsync('cd packages/api && npx railway up');\n    \n    console.log('Deployment completed successfully!');\n  } catch (error) {\n    console.error('Deployment failed:', error);\n    process.exit(1);\n  }\n}\n\ndeployToProduction();\n```",
+        "testStrategy": "모든 주요 사용자 플로우(학생, 교사, 관리자)에 대한 종단간(E2E) 테스트를 수행합니다. 성능 지표(LCP, FID, CLS, API 응답 시간 등)가 목표치를 충족하는지 확인합니다. 보안 취약점 스캔 결과를 검토하고 모든 중요 및 높은 수준의 취약점이 해결되었는지 확인합니다. 실제 사용자 피드백을 수집하고 분석하여 개선 사항을 식별합니다. 배포 후 모니터링 시스템이 정상적으로 작동하는지 확인합니다.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "종합 통합 테스트 및 E2E 테스트 수행",
+            "description": "모든 주요 사용자 플로우(학생, 교사, 관리자)에 대한 종단간 테스트를 수행하고, 시스템 전체의 기능적 완성도를 검증합니다.",
+            "dependencies": [],
+            "details": "Playwright를 사용하여 학생의 로그인부터 문제 풀이, 교사의 문제 세트 관리, 관리자의 사용자 관리까지 모든 핵심 플로우를 자동화된 테스트로 구현합니다. 각 역할별 대시보드 접근성, 권한 기반 기능 제한, 데이터 일관성을 검증합니다. 크로스 브라우저 호환성과 반응형 디자인도 함께 테스트합니다. 테스트 실패 시 상세한 스크린샷과 로그를 수집하여 디버깅을 지원합니다.",
+            "status": "pending",
+            "testStrategy": "주요 사용자 시나리오별로 테스트 케이스를 작성하고, 성공/실패 조건을 명확히 정의합니다. 테스트 데이터는 시드 데이터를 사용하여 일관성을 보장하고, 테스트 후 데이터 정리를 자동화합니다."
+          },
+          {
+            "id": 2,
+            "title": "성능 최적화 및 성능 지표 측정",
+            "description": "애플리케이션의 성능을 측정하고 최적화하여 사용자 경험을 향상시킵니다.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Lighthouse를 사용하여 Core Web Vitals(LCP, FID, CLS) 지표를 측정하고 목표치(LCP < 2.5s, FID < 100ms, CLS < 0.1)를 달성합니다. API 응답 시간을 모니터링하고 느린 쿼리를 최적화합니다. 프론트엔드에서는 코드 스플리팅, 이미지 최적화, 캐싱 전략을 적용합니다. 백엔드에서는 데이터베이스 인덱스 최적화, 쿼리 최적화, Redis 캐싱을 구현합니다. 번들 크기 분석을 통해 불필요한 의존성을 제거합니다.",
+            "status": "pending",
+            "testStrategy": "성능 테스트를 자동화하여 CI/CD 파이프라인에 통합하고, 성능 회귀를 방지합니다. 다양한 네트워크 조건과 디바이스에서 성능을 측정합니다."
+          },
+          {
+            "id": 3,
+            "title": "보안 취약점 점검 및 보안 강화",
+            "description": "애플리케이션의 보안 취약점을 점검하고 필요한 보안 조치를 구현합니다.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "npm audit을 통해 의존성 취약점을 스캔하고 수정합니다. OWASP Top 10 기준으로 보안 점검을 수행합니다. API 엔드포인트의 인증/인가 검증, 입력 유효성 검사, SQL 인젝션 방어를 확인합니다. 프론트엔드에서 XSS, CSRF 방어 메커니즘을 점검합니다. CSP(Content Security Policy) 헤더를 설정하고, HTTPS 강제 리디렉션을 구현합니다. Supabase RLS 정책이 올바르게 적용되었는지 검증합니다. 민감한 데이터의 암호화 상태를 확인합니다.",
+            "status": "pending",
+            "testStrategy": "보안 테스트 도구를 사용하여 자동화된 취약점 스캔을 수행하고, 침투 테스트 시나리오를 통해 보안 강도를 검증합니다."
+          },
+          {
+            "id": 4,
+            "title": "사용자 수용 테스트(UAT) 및 피드백 수집",
+            "description": "실제 사용자를 대상으로 수용 테스트를 진행하고 피드백을 수집하여 최종 개선사항을 반영합니다.",
+            "dependencies": [
+              "12.2",
+              "12.3"
+            ],
+            "details": "베타 테스터 그룹(학생 5명, 교사 3명, 관리자 2명)을 모집하여 실제 사용 시나리오를 테스트합니다. 사용자 피드백 수집을 위한 설문조사와 인터뷰를 진행합니다. 사용성 테스트를 통해 UI/UX 개선점을 식별합니다. 실제 데이터를 사용한 스트레스 테스트를 수행합니다. 피드백을 분석하여 우선순위가 높은 개선사항을 식별하고 반영합니다. 사용자 매뉴얼과 도움말 문서를 작성합니다.",
+            "status": "pending",
+            "testStrategy": "정량적 지표(작업 완료율, 소요 시간, 오류율)와 정성적 피드백(만족도, 사용 편의성)을 모두 수집하여 종합적으로 평가합니다."
+          },
+          {
+            "id": 5,
+            "title": "프로덕션 배포 및 모니터링 시스템 구축",
+            "description": "최종 프로덕션 환경에 배포하고 실시간 모니터링 시스템을 구축합니다.",
+            "dependencies": [
+              "12.4"
+            ],
+            "details": "프론트엔드는 Vercel에, 백엔드는 Railway에 배포합니다. 배포 전 최종 테스트를 자동으로 실행하고 통과해야만 배포가 진행되도록 설정합니다. 데이터베이스 마이그레이션을 안전하게 수행합니다. 배포 후 헬스체크를 통해 서비스 정상 작동을 확인합니다. Sentry를 통한 오류 모니터링, Vercel Analytics를 통한 성능 모니터링을 설정합니다. 알림 시스템을 구축하여 장애 발생 시 즉시 알림을 받을 수 있도록 합니다. 롤백 계획을 수립하고 테스트합니다.",
+            "status": "pending",
+            "testStrategy": "배포 후 스모크 테스트를 자동으로 실행하여 핵심 기능이 정상 작동하는지 확인합니다. 모니터링 시스템이 실제 이슈를 감지하고 알림을 보내는지 테스트합니다."
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "도메인 기능 UI 구현 및 대시보드 통합",
+        "description": "도메인 레이어에서 구현된 기능들을 분석하여 UI가 누락된 항목들의 사용자 인터페이스를 구현하고, 역할별 대시보드에 적절히 배치",
+        "details": "도메인 레이어에서 구현된 모든 기능들을 체계적으로 분석하고, web 패키지의 기존 UI 구현 상태를 점검합니다. 누락된 UI 컴포넌트들을 식별하여 구현하고, 각 역할(학생/교사/관리자)별 대시보드에 적절히 배치합니다.\n\n```typescript\n// 도메인 기능 분석 및 UI 매핑\ninterface DomainFeatureAnalysis {\n  featureName: string;\n  domainImplemented: boolean;\n  uiImplemented: boolean;\n  targetRoles: Array<'student' | 'teacher' | 'admin'>;\n  priority: 'high' | 'medium' | 'low';\n}\n\n// 누락된 UI 컴포넌트 구현 예시\nexport const ProblemSetAnalytics = () => {\n  const { data: analytics } = useProblemSetAnalytics();\n  \n  return (\n    <Card className=\"p-6\">\n      <CardHeader>\n        <CardTitle>문제집 분석</CardTitle>\n      </CardHeader>\n      <CardContent>\n        <div className=\"grid grid-cols-1 md:grid-cols-3 gap-4\">\n          <MetricCard \n            title=\"평균 정답률\" \n            value={`${analytics?.averageAccuracy}%`}\n            trend={analytics?.accuracyTrend}\n          />\n          <MetricCard \n            title=\"완료율\" \n            value={`${analytics?.completionRate}%`}\n            trend={analytics?.completionTrend}\n          />\n          <MetricCard \n            title=\"평균 소요시간\" \n            value={analytics?.averageTime}\n            trend={analytics?.timeTrend}\n          />\n        </div>\n      </CardContent>\n    </Card>\n  );\n};\n\n// 대시보드 위젯 배치 시스템\nexport const DashboardLayout = ({ role }: { role: UserRole }) => {\n  const widgets = useMemo(() => {\n    return getDashboardWidgets(role).filter(widget => \n      widget.isImplemented && widget.isEnabled\n    );\n  }, [role]);\n\n  return (\n    <div className=\"grid grid-cols-1 lg:grid-cols-12 gap-6\">\n      {widgets.map((widget, index) => (\n        <div \n          key={widget.id} \n          className={`col-span-${widget.gridSpan}`}\n        >\n          <widget.component />\n        </div>\n      ))}\n    </div>\n  );\n};\n```\n\n구현 단계:\n1. 도메인 레이어 기능 목록 추출 및 분석\n2. 기존 web 패키지 UI 구현 상태 점검\n3. 누락된 UI 컴포넌트 우선순위 결정\n4. 역할별 대시보드 레이아웃 설계\n5. 누락된 UI 컴포넌트 구현\n6. 대시보드 위젯 배치 및 통합\n7. 반응형 레이아웃 최적화",
+        "testStrategy": "도메인 레이어의 모든 기능이 적절한 UI를 가지고 있는지 체크리스트를 통해 확인합니다. 새로 구현된 UI 컴포넌트들이 각 역할별 사용자에게 올바르게 표시되는지 테스트합니다. 대시보드 레이아웃이 다양한 화면 크기에서 적절하게 반응하는지 확인합니다. 각 위젯이 해당 도메인 기능과 올바르게 연동되어 데이터를 표시하는지 테스트합니다. 사용자 역할에 따른 접근 권한이 UI 레벨에서도 올바르게 적용되는지 확인합니다. 성능 테스트를 통해 대시보드 로딩 시간이 허용 범위 내에 있는지 검증합니다.",
+        "status": "pending",
+        "dependencies": [
+          8,
+          10
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "도메인 레이어 기능 분석 및 UI 매핑 테이블 생성",
+            "description": "도메인 레이어에서 구현된 모든 기능들을 체계적으로 분석하고, 각 기능별로 UI 구현 상태를 매핑하는 분석 테이블을 생성합니다.",
+            "dependencies": [],
+            "details": "도메인 패키지의 모든 애그리게이트, 엔티티, 서비스를 스캔하여 기능 목록을 추출합니다. DomainFeatureAnalysis 인터페이스를 구현하여 각 기능별로 도메인 구현 여부, UI 구현 여부, 대상 역할, 우선순위를 매핑합니다. 분석 결과를 JSON 파일로 저장하여 후속 작업의 기준으로 활용합니다. 특히 Problem, ProblemSet, Class, User 관련 기능들의 CRUD 및 비즈니스 로직을 중점적으로 분석합니다.",
+            "status": "done",
+            "testStrategy": "도메인 레이어의 모든 public 메서드가 분석 테이블에 포함되었는지 확인하고, 각 기능의 분류가 올바른지 검증합니다."
+          },
+          {
+            "id": 2,
+            "title": "기존 web 패키지 UI 구현 상태 점검 및 누락 항목 식별",
+            "description": "web 패키지의 기존 UI 컴포넌트들을 점검하여 도메인 기능과의 매핑 상태를 확인하고, 누락된 UI 컴포넌트 목록을 식별합니다.",
+            "dependencies": [
+              "13.1"
+            ],
+            "details": "web/src/components, web/src/pages 디렉토리의 모든 컴포넌트를 스캔하여 도메인 기능과의 연결 상태를 확인합니다. 기존 컴포넌트들이 어떤 도메인 기능을 다루고 있는지 매핑하고, 13.1에서 생성한 분석 테이블과 비교하여 누락된 UI를 식별합니다. 특히 문제집 분석, 학습 진도 추적, 성과 리포트 등의 고급 기능들의 UI 구현 상태를 중점적으로 점검합니다.",
+            "status": "done",
+            "testStrategy": "모든 기존 UI 컴포넌트가 올바른 도메인 기능과 매핑되었는지 확인하고, 누락된 항목 목록의 정확성을 검증합니다."
+          },
+          {
+            "id": 3,
+            "title": "누락된 UI 컴포넌트 우선순위 결정 및 구현 계획 수립",
+            "description": "식별된 누락 UI 컴포넌트들의 구현 우선순위를 결정하고, 각 역할별 사용자에게 미치는 영향도를 평가하여 구현 계획을 수립합니다.",
+            "dependencies": [
+              "13.2"
+            ],
+            "details": "누락된 UI 컴포넌트들을 사용자 역할별 중요도, 비즈니스 가치, 구현 복잡도를 기준으로 우선순위를 매깁니다. 학생용 대시보드에 필요한 학습 진도 위젯, 교사용 성과 분석 컴포넌트, 관리자용 시스템 모니터링 UI 등을 분류합니다. 각 컴포넌트의 구현 범위, 필요한 API 연동, 디자인 요구사항을 정의하고 구현 순서를 결정합니다.",
+            "status": "done",
+            "testStrategy": "우선순위 결정 기준이 일관성 있게 적용되었는지 확인하고, 각 역할별 사용자 요구사항이 적절히 반영되었는지 검증합니다."
+          },
+          {
+            "id": 4,
+            "title": "역할별 대시보드 레이아웃 설계 및 위젯 배치 시스템 구현",
+            "description": "학생, 교사, 관리자 역할별로 최적화된 대시보드 레이아웃을 설계하고, 동적 위젯 배치 시스템을 구현합니다.",
+            "dependencies": [
+              "13.3"
+            ],
+            "details": "DashboardLayout 컴포넌트를 구현하여 사용자 역할에 따라 적절한 위젯들을 동적으로 배치합니다. 12-column 그리드 시스템을 사용하여 반응형 레이아웃을 구현하고, 각 위젯의 크기와 위치를 역할별로 최적화합니다. 학생용은 학습 진도와 과제 현황 중심, 교사용은 클래스 관리와 성과 분석 중심, 관리자용은 시스템 전체 모니터링 중심으로 설계합니다. 위젯 표시/숨김 설정과 사용자 맞춤 배치 기능도 구현합니다.",
+            "status": "done",
+            "testStrategy": "각 역할별 대시보드가 적절한 위젯들을 표시하는지 확인하고, 반응형 레이아웃이 다양한 화면 크기에서 올바르게 작동하는지 테스트합니다."
+          },
+          {
+            "id": 5,
+            "title": "누락된 UI 컴포넌트 구현 및 대시보드 통합",
+            "description": "우선순위에 따라 누락된 UI 컴포넌트들을 구현하고, 역할별 대시보드에 통합하여 완전한 사용자 인터페이스를 완성합니다.",
+            "dependencies": [
+              "13.4"
+            ],
+            "details": "ProblemSetAnalytics, LearningProgress, PerformanceReport 등의 누락된 컴포넌트들을 구현합니다. 각 컴포넌트는 해당 도메인 서비스와 연동하여 실시간 데이터를 표시하고, shadcn/ui 컴포넌트를 활용하여 일관된 디자인을 유지합니다. React Query를 사용하여 데이터 페칭과 캐싱을 최적화하고, 로딩 상태와 에러 처리를 구현합니다. 구현된 컴포넌트들을 대시보드 위젯 시스템에 등록하고 적절한 위치에 배치합니다.",
+            "status": "in-progress",
+            "testStrategy": "새로 구현된 모든 UI 컴포넌트가 해당 도메인 기능과 올바르게 연동되는지 확인하고, 각 역할별 사용자가 적절한 권한으로 접근할 수 있는지 테스트합니다. 성능 테스트를 통해 대시보드 로딩 시간이 3초 이내인지 검증합니다."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-29T16:41:23.614Z",
+      "updated": "2025-09-03T03:31:07.656Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

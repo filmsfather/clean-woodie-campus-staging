@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme colors - RGB values */
+    --color-brand-50: 239 246 255;
+    --color-brand-100: 219 234 254;
+    --color-brand-200: 191 219 254;
+    --color-brand-300: 147 197 253;
+    --color-brand-400: 96 165 250;
+    --color-brand-500: 59 130 246;
+    --color-brand-600: 37 99 235;
+    --color-brand-700: 29 78 216;
+    --color-brand-800: 30 64 175;
+    --color-brand-900: 30 58 138;
+    --color-brand-950: 23 37 84;
+
+    --color-surface-primary: 255 255 255;
+    --color-surface-secondary: 248 250 252;
+    --color-surface-tertiary: 241 245 249;
+
+    --color-text-primary: 15 23 42;
+    --color-text-secondary: 71 85 105;
+    --color-text-tertiary: 100 116 139;
+    --color-text-inverse: 255 255 255;
+
+    --color-border-primary: 226 232 240;
+    --color-border-secondary: 203 213 225;
+
+    --color-success: 16 185 129;
+    --color-warning: 245 158 11;
+    --color-error: 239 68 68;
+    --color-info: 59 130 246;
+  }
+
+  .dark {
+    /* Dark theme colors - RGB values */
+    --color-brand-50: 23 37 84;
+    --color-brand-100: 30 58 138;
+    --color-brand-200: 30 64 175;
+    --color-brand-300: 29 78 216;
+    --color-brand-400: 37 99 235;
+    --color-brand-500: 59 130 246;
+    --color-brand-600: 96 165 250;
+    --color-brand-700: 147 197 253;
+    --color-brand-800: 191 219 254;
+    --color-brand-900: 219 234 254;
+    --color-brand-950: 239 246 255;
+
+    --color-surface-primary: 15 23 42;
+    --color-surface-secondary: 30 41 59;
+    --color-surface-tertiary: 51 65 85;
+
+    --color-text-primary: 248 250 252;
+    --color-text-secondary: 203 213 225;
+    --color-text-tertiary: 148 163 184;
+    --color-text-inverse: 15 23 42;
+
+    --color-border-primary: 51 65 85;
+    --color-border-secondary: 71 85 105;
+
+    --color-success: 16 185 129;
+    --color-warning: 245 158 11;
+    --color-error: 239 68 68;
+    --color-info: 59 130 246;
+  }
+
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-surface-primary text-text-primary transition-colors duration-200;
+    font-size: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+    line-height: 1.6;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-secondary rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-tertiary;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-surface-primary;
+  }
+
+  /* Selection styles */
+  ::selection {
+    @apply bg-brand-100 text-brand-900;
+  }
+
+  .dark ::selection {
+    @apply bg-brand-800 text-brand-100;
+  }
+}
+
+@layer components {
+  /* Component layer for reusable patterns */
+  .btn-base {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-base {
+    @apply block w-full px-3 py-2 text-sm bg-surface-primary border border-border-primary rounded-lg placeholder-text-tertiary focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors duration-200;
+  }
+
+  .card-base {
+    @apply bg-surface-primary border border-border-primary rounded-lg shadow-soft;
+  }
+}
+
+@layer utilities {
+  /* Custom utility classes */
+  .text-gradient {
+    background: linear-gradient(135deg, theme('colors.brand.500'), theme('colors.brand.700'));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .safe-area-inset {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Animation utilities */
+  .animate-in {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-out {
+    animation: fadeOut 0.2s ease-in forwards;
+  }
+}

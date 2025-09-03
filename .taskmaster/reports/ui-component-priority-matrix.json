@@ -1,0 +1,451 @@
+{
+  "analysisDate": "2025-09-02",
+  "version": "1.0.0",
+  "description": "누락된 UI 컴포넌트 우선순위 결정 매트릭스 및 구현 계획",
+  "prioritizationCriteria": {
+    "businessValue": {
+      "weight": 0.35,
+      "scale": "1-5",
+      "description": "비즈니스 가치 및 사용자에게 미치는 영향도"
+    },
+    "userImpact": {
+      "weight": 0.30,
+      "scale": "1-5", 
+      "description": "사용자 경험 개선 정도"
+    },
+    "implementationComplexity": {
+      "weight": 0.15,
+      "scale": "1-5 (역산)",
+      "description": "구현 복잡도 (낮을수록 높은 점수)"
+    },
+    "technicalDependency": {
+      "weight": 0.10,
+      "scale": "1-5 (역산)",
+      "description": "기술적 의존성 (낮을수록 높은 점수)"
+    },
+    "resourceAvailability": {
+      "weight": 0.10,
+      "scale": "1-5",
+      "description": "개발 리소스 가용성"
+    }
+  },
+  "componentPriorityMatrix": [
+    {
+      "componentName": "ClassOverview",
+      "feature": "교사 대시보드 확장",
+      "targetRoles": ["teacher"],
+      "scores": {
+        "businessValue": 5,
+        "userImpact": 5,
+        "implementationComplexity": 2,
+        "technicalDependency": 4,
+        "resourceAvailability": 4
+      },
+      "weightedScore": 4.25,
+      "priority": "critical",
+      "rationale": "교사의 핵심 업무인 학급 관리를 위한 필수 기능",
+      "estimatedEffort": "large",
+      "estimatedDays": 10
+    },
+    {
+      "componentName": "ProfileEditor",
+      "feature": "사용자 프로필 관리",
+      "targetRoles": ["student", "teacher", "admin"],
+      "scores": {
+        "businessValue": 4,
+        "userImpact": 5,
+        "implementationComplexity": 4,
+        "technicalDependency": 4,
+        "resourceAvailability": 5
+      },
+      "weightedScore": 4.35,
+      "priority": "critical",
+      "rationale": "모든 사용자 역할이 필요로 하는 기본 기능",
+      "estimatedEffort": "medium",
+      "estimatedDays": 5
+    },
+    {
+      "componentName": "ProblemSetAnalytics",
+      "feature": "문제집 고급 기능",
+      "targetRoles": ["teacher"],
+      "scores": {
+        "businessValue": 5,
+        "userImpact": 4,
+        "implementationComplexity": 2,
+        "technicalDependency": 3,
+        "resourceAvailability": 3
+      },
+      "weightedScore": 3.85,
+      "priority": "high",
+      "rationale": "교사의 교육 효과 측정 및 개선을 위한 중요 기능",
+      "estimatedEffort": "large",
+      "estimatedDays": 12
+    },
+    {
+      "componentName": "StudentPerformanceGrid",
+      "feature": "교사 대시보드 확장",
+      "targetRoles": ["teacher"],
+      "scores": {
+        "businessValue": 4,
+        "userImpact": 4,
+        "implementationComplexity": 3,
+        "technicalDependency": 4,
+        "resourceAvailability": 4
+      },
+      "weightedScore": 3.85,
+      "priority": "high",
+      "rationale": "학생별 성과 관리를 위한 핵심 UI",
+      "estimatedEffort": "medium",
+      "estimatedDays": 7
+    },
+    {
+      "componentName": "ClassProgressDashboard",
+      "feature": "진도 추적 고급 기능",
+      "targetRoles": ["teacher", "admin"],
+      "scores": {
+        "businessValue": 5,
+        "userImpact": 4,
+        "implementationComplexity": 2,
+        "technicalDependency": 2,
+        "resourceAvailability": 3
+      },
+      "weightedScore": 3.70,
+      "priority": "high",
+      "rationale": "학급 전체 학습 진도 관리를 위한 필수 기능",
+      "estimatedEffort": "large",
+      "estimatedDays": 10
+    },
+    {
+      "componentName": "InviteCreator",
+      "feature": "초대 관리 시스템",
+      "targetRoles": ["admin", "teacher"],
+      "scores": {
+        "businessValue": 3,
+        "userImpact": 3,
+        "implementationComplexity": 4,
+        "technicalDependency": 4,
+        "resourceAvailability": 4
+      },
+      "weightedScore": 3.45,
+      "priority": "medium",
+      "rationale": "사용자 온보딩 프로세스 개선",
+      "estimatedEffort": "medium",
+      "estimatedDays": 6
+    },
+    {
+      "componentName": "InviteManager",
+      "feature": "초대 관리 시스템", 
+      "targetRoles": ["admin", "teacher"],
+      "scores": {
+        "businessValue": 3,
+        "userImpact": 3,
+        "implementationComplexity": 2,
+        "technicalDependency": 3,
+        "resourceAvailability": 4
+      },
+      "weightedScore": 3.15,
+      "priority": "medium",
+      "rationale": "초대 상태 추적 및 관리",
+      "estimatedEffort": "large",
+      "estimatedDays": 8
+    },
+    {
+      "componentName": "IndividualProgressDetail",
+      "feature": "진도 추적 고급 기능",
+      "targetRoles": ["teacher", "admin"],
+      "scores": {
+        "businessValue": 4,
+        "userImpact": 3,
+        "implementationComplexity": 3,
+        "technicalDependency": 3,
+        "resourceAvailability": 3
+      },
+      "weightedScore": 3.35,
+      "priority": "medium",
+      "rationale": "개별 학생 맞춤형 지도를 위한 상세 분석",
+      "estimatedEffort": "medium",
+      "estimatedDays": 6
+    },
+    {
+      "componentName": "ProblemSetSearch",
+      "feature": "문제집 고급 기능",
+      "targetRoles": ["teacher"],
+      "scores": {
+        "businessValue": 3,
+        "userImpact": 4,
+        "implementationComplexity": 3,
+        "technicalDependency": 4,
+        "resourceAvailability": 4
+      },
+      "weightedScore": 3.50,
+      "priority": "medium",
+      "rationale": "문제집 활용도 향상을 위한 검색 기능",
+      "estimatedEffort": "medium",
+      "estimatedDays": 5
+    },
+    {
+      "componentName": "AssignmentStatusTracker",
+      "feature": "교사 대시보드 확장",
+      "targetRoles": ["teacher"],
+      "scores": {
+        "businessValue": 4,
+        "userImpact": 3,
+        "implementationComplexity": 3,
+        "technicalDependency": 2,
+        "resourceAvailability": 4
+      },
+      "weightedScore": 3.40,
+      "priority": "medium",
+      "rationale": "과제 진행 현황 실시간 추적",
+      "estimatedEffort": "medium",
+      "estimatedDays": 6
+    },
+    {
+      "componentName": "ProfileImageUpload",
+      "feature": "사용자 프로필 관리",
+      "targetRoles": ["student", "teacher", "admin"],
+      "scores": {
+        "businessValue": 2,
+        "userImpact": 3,
+        "implementationComplexity": 2,
+        "technicalDependency": 2,
+        "resourceAvailability": 4
+      },
+      "weightedScore": 2.55,
+      "priority": "low",
+      "rationale": "사용자 경험 개선을 위한 부가 기능",
+      "estimatedEffort": "medium",
+      "estimatedDays": 4
+    },
+    {
+      "componentName": "AchievementProgressTracker",
+      "feature": "고급 게임화 기능",
+      "targetRoles": ["student"],
+      "scores": {
+        "businessValue": 2,
+        "userImpact": 3,
+        "implementationComplexity": 3,
+        "technicalDependency": 3,
+        "resourceAvailability": 3
+      },
+      "weightedScore": 2.65,
+      "priority": "low",
+      "rationale": "학습 동기 부여를 위한 추가 기능",
+      "estimatedEffort": "medium",
+      "estimatedDays": 5
+    },
+    {
+      "componentName": "BatchJobMonitor",
+      "feature": "배치 작업 모니터링",
+      "targetRoles": ["admin"],
+      "scores": {
+        "businessValue": 3,
+        "userImpact": 2,
+        "implementationComplexity": 1,
+        "technicalDependency": 1,
+        "resourceAvailability": 2
+      },
+      "weightedScore": 2.25,
+      "priority": "low",
+      "rationale": "관리자 전용 시스템 관리 도구",
+      "estimatedEffort": "large",
+      "estimatedDays": 15
+    },
+    {
+      "componentName": "SRSConfigurationPanel",
+      "feature": "SRS 시스템 관리",
+      "targetRoles": ["admin"],
+      "scores": {
+        "businessValue": 2,
+        "userImpact": 1,
+        "implementationComplexity": 2,
+        "technicalDependency": 2,
+        "resourceAvailability": 2
+      },
+      "weightedScore": 1.80,
+      "priority": "low",
+      "rationale": "고급 관리자 기능, 당장 필요하지 않음",
+      "estimatedEffort": "medium",
+      "estimatedDays": 8
+    }
+  ],
+  "implementationRoadmap": {
+    "phase1_critical": {
+      "duration": "3-4 weeks",
+      "components": [
+        {
+          "name": "ProfileEditor",
+          "priority": 1,
+          "rationale": "모든 사용자가 사용하는 기본 기능, 빠른 구현 가능"
+        },
+        {
+          "name": "ClassOverview", 
+          "priority": 2,
+          "rationale": "교사의 핵심 업무 지원, 높은 비즈니스 가치"
+        }
+      ],
+      "totalEstimatedDays": 15,
+      "successCriteria": [
+        "모든 사용자가 프로필을 편집할 수 있음",
+        "교사가 학급 전체 현황을 한눈에 볼 수 있음"
+      ]
+    },
+    "phase2_high": {
+      "duration": "4-6 weeks", 
+      "components": [
+        {
+          "name": "ProblemSetAnalytics",
+          "priority": 3,
+          "rationale": "교육 효과 측정을 위한 중요 기능"
+        },
+        {
+          "name": "StudentPerformanceGrid",
+          "priority": 4,
+          "rationale": "교사 대시보드 완성을 위한 핵심 컴포넌트"
+        },
+        {
+          "name": "ClassProgressDashboard",
+          "priority": 5,
+          "rationale": "진도 관리를 위한 필수 기능"
+        }
+      ],
+      "totalEstimatedDays": 29,
+      "successCriteria": [
+        "문제집 성과 분석 데이터를 시각화하여 제공",
+        "학생별 성과를 효과적으로 관리할 수 있음",
+        "학급 전체 진도를 실시간으로 추적할 수 있음"
+      ]
+    },
+    "phase3_medium": {
+      "duration": "3-4 weeks",
+      "components": [
+        {
+          "name": "ProblemSetSearch",
+          "priority": 6,
+          "rationale": "문제집 활용도 개선"
+        },
+        {
+          "name": "InviteCreator",
+          "priority": 7,
+          "rationale": "사용자 온보딩 개선"
+        },
+        {
+          "name": "AssignmentStatusTracker",
+          "priority": 8,
+          "rationale": "과제 관리 기능 완성"
+        }
+      ],
+      "totalEstimatedDays": 17,
+      "successCriteria": [
+        "고급 검색으로 문제집을 쉽게 찾을 수 있음",
+        "새 사용자 초대 프로세스가 원활함",
+        "과제 진행 상황을 실시간으로 추적할 수 있음"
+      ]
+    },
+    "phase4_polish": {
+      "duration": "2-3 weeks",
+      "components": [
+        {
+          "name": "IndividualProgressDetail",
+          "priority": 9,
+          "rationale": "개별 학생 관리 기능 강화"
+        },
+        {
+          "name": "InviteManager",
+          "priority": 10,
+          "rationale": "초대 관리 시스템 완성"
+        }
+      ],
+      "totalEstimatedDays": 14,
+      "successCriteria": [
+        "개별 학생의 학습 패턴을 상세 분석할 수 있음",
+        "초대 현황을 체계적으로 관리할 수 있음"
+      ]
+    },
+    "phase5_advanced": {
+      "duration": "4-5 weeks",
+      "components": [
+        {
+          "name": "ProfileImageUpload",
+          "priority": 11,
+          "rationale": "사용자 경험 개선"
+        },
+        {
+          "name": "AchievementProgressTracker", 
+          "priority": 12,
+          "rationale": "게임화 기능 강화"
+        },
+        {
+          "name": "BatchJobMonitor",
+          "priority": 13,
+          "rationale": "관리자 도구 완성"
+        }
+      ],
+      "totalEstimatedDays": 24,
+      "successCriteria": [
+        "사용자가 프로필 이미지를 업로드할 수 있음",
+        "성취 진행률을 상세하게 볼 수 있음",
+        "시스템 배치 작업을 모니터링할 수 있음"
+      ]
+    }
+  },
+  "resourceAllocation": {
+    "totalEstimatedDays": 99,
+    "recommendedTeamSize": 2,
+    "skillRequirements": [
+      "React/TypeScript 전문성",
+      "UI/UX 디자인 이해",
+      "차트 라이브러리 경험 (Recharts, Chart.js)",
+      "반응형 웹 개발",
+      "상태 관리 (React Query, Zustand)"
+    ],
+    "technicalDependencies": [
+      "API 엔드포인트 구현 필요",
+      "백엔드 데이터 모델 확장",
+      "이미지 업로드 인프라",
+      "실시간 데이터 업데이트 시스템"
+    ]
+  },
+  "riskAssessment": {
+    "high": [
+      {
+        "risk": "API 의존성",
+        "impact": "일부 컴포넌트는 백엔드 API 완성 후에만 완전히 테스트 가능",
+        "mitigation": "Mock 데이터를 사용한 프론트엔드 우선 개발"
+      }
+    ],
+    "medium": [
+      {
+        "risk": "성능 이슈", 
+        "impact": "대량 데이터 시각화로 인한 렌더링 성능 저하",
+        "mitigation": "가상화, 페이징, 지연 로딩 적용"
+      },
+      {
+        "risk": "사용자 채택",
+        "impact": "새로운 UI의 학습 곡선",
+        "mitigation": "점진적 롤아웃, 사용자 가이드 제공"
+      }
+    ],
+    "low": [
+      {
+        "risk": "브라우저 호환성",
+        "impact": "일부 구형 브라우저에서 기능 제한",
+        "mitigation": "폴리필 적용, 점진적 향상"
+      }
+    ]
+  },
+  "summary": {
+    "totalComponents": 14,
+    "criticalPriority": 2,
+    "highPriority": 3,
+    "mediumPriority": 5,
+    "lowPriority": 4,
+    "recommendedStartOrder": [
+      "ProfileEditor",
+      "ClassOverview", 
+      "ProblemSetAnalytics",
+      "StudentPerformanceGrid",
+      "ClassProgressDashboard"
+    ]
+  }
+}

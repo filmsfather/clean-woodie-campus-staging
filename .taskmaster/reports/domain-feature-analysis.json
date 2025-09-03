@@ -1,0 +1,516 @@
+{
+  "analysisDate": "2025-09-02",
+  "version": "1.0.0",
+  "description": "도메인 레이어 기능 분석 및 UI 매핑 테이블",
+  "domainFeatures": [
+    {
+      "featureName": "사용자 관리 (User Management)",
+      "domainModule": "auth/entities/User",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": true,
+      "targetRoles": ["admin"],
+      "priority": "medium",
+      "uiComponents": [
+        "packages/web/src/components/auth/RoleGuard.tsx",
+        "packages/web/src/contexts/AuthContext.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "updateProfile",
+        "activate",
+        "deactivate",
+        "roleManagement"
+      ],
+      "missingUiFeatures": [
+        "사용자 목록 관리 UI",
+        "사용자 상세 정보 편집 UI",
+        "사용자 활성화/비활성화 UI"
+      ]
+    },
+    {
+      "featureName": "초대 관리 (Invite Management)",
+      "domainModule": "auth/entities/Invite",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": false,
+      "targetRoles": ["admin", "teacher"],
+      "priority": "medium",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "create",
+        "validate",
+        "accept",
+        "expire"
+      ],
+      "missingUiFeatures": [
+        "초대장 생성 UI",
+        "초대장 목록 관리 UI",
+        "초대 수락 UI",
+        "초대 상태 추적 UI"
+      ]
+    },
+    {
+      "featureName": "프로필 관리 (Profile Management)",
+      "domainModule": "auth/entities/Profile",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": false,
+      "targetRoles": ["student", "teacher", "admin"],
+      "priority": "high",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "create",
+        "update",
+        "getProfile"
+      ],
+      "missingUiFeatures": [
+        "개인 프로필 편집 UI",
+        "프로필 이미지 업로드 UI",
+        "프로필 설정 UI"
+      ]
+    },
+    {
+      "featureName": "문제 관리 (Problem Management)",
+      "domainModule": "problems/entities/Problem",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": true,
+      "targetRoles": ["teacher"],
+      "priority": "high",
+      "uiComponents": [
+        "packages/web/src/components/problems/editor/ProblemEditor.tsx",
+        "packages/web/src/components/problems/ProblemBankBrowser.tsx",
+        "packages/web/src/components/problems/TagManager.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "updateContent",
+        "updateCorrectAnswer",
+        "changeDifficulty",
+        "addTag",
+        "removeTag",
+        "activate",
+        "deactivate",
+        "clone",
+        "validateForUse"
+      ],
+      "missingUiFeatures": [
+        "문제 복제 UI",
+        "문제 사용 통계 UI",
+        "문제 검증 결과 표시 UI"
+      ]
+    },
+    {
+      "featureName": "문제집 관리 (ProblemSet Management)",
+      "domainModule": "problemSets/entities/ProblemSet",
+      "domainImplemented": true,
+      "applicationImplemented": false,
+      "apiImplemented": false,
+      "uiImplemented": true,
+      "targetRoles": ["teacher"],
+      "priority": "high",
+      "uiComponents": [
+        "packages/web/src/components/problemsets/ProblemSetBuilder.tsx",
+        "packages/web/src/components/problemsets/ProblemSetList.tsx",
+        "packages/web/src/components/problemsets/ProblemPicker.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "addItem",
+        "removeItem",
+        "reorderItems",
+        "updateTitle",
+        "updateDescription"
+      ],
+      "missingUiFeatures": []
+    },
+    {
+      "featureName": "문제집 분석 (ProblemSet Analytics)",
+      "domainModule": "problemSets/services/IProblemSetAnalyticsService",
+      "domainImplemented": true,
+      "applicationImplemented": false,
+      "apiImplemented": false,
+      "uiImplemented": false,
+      "targetRoles": ["teacher", "admin"],
+      "priority": "medium",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "getPerformanceStatistics",
+        "getUsageStatistics",
+        "getDifficultyDistribution"
+      ],
+      "missingUiFeatures": [
+        "문제집 성과 분석 대시보드",
+        "문제집 사용 통계 UI",
+        "난이도 분포 차트",
+        "학습자 성과 비교 UI"
+      ]
+    },
+    {
+      "featureName": "문제집 검색 (ProblemSet Search)",
+      "domainModule": "problemSets/services/IProblemSetSearchService",
+      "domainImplemented": true,
+      "applicationImplemented": false,
+      "apiImplemented": false,
+      "uiImplemented": false,
+      "targetRoles": ["teacher", "student"],
+      "priority": "medium",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "searchProblemSets",
+        "filterByTags",
+        "filterByDifficulty",
+        "sortResults"
+      ],
+      "missingUiFeatures": [
+        "문제집 검색 UI",
+        "고급 필터링 UI",
+        "검색 결과 정렬 UI"
+      ]
+    },
+    {
+      "featureName": "문제집 복제 (ProblemSet Cloning)",
+      "domainModule": "problemSets/services/IProblemSetCloningService",
+      "domainImplemented": true,
+      "applicationImplemented": false,
+      "apiImplemented": false,
+      "uiImplemented": false,
+      "targetRoles": ["teacher"],
+      "priority": "low",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "cloneProblemSet",
+        "copyWithModifications"
+      ],
+      "missingUiFeatures": [
+        "문제집 복제 UI",
+        "복제 시 수정사항 선택 UI"
+      ]
+    },
+    {
+      "featureName": "과제 관리 (Assignment Management)",
+      "domainModule": "assignments/entities/Assignment",
+      "domainImplemented": true,
+      "applicationImplemented": false,
+      "apiImplemented": false,
+      "uiImplemented": true,
+      "targetRoles": ["teacher"],
+      "priority": "high",
+      "uiComponents": [
+        "packages/web/src/components/problemsets/ProblemSetAssignment.tsx",
+        "packages/web/src/components/problemsets/StudentAssignmentManager.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "addTarget",
+        "removeTarget",
+        "updateDueDate",
+        "extendDueDate",
+        "checkOverdue"
+      ],
+      "missingUiFeatures": [
+        "과제 진행 현황 모니터링 UI",
+        "과제 결과 분석 UI",
+        "과제 알림 관리 UI"
+      ]
+    },
+    {
+      "featureName": "과제 서비스 (Assignment Service)",
+      "domainModule": "assignments/services/AssignmentService",
+      "domainImplemented": true,
+      "applicationImplemented": false,
+      "apiImplemented": false,
+      "uiImplemented": false,
+      "targetRoles": ["teacher", "admin"],
+      "priority": "medium",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "validateAssignmentRules",
+        "checkConflicts",
+        "notifyStakeholders"
+      ],
+      "missingUiFeatures": [
+        "과제 규칙 검증 UI",
+        "과제 충돌 확인 UI",
+        "이해관계자 알림 UI"
+      ]
+    },
+    {
+      "featureName": "SRS 복습 스케줄 (SRS Review Schedule)",
+      "domainModule": "srs/entities/ReviewSchedule",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": true,
+      "targetRoles": ["student"],
+      "priority": "high",
+      "uiComponents": [
+        "packages/web/src/components/dashboard/student/pages/ReviewPage.tsx",
+        "packages/web/src/components/dashboard/student/components/ReviewQueueCard.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "updateNextReviewDate",
+        "processReview",
+        "calculateNextInterval"
+      ],
+      "missingUiFeatures": []
+    },
+    {
+      "featureName": "SRS 학습 기록 (SRS Study Record)",
+      "domainModule": "srs/entities/StudyRecord",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": false,
+      "targetRoles": ["student", "teacher"],
+      "priority": "medium",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "create",
+        "updateFeedback",
+        "calculatePerformance"
+      ],
+      "missingUiFeatures": [
+        "학습 기록 상세 보기 UI",
+        "학습 성과 분석 UI",
+        "학습 패턴 분석 UI"
+      ]
+    },
+    {
+      "featureName": "SRS 간격 반복 계산기 (SRS Calculator)",
+      "domainModule": "srs/services/SpacedRepetitionCalculator",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": false,
+      "uiImplemented": false,
+      "targetRoles": ["admin"],
+      "priority": "low",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "calculateNextInterval",
+        "adjustEaseFactor",
+        "optimizeSchedule"
+      ],
+      "missingUiFeatures": [
+        "SRS 알고리즘 설정 UI",
+        "복습 간격 시각화 UI",
+        "SRS 성능 모니터링 UI"
+      ]
+    },
+    {
+      "featureName": "진도 추적 - 통계 (Progress Statistics)",
+      "domainModule": "progress/entities/Statistics",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": false,
+      "uiImplemented": true,
+      "targetRoles": ["student", "teacher"],
+      "priority": "high",
+      "uiComponents": [
+        "packages/web/src/components/dashboard/student/pages/MyProgressPage.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "updateProgress",
+        "calculateAccuracy",
+        "trackStreaks"
+      ],
+      "missingUiFeatures": []
+    },
+    {
+      "featureName": "진도 추적 - 학습 스트릭 (Study Streak)",
+      "domainModule": "progress/entities/StudyStreak",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": false,
+      "uiImplemented": true,
+      "targetRoles": ["student"],
+      "priority": "medium",
+      "uiComponents": [
+        "packages/web/src/components/dashboard/student/components/StudyStreakCard.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "updateStreak",
+        "resetStreak",
+        "achieveStreak"
+      ],
+      "missingUiFeatures": []
+    },
+    {
+      "featureName": "진도 추적 서비스 (Progress Tracking Service)",
+      "domainModule": "progress/services/ProgressTrackingService",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": false,
+      "uiImplemented": false,
+      "targetRoles": ["teacher", "admin"],
+      "priority": "medium",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "trackStudentProgress",
+        "generateProgressReport",
+        "identifyLearningGaps"
+      ],
+      "missingUiFeatures": [
+        "학급 진도 현황 대시보드",
+        "개별 학생 진도 상세 보기",
+        "학습 격차 분석 UI"
+      ]
+    },
+    {
+      "featureName": "게임화 - 성취 (Gamification Achievement)",
+      "domainModule": "gamification/entities/Achievement",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": true,
+      "targetRoles": ["student"],
+      "priority": "medium",
+      "uiComponents": [
+        "packages/web/src/components/gamification/GamificationDashboard.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "earn",
+        "checkCriteria"
+      ],
+      "missingUiFeatures": [
+        "성취 상세 정보 모달",
+        "성취 진행률 표시 UI"
+      ]
+    },
+    {
+      "featureName": "게임화 - 토큰 (Gamification Token)",
+      "domainModule": "gamification/entities/Token",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": true,
+      "targetRoles": ["student"],
+      "priority": "medium",
+      "uiComponents": [
+        "packages/web/src/components/gamification/GamificationDashboard.tsx"
+      ],
+      "businessCapabilities": [
+        "earn",
+        "spend",
+        "calculateBalance"
+      ],
+      "missingUiFeatures": [
+        "토큰 거래 내역 UI",
+        "토큰 획득 이유 상세 표시"
+      ]
+    },
+    {
+      "featureName": "게임화 - 보상 (Gamification Reward)",
+      "domainModule": "gamification/entities/Reward",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": true,
+      "targetRoles": ["student"],
+      "priority": "medium",
+      "uiComponents": [
+        "packages/web/src/components/gamification/GamificationDashboard.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "redeem",
+        "checkAvailability"
+      ],
+      "missingUiFeatures": [
+        "보상 상세 정보 UI",
+        "보상 교환 내역 UI"
+      ]
+    },
+    {
+      "featureName": "게임화 - 리더보드 (Gamification Leaderboard)",
+      "domainModule": "gamification/entities/LeaderboardEntry",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": true,
+      "uiImplemented": true,
+      "targetRoles": ["student"],
+      "priority": "medium",
+      "uiComponents": [
+        "packages/web/src/components/gamification/LeaderboardCard.tsx"
+      ],
+      "businessCapabilities": [
+        "create",
+        "updateRanking",
+        "calculateScore"
+      ],
+      "missingUiFeatures": [
+        "리더보드 상세 보기 UI",
+        "개인 순위 변동 이력 UI"
+      ]
+    },
+    {
+      "featureName": "배치 작업 (Batch Processing)",
+      "domainModule": "batch/entities/BatchJob",
+      "domainImplemented": true,
+      "applicationImplemented": true,
+      "apiImplemented": false,
+      "uiImplemented": false,
+      "targetRoles": ["admin"],
+      "priority": "low",
+      "uiComponents": [],
+      "businessCapabilities": [
+        "create",
+        "start",
+        "complete",
+        "fail",
+        "retry"
+      ],
+      "missingUiFeatures": [
+        "배치 작업 모니터링 대시보드",
+        "작업 실행 이력 UI",
+        "작업 스케줄링 UI",
+        "작업 실패 로그 UI"
+      ]
+    }
+  ],
+  "summary": {
+    "totalFeatures": 21,
+    "fullyImplemented": 6,
+    "partiallyImplemented": 9,
+    "notImplemented": 6,
+    "highPriorityMissing": 2,
+    "mediumPriorityMissing": 8,
+    "lowPriorityMissing": 2
+  },
+  "recommendations": [
+    {
+      "priority": "high",
+      "feature": "프로필 관리",
+      "reason": "모든 사용자 역할이 필요로 하는 기본 기능"
+    },
+    {
+      "priority": "high",
+      "feature": "진도 추적 API 연동",
+      "reason": "UI는 완성되었으나 API 연결 필요"
+    },
+    {
+      "priority": "medium",
+      "feature": "문제집 분석 기능",
+      "reason": "교사의 교육 효과 측정에 중요"
+    },
+    {
+      "priority": "medium",
+      "feature": "초대 관리 시스템",
+      "reason": "사용자 온보딩 프로세스 개선"
+    },
+    {
+      "priority": "low",
+      "feature": "배치 작업 모니터링",
+      "reason": "시스템 관리자만 필요한 고급 기능"
+    }
+  ]
+}

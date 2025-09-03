@@ -1,0 +1,1 @@
+{"version":3,"file":"ConsoleEmailAdapter.d.ts","sourceRoot":"","sources":["ConsoleEmailAdapter.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,YAAY,EAAE,WAAW,EAAE,MAAM,sCAAsC,CAAC;AAChG,OAAO,EAAE,MAAM,EAAE,MAAM,gBAAgB,CAAC;AAGxC,qBAAa,mBAAoB,YAAW,aAAa;IACjD,SAAS,CAAC,OAAO,EAAE,YAAY,GAAG,OAAO,CAAC,MAAM,CAAC,WAAW,CAAC,CAAC;CA2BrE"}

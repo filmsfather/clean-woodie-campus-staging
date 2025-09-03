@@ -1,0 +1,82 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.0.0
+    
+    - name: Install dependencies
+      run: pnpm install
+    
+    - name: Run linting
+      run: pnpm run lint
+    
+    - name: Run type check
+      run: pnpm run type-check
+    
+    - name: Run tests
+      run: pnpm run test:all
+    
+    - name: Build packages
+      run: pnpm run build
+
+  deploy-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.0.0
+    
+    - name: Install dependencies
+      run: pnpm install
+    
+    - name: Build for staging
+      env:
+        VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+        VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        VITE_APP_ENV: staging
+        VITE_APP_NAME: "Clean Woodie Campus (Staging)"
+        VITE_ENABLE_DEV_TOOLS: true
+        VITE_ENABLE_ANALYTICS: false
+      run: |
+        cd packages/web
+        pnpm run build
+    
+    - name: Deploy to Vercel
+      uses: vercel/action@v1
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: packages/web
+        vercel-args: '--prod --yes'

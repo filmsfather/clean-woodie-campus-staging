@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    "baseUrl": ".",
+    "paths": {
+      "@woodie/domain": ["./packages/domain/src"],
+      "@woodie/domain/*": ["./packages/domain/src/*"],
+      "@woodie/application": ["./packages/application/src"],
+      "@woodie/application/*": ["./packages/application/src/*"],
+      "@woodie/infrastructure": ["./packages/infrastructure/src"],
+      "@woodie/infrastructure/*": ["./packages/infrastructure/src/*"]
+    }
+  },
+  "references": [
+    { "path": "./packages/domain" },
+    { "path": "./packages/application" },
+    { "path": "./packages/infrastructure" },
+    { "path": "./packages/web" },
+    { "path": "./packages/api" }
+  ],
+  "exclude": ["node_modules", "dist", "build"]
+}

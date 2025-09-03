@@ -1,0 +1,478 @@
+# WOODIECAMPUS - Product Requirements Document v2.0
+
+## Executive Summary
+
+WOODIECAMPUS는 에빙하우스 망각곡선 이론 기반 지능형 학습 관리 플랫폼입니다. 클린 아키텍처로 도메인 순수성을 보장하고, 수직 슬라이스 단위로 기능을 점진적 배포합니다.
+
+### 핵심 원칙
+1. **도메인 독립성**: 비즈니스 로직의 프레임워크/DB 독립
+2. **수직 슬라이스**: 기능별 독립 배포 가능 구조
+3. **Result 패턴**: 모든 실패 케이스 표준화t
+4. **Supabase 최대 활용**: Auth/DB/Storage/Realtime 통합
+5. **비용 통제**: 월 10만원 이내 인프라 운영
+
+## 1. Goals & Non-Goals
+
+### 1.1 Goals
+- 학습/문제/복습 핵심 플로우의 크로스 플랫폼 제공
+- Role 기반 UI 차별화 (Student/Teacher/Admin)
+- Spaced Repetition 자동화 및 진도 가시화
+- 기술 스택 교체 유연성 (Express → Edge Functions)
+- 입시/학습 특화 기능 우선 개발
+
+### 1.2 Non-Goals
+- 동영상 스트리밍/라이브 강의 (초기 제외)
+- 멀티테넌트 아키텍처 (단일 인스턴스)
+- 복잡한 결제/정산 시스템
+- 네이티브 앱 (PWA로 충분)
+
+## 2. User Personas & Core Flows
+
+### Student
+**핵심 플로우**: 오늘 할 일 확인 → 문제 풀이/복습 → 진도/스트릭 확인
+- 일일 학습 20-30분
+- 모바일 우선 사용
+- 즉각적 피드백 필요
+
+### Teacher  
+**핵심 플로우**: 문제/문제집 생성 → 반/학생 배정 → 통계 모니터링
+- PC+모바일 다중 사용
+- 문제 재사용 중시
+- 데이터 기반 지도
+
+### Admin
+**핵심 플로우**: 사용자 초대/관리 → 시스템 모니터링 → 감사 로그
+- 초대 기반 온보딩
+- 권한 세분화 관리
+- 운영 지표 추적
+
+## 3. 12-Week Development Roadmap
+
+### Week 1: Foundation
+**목표**: 프로젝트 기반 구축
+```
+- [ ] Monorepo 구조 (pnpm workspace)
+- [ ] Supabase 프로젝트 생성
+- [ ] 도메인 베이스 클래스
+- [ ] CI/CD 파이프라인
+```
+
+### Week 2: Authentication & User Management
+**목표**: 초대 기반 사용자 시스템
+```
+- [ ] 이메일/비밀번호 인증
+- [ ] Admin 초대 생성/발송
+- [ ] 초대 링크 통한 가입
+- [ ] RLS 정책 구현
+```
+
+**초대 플로우**:
+1. Admin이 이메일/역할로 초대 생성
+2. 초대 이메일 발송 (토큰 포함)
+3. 사용자가 링크 클릭 → 비밀번호 설정
+4. 계정 활성화 완료
+
+### Week 3-4: Problem Management
+**목표**: 문제 CRUD 시스템
+```
+- [ ] Problem 도메인 엔티티
+- [ ] JSONB 기반 유연한 콘텐츠
+- [ ] 태그/난이도 시스템
+- [ ] 교사별 문제 뱅크
+```
+
+### Week 5-6: Problem Sets & Assignment
+**목표**: 문제집 구성 및 배포
+```
+- [ ] ProblemSet 애그리게이트
+- [ ] 드래그앤드롭 문제 정렬
+- [ ] 반/개별 학생 배정
+- [ ] 마감일 관리
+```
+
+### Week 7-8: Spaced Repetition System
+**목표**: 과학적 복습 엔진
+```
+- [ ] 복습 알고리즘 구현
+- [ ] 피드백 기반 조정 (AGAIN/HARD/GOOD/EASY)
+- [ ] Realtime 복습 알림
+- [ ] 복습 큐 관리
+```
+
+### Week 9: Progress Tracking
+**목표**: 학습 분석 시스템
+```
+- [ ] 정답률/완료율 계산
+- [ ] 스트릭 추적
+- [ ] 대시보드 구현
+- [ ] 통계 집계
+```
+
+### Week 10: Gamification
+**목표**: 동기부여 메커니즘
+```
+- [ ] 토큰 시스템
+- [ ] 리더보드
+- [ ] 업적/배지
+- [ ] 보상 교환
+```
+
+### Week 11-12: Polish & Deploy
+**목표**: 프로덕션 준비
+```
+- [ ] 성능 최적화
+- [ ] 보안 점검
+- [ ] 모니터링 설정
+- [ ] 프로덕션 배포
+```
+
+## 4. Clean Architecture Implementation
+
+### 4.1 Layer Structure
+```typescript
+// Domain Layer - 순수 비즈니스 로직
+domain/
+  ├── entities/       // User, Problem, ProblemSet
+  ├── value-objects/  // Email, Difficulty, ReviewSchedule
+  ├── services/       // SpacedRepetitionCalculator
+  └── events/         // ProblemSolvedEvent
+
+// Application Layer - Use Cases
+application/
+  ├── use-cases/      // CreateProblem, AssignProblemSet
+  ├── dto/            // 데이터 전송 객체
+  └── mappers/        // Domain ↔ DTO 변환
+
+// Infrastructure Layer - 외부 의존성
+infrastructure/
+  ├── supabase/       // Auth, Database, Realtime
+  ├── repositories/   // 구현체
+  └── services/       // 외부 서비스 어댑터
+
+// Presentation Layer - UI/API
+web/                  // React 프론트엔드
+api/                  // Express API
+```
+
+### 4.2 Dependency Rule
+```
+Presentation → Application → Domain
+     ↓              ↓
+Infrastructure (주입을 통한 의존성 역전)
+```
+
+## 5. Technology Stack
+
+### 5.1 Core Stack
+```yaml
+Frontend:
+  - React 18 + TypeScript
+  - Vite (빌드)
+  - React Router v7
+  - React Query (서버 상태)
+  - Zustand (클라이언트 상태)
+  - Tailwind CSS v4
+
+Backend:
+  - Node.js + TypeScript  
+  - Express → Edge Functions (점진적 마이그레이션)
+  - Jest/Vitest (테스팅)
+
+Infrastructure:
+  - Supabase (PostgreSQL + Auth + Realtime + Storage)
+  - Redis (캐싱/큐)
+  - Vercel (Frontend)
+  - Railway/Render (Backend)
+```
+
+### 5.2 Migration Path (난이도 완화)
+```yaml
+Phase 1 (초기):
+  - Express 서버
+  - Supabase Storage
+  - Zustand 상태관리
+
+Phase 2 (최적화):
+  - Edge Functions 전환
+  - Cloudflare R2 (대용량)
+  - React Context + Query
+
+Phase 3 (확장):
+  - tRPC (타입 안전)
+  - Hono (Workers)
+  - 전역 CDN
+```
+
+## 6. Database Schema
+
+### 6.1 User Management
+```sql
+-- 초대 토큰
+CREATE TABLE users.invite_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL,
+  class_id UUID,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 사용자 프로필 (Supabase Auth 확장)
+CREATE TABLE users.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  role VARCHAR(20) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  class_id UUID,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 감사 로그
+CREATE TABLE users.audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_id UUID REFERENCES auth.users(id),
+  action VARCHAR(50) NOT NULL,
+  target_id UUID,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 6.2 Learning Domain
+```sql
+-- 문제
+CREATE TABLE learning.problems (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  teacher_id UUID REFERENCES auth.users(id),
+  content JSONB NOT NULL,  -- 유연한 문제 구조
+  correct_answer JSONB NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  difficulty INT CHECK (difficulty BETWEEN 1 AND 5),
+  tags TEXT[],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 인덱스 최적화
+CREATE INDEX idx_problems_teacher ON learning.problems(teacher_id);
+CREATE INDEX idx_problems_type ON learning.problems(type);
+CREATE INDEX idx_problems_tags ON learning.problems USING gin(tags);
+
+-- RLS 정책
+ALTER TABLE learning.problems ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "teachers_own_problems" ON learning.problems
+  FOR ALL USING (auth.uid() = teacher_id);
+
+CREATE POLICY "students_read_problems" ON learning.problems
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM users.profiles
+      WHERE id = auth.uid() AND role = 'student'
+    )
+  );
+```
+
+## 7. API Specification
+
+### 7.1 Admin APIs (초대 관리)
+```yaml
+POST /api/admin/invites
+  body: { email, role, classId? }
+  response: { inviteId, inviteUrl }
+
+POST /api/admin/invites/batch
+  body: { invites: [{email, role, classId}] }
+  response: { success: number, failed: [] }
+
+POST /api/admin/invites/:id/resend
+  response: { success: boolean }
+
+DELETE /api/admin/invites/:id
+  response: { success: boolean }
+
+PATCH /api/admin/users/:id/status
+  body: { isActive: boolean }
+  response: { user }
+
+PATCH /api/admin/users/:id/role
+  body: { role: string }
+  response: { user }
+```
+
+### 7.2 Auth APIs
+```yaml
+POST /api/auth/signup/invite
+  body: { token, password, name }
+  response: { user, session }
+
+POST /api/auth/password/reset-request
+  body: { email }
+  response: { success: boolean }
+
+POST /api/auth/password/reset
+  body: { token, newPassword }
+  response: { success: boolean }
+```
+
+## 8. Frontend Design System
+
+### 8.1 Tailwind v4 Configuration
+```typescript
+// tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      colors: {
+        // CSS 변수 기반 테마
+        brand: 'var(--color-brand)',
+        surface: 'var(--color-surface)',
+      },
+      spacing: {
+        // 8pt 그리드
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+      },
+      typography: {
+        // 유동형 타이포그래피
+        'fluid-base': 'clamp(14px, 2vw, 16px)',
+        'fluid-lg': 'clamp(18px, 3vw, 24px)',
+      }
+    }
+  }
+}
+```
+
+### 8.2 Component Primitives
+```typescript
+// 카드 컴포넌트 (S/M/L)
+<Card size="medium" interactive>
+  <Card.Header>
+    <Card.Title>문제집 제목</Card.Title>
+  </Card.Header>
+  <Card.Body>콘텐츠</Card.Body>
+  <Card.Footer>
+    <Button variant="primary">시작하기</Button>
+  </Card.Footer>
+</Card>
+
+// 반응형 그리드
+<Grid cols={{ base: 1, md: 2, lg: 3 }} gap={4}>
+  {items.map(item => <Card key={item.id} />)}
+</Grid>
+```
+
+## 9. Performance & Caching
+
+### 9.1 Caching Strategy
+```yaml
+Redis Cache:
+  - 대시보드 집계: TTL 5분
+  - 사용자 세션: TTL 30분
+  - 문제집 메타: TTL 1시간
+  - 리더보드: TTL 1분
+
+CDN Cache:
+  - 정적 자산: 1년 (파일명 해시)
+  - API 응답: Cache-Control 헤더
+  - HTML: no-cache
+
+Database:
+  - 복합 인덱스 최적화
+  - 집계 테이블 (일일 갱신)
+  - Connection pooling
+```
+
+### 9.2 Performance Targets
+```yaml
+Metrics:
+  - LCP: < 2.5s
+  - FID: < 100ms  
+  - CLS: < 0.1
+  - API P95: < 300ms
+  - Cache Hit Rate: > 80%
+```
+
+## 10. Testing & Quality
+
+### 10.1 Test Coverage
+```yaml
+Domain Layer: 100%
+Use Cases: 90%
+API Routes: 80%
+UI Components: 70%
+E2E Scenarios: Critical paths
+```
+
+### 10.2 Acceptance Criteria Examples
+
+**Week 2 - Auth**:
+- ✅ Admin이 초대 생성 성공
+- ✅ 초대 이메일 발송 확인
+- ✅ 만료된 토큰 거부
+- ✅ 사용된 토큰 재사용 불가
+- ✅ RLS로 타 사용자 접근 차단
+
+**Week 7-8 - SRS**:
+- ✅ AGAIN: 5분 후 재복습
+- ✅ HARD: 이전 단계 복귀
+- ✅ GOOD: 다음 단계 진행
+- ✅ EASY: 단계 스킵
+- ✅ Realtime 알림 수신
+
+## 11. Deployment & Operations
+
+### 11.1 Environment Strategy
+```yaml
+Development:
+  - Local Supabase
+  - Hot reload
+  - Mock data
+
+Staging:
+  - Supabase staging
+  - Production build
+  - E2E tests
+
+Production:
+  - Supabase cloud
+  - CDN enabled
+  - Full monitoring
+```
+
+### 11.2 Cost Optimization
+```yaml
+월 예산: ₩100,000
+  - Supabase: ₩30,000
+  - Vercel: ₩20,000  
+  - Backend: ₩30,000
+  - 기타: ₩20,000
+
+트리거 포인트:
+  - Storage > 100GB → R2 전환
+  - API calls > 1M/월 → Edge Functions
+  - Bandwidth > 100GB → CDN 최적화
+```
+
+
+## 13. Open Questions
+
+1. **반/학생 그룹 관리**: 다중 반 소속 허용 여부?
+2. **문제집 공유**: 교사 간 공유 범위와 권한?
+3. **Edge Functions 전환**: 시작 시점과 범위?
+4. **보상 경제**: 토큰 가치와 인플레이션 관리?
+
+## Appendix A: System Topology
+
+
+
+---
+
+**Version**: 2.0  
+**Status**: Final  
+**Updated**: 2025-01-24  
+**Author**: WOODIECAMPUS Product Team
