@@ -42,11 +42,17 @@ jobs:
         VITE_ENABLE_ANALYTICS: false
       run: pnpm --filter @woodie/web run build --mode staging
     
-    - name: Deploy to Vercel
-      uses: vercel/action@v1
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: packages/web
-        vercel-args: '--prod --yes'
+    # Temporarily disable Vercel deploy to test build only
+    # - name: Deploy to Vercel
+    #   uses: vercel/action@v1
+    #   with:
+    #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
+    #     vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+    #     vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+    #     working-directory: packages/web
+    #     vercel-args: '--prod --yes'
+    
+    - name: Check build output
+      run: |
+        echo "Build completed successfully!"
+        ls -la packages/web/dist/
