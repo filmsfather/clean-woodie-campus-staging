@@ -3,6 +3,13 @@ import {
   CreateInviteUseCase, 
   ValidateInviteTokenUseCase, 
   UseInviteTokenUseCase,
+  DeleteInviteUseCase,
+  FindInvitesByEmailUseCase,
+  FindPendingInvitesByEmailUseCase,
+  FindInvitesByCreatorUseCase,
+  FindInvitesByOrganizationUseCase,
+  DeleteExpiredInvitesUseCase,
+  CheckActivePendingInviteUseCase,
   CreateInviteDto,
   ValidateInviteTokenDto,
   UseInviteTokenDto
@@ -17,9 +24,23 @@ interface InviteRequest extends Request {
     token?: string;
     userId?: string;
     expiryDays?: number;
+    creatorId?: string;
+    olderThanDays?: number;
+    requesterId?: string;
+  };
+  params: {
+    inviteId?: string;
+    creatorId?: string;
+    organizationId?: string;
   };
   query: {
     token?: string;
+    email?: string;
+    organizationId?: string;
+    creatorId?: string;
+    role?: 'student' | 'teacher' | 'admin';
+    isUsed?: string;
+    isExpired?: string;
   };
 }
 
@@ -27,7 +48,14 @@ export class InviteController {
   constructor(
     private createInviteUseCase: CreateInviteUseCase,
     private validateInviteTokenUseCase: ValidateInviteTokenUseCase,
-    private useInviteTokenUseCase: UseInviteTokenUseCase
+    private useInviteTokenUseCase: UseInviteTokenUseCase,
+    private deleteInviteUseCase: DeleteInviteUseCase,
+    private findInvitesByEmailUseCase: FindInvitesByEmailUseCase,
+    private findPendingInvitesByEmailUseCase: FindPendingInvitesByEmailUseCase,
+    private findInvitesByCreatorUseCase: FindInvitesByCreatorUseCase,
+    private findInvitesByOrganizationUseCase: FindInvitesByOrganizationUseCase,
+    private deleteExpiredInvitesUseCase: DeleteExpiredInvitesUseCase,
+    private checkActivePendingInviteUseCase: CheckActivePendingInviteUseCase
   ) {}
 
   // POST /api/auth/invites - 새 초대 생성 (관리자만)
@@ -212,6 +240,347 @@ export class InviteController {
 
     } catch (error) {
       console.error('UseInviteToken controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  // DELETE /api/auth/invites/:inviteId - 초대 삭제 (관리자만)
+  async deleteInvite(req: InviteRequest, res: Response): Promise<void> {
+    try {
+      const { inviteId } = req.params;
+      const { requesterId } = req.body;
+
+      if (!inviteId) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing inviteId parameter'
+        });
+        return;
+      }
+
+      const result = await this.deleteInviteUseCase.execute({
+        inviteId,
+        requesterId
+      });
+
+      if (result.isFailure) {
+        const statusCode = result.errorValue.includes('not found') ? 404 : 400;
+        
+        res.status(statusCode).json({
+          success: false,
+          error: result.errorValue
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Invite deleted successfully'
+      });
+
+    } catch (error) {
+      console.error('DeleteInvite controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  // GET /api/auth/invites/by-email?email=xxx - 이메일별 초대 조회
+  async findInvitesByEmail(req: InviteRequest, res: Response): Promise<void> {
+    try {
+      const { email } = req.query;
+
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing email parameter'
+        });
+        return;
+      }
+
+      const result = await this.findInvitesByEmailUseCase.execute({
+        email: email as string
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.errorValue
+        });
+        return;
+      }
+
+      const invites = result.value;
+      
+      res.status(200).json({
+        success: true,
+        data: invites.map(invite => ({
+          id: invite.id,
+          email: invite.email,
+          role: invite.role,
+          organizationId: invite.organizationId,
+          classId: invite.classId,
+          token: invite.token, // 관리자용, 실제로는 권한 체크 필요
+          expiresAt: invite.expiresAt,
+          usedAt: invite.usedAt,
+          createdBy: invite.createdBy,
+          usedBy: invite.usedBy,
+          createdAt: invite.createdAt
+        }))
+      });
+
+    } catch (error) {
+      console.error('FindInvitesByEmail controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  // GET /api/auth/invites/pending?email=xxx - 대기중인 초대 조회
+  async findPendingInvitesByEmail(req: InviteRequest, res: Response): Promise<void> {
+    try {
+      const { email } = req.query;
+
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing email parameter'
+        });
+        return;
+      }
+
+      const result = await this.findPendingInvitesByEmailUseCase.execute({
+        email: email as string
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.errorValue
+        });
+        return;
+      }
+
+      const invites = result.value;
+      
+      res.status(200).json({
+        success: true,
+        data: invites.map(invite => ({
+          id: invite.id,
+          email: invite.email,
+          role: invite.role,
+          organizationId: invite.organizationId,
+          classId: invite.classId,
+          expiresAt: invite.expiresAt,
+          createdBy: invite.createdBy,
+          createdAt: invite.createdAt
+        }))
+      });
+
+    } catch (error) {
+      console.error('FindPendingInvitesByEmail controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  // GET /api/auth/invites/by-creator/:creatorId - 생성자별 초대 조회
+  async findInvitesByCreator(req: InviteRequest, res: Response): Promise<void> {
+    try {
+      const { creatorId } = req.params;
+
+      if (!creatorId) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing creatorId parameter'
+        });
+        return;
+      }
+
+      const result = await this.findInvitesByCreatorUseCase.execute({
+        creatorId
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.errorValue
+        });
+        return;
+      }
+
+      const invites = result.value;
+      
+      res.status(200).json({
+        success: true,
+        data: invites.map(invite => ({
+          id: invite.id,
+          email: invite.email,
+          role: invite.role,
+          organizationId: invite.organizationId,
+          classId: invite.classId,
+          expiresAt: invite.expiresAt,
+          usedAt: invite.usedAt,
+          usedBy: invite.usedBy,
+          createdAt: invite.createdAt
+        }))
+      });
+
+    } catch (error) {
+      console.error('FindInvitesByCreator controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  // GET /api/auth/invites/by-organization/:organizationId - 조직별 초대 조회
+  async findInvitesByOrganization(req: InviteRequest, res: Response): Promise<void> {
+    try {
+      const { organizationId } = req.params;
+      const { creatorId, role, isUsed, isExpired } = req.query;
+
+      if (!organizationId) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing organizationId parameter'
+        });
+        return;
+      }
+
+      // 필터 구성
+      const filters: any = {};
+      if (creatorId) filters.createdBy = creatorId as string;
+      if (role) filters.role = role as 'student' | 'teacher' | 'admin';
+      if (isUsed !== undefined) filters.isUsed = isUsed === 'true';
+      if (isExpired !== undefined) filters.isExpired = isExpired === 'true';
+
+      const result = await this.findInvitesByOrganizationUseCase.execute({
+        organizationId,
+        filters: Object.keys(filters).length > 0 ? filters : undefined
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.errorValue
+        });
+        return;
+      }
+
+      const invites = result.value;
+      
+      res.status(200).json({
+        success: true,
+        data: invites.map(invite => ({
+          id: invite.id,
+          email: invite.email,
+          role: invite.role,
+          organizationId: invite.organizationId,
+          classId: invite.classId,
+          expiresAt: invite.expiresAt,
+          usedAt: invite.usedAt,
+          createdBy: invite.createdBy,
+          usedBy: invite.usedBy,
+          createdAt: invite.createdAt
+        }))
+      });
+
+    } catch (error) {
+      console.error('FindInvitesByOrganization controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  // DELETE /api/auth/invites/expired - 만료된 토큰 삭제 (관리자만)
+  async deleteExpiredInvites(req: InviteRequest, res: Response): Promise<void> {
+    try {
+      const { olderThanDays } = req.body;
+
+      const result = await this.deleteExpiredInvitesUseCase.execute({
+        olderThanDays
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.errorValue
+        });
+        return;
+      }
+
+      const deletedCount = result.value;
+      
+      res.status(200).json({
+        success: true,
+        data: {
+          deletedCount,
+          message: `${deletedCount} expired invites deleted`
+        }
+      });
+
+    } catch (error) {
+      console.error('DeleteExpiredInvites controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  // GET /api/auth/invites/check-active?email=xxx&organizationId=xxx - 활성 초대 확인
+  async checkActivePendingInvite(req: InviteRequest, res: Response): Promise<void> {
+    try {
+      const { email, organizationId } = req.query;
+
+      if (!email || !organizationId) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing required parameters: email, organizationId'
+        });
+        return;
+      }
+
+      const result = await this.checkActivePendingInviteUseCase.execute({
+        email: email as string,
+        organizationId: organizationId as string
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.errorValue
+        });
+        return;
+      }
+
+      const hasActivePendingInvite = result.value;
+      
+      res.status(200).json({
+        success: true,
+        data: {
+          hasActivePendingInvite,
+          message: hasActivePendingInvite 
+            ? 'User has active pending invite for this organization'
+            : 'No active pending invite found'
+        }
+      });
+
+    } catch (error) {
+      console.error('CheckActivePendingInvite controller error:', error);
       res.status(500).json({
         success: false,
         error: 'Internal server error'

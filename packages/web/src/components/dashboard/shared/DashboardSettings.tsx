@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { DashboardWidget, getDashboardWidgets, WIDGET_REGISTRY } from './DashboardLayout';
+import { DashboardWidget, getDashboardWidgets } from './DashboardLayout';
 import { UserRole } from '../../../types/auth';
 import { Modal } from '../../ui/Modal';
 import { Button } from '../../ui/Button';
@@ -166,7 +166,7 @@ export const DashboardSettingsModal: React.FC<DashboardSettingsModalProps> = ({
               </div>
 
               <div className="space-y-2 max-h-80 overflow-y-auto">
-                {availableWidgets.map((widget, index) => {
+                {availableWidgets.map((widget) => {
                   const isEnabled = localSettings.enabledWidgets.includes(widget.id);
                   const orderIndex = localSettings.widgetOrder.indexOf(widget.id);
                   

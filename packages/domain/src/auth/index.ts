@@ -6,7 +6,7 @@ export * from './value-objects/Password';
 export * from './value-objects/InviteToken';
 export * from './value-objects/FullName';
 export * from './services/IPasswordHashService';
-export * from './services/INotificationService';
+export type { INotificationService as IAuthNotificationService } from './services/INotificationService';
 export * from './repositories/IUserRepository';
 export * from './repositories/IAuthRepository';
 export * from './repositories/IInviteRepository';

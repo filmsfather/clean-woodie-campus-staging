@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import {
   AuthenticatedRequest,
   TagRecommendationRequest,
@@ -27,7 +27,7 @@ export class TagController extends BaseController {
   }
 
   // 태그 추천
-  async getRecommendations(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getRecommendations(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -86,7 +86,7 @@ export class TagController extends BaseController {
   }
 
   // 유사한 태그 조회
-  async getSimilarTags(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getSimilarTags(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -133,7 +133,7 @@ export class TagController extends BaseController {
   }
 
   // 태그 유효성 검증
-  async validateTags(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async validateTags(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -179,7 +179,7 @@ export class TagController extends BaseController {
   }
 
   // 태그 사용 통계 - 라우트에서 호출되는 메소드
-  async getTagUsage(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getTagUsage(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -212,7 +212,7 @@ export class TagController extends BaseController {
   }
 
   // 태그 분포 - 라우트에서 호출되는 메소드
-  async getTagDistribution(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getTagDistribution(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -245,7 +245,7 @@ export class TagController extends BaseController {
   }
 
   // 태그 검색 - 라우트에서 호출되는 메소드
-  async searchTags(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async searchTags(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;

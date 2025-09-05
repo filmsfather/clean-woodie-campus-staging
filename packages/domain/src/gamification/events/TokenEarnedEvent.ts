@@ -24,7 +24,7 @@ export class TokenEarnedEvent extends BaseDomainEvent {
     public readonly newTotalEarned: number,
     public readonly earnedAt: Date
   ) {
-    super();
+    super(tokenId);
   }
 
   /**

@@ -7,4 +7,5 @@ import { DomainEvent } from './DomainEvent'
 export interface IEventDispatcher {
   dispatch(event: DomainEvent): Promise<void>
   dispatchAll(events: DomainEvent[]): Promise<void>
+  register<T extends DomainEvent>(eventName: string, handler: (event: T) => Promise<void>): void
 }

@@ -57,4 +57,15 @@ export interface IProblemSetRepository {
   
   // 특정 문제를 사용하는 문제집 개수 조회
   countProblemSetsByProblemId(problemId: UniqueEntityID): Promise<Result<number>>;
+  
+  // === 공유 관련 조회 ===
+  
+  // 공유된 문제집들 조회 (isShared=true)
+  findSharedProblemSets(): Promise<Result<ProblemSet[]>>;
+  
+  // 공개된 문제집들 조회 (isPublic=true)
+  findPublicProblemSets(): Promise<Result<ProblemSet[]>>;
+  
+  // 특정 교사를 제외한 공유된 문제집들 조회
+  findSharedProblemSetsExcludingTeacher(excludeTeacherId: string): Promise<Result<ProblemSet[]>>;
 }

@@ -569,4 +569,85 @@ export class Assignment extends AggregateRoot<UniqueEntityID> {
 
     return Result.ok<Assignment>(assignment);
   }
+
+  // === 영속성 지원 메서드들 ===
+
+  // 복원을 위한 정적 팩토리 메서드
+  public static restore(props: {
+    id: string;
+    teacherId: string;
+    problemSetId: string;
+    title: string;
+    description?: string;
+    dueDate: DueDate;
+    maxAttempts?: number;
+    status: AssignmentStatus;
+    targets?: AssignmentTarget[];
+    createdAt: Date;
+    updatedAt: Date;
+  }): Result<Assignment> {
+    const assignment = new Assignment({
+      teacherId: props.teacherId,
+      problemSetId: new UniqueEntityID(props.problemSetId),
+      title: props.title,
+      description: props.description,
+      dueDate: props.dueDate,
+      maxAttempts: props.maxAttempts,
+      isActive: props.status === AssignmentStatus.ACTIVE,
+      targets: props.targets,
+      createdAt: props.createdAt,
+      updatedAt: props.updatedAt
+    }, new UniqueEntityID(props.id));
+
+    assignment._status = props.status;
+    
+    return Result.ok<Assignment>(assignment);
+  }
+
+  // 직렬화 (영속성을 위한)
+  public toPersistence(): {
+    id: string;
+    teacherId: string;
+    problemSetId: string;
+    title: string;
+    description?: string;
+    dueDate: Date;
+    maxAttempts?: number;
+    status: AssignmentStatus;
+    targets?: Array<{
+      id: string;
+      targetType: string;
+      targetId: string;
+      assignedBy: string;
+      assignedAt: Date;
+      revokedBy?: string;
+      revokedAt?: Date;
+      isActive: boolean;
+    }>;
+    createdAt: Date;
+    updatedAt: Date;
+  } {
+    return {
+      id: this.id.toString(),
+      teacherId: this._teacherId,
+      problemSetId: this._problemSetId.toString(),
+      title: this._title,
+      description: this._description,
+      dueDate: this._dueDate.value,
+      maxAttempts: this._maxAttempts,
+      status: this._status,
+      targets: this._targets.map(target => ({
+        id: target.id.toString(),
+        targetType: target.targetIdentifier.type,
+        targetId: target.targetIdentifier.getTargetId(),
+        assignedBy: target.assignedBy,
+        assignedAt: target.assignedAt,
+        revokedBy: target.revokedBy,
+        revokedAt: target.revokedAt,
+        isActive: target.isActive()
+      })),
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt
+    };
+  }
 }

@@ -6,18 +6,24 @@ interface ProblemSetItemProps {
   problemSetId: UniqueEntityID;
   problemId: UniqueEntityID;
   orderIndex: number;
+  points?: number;
+  estimatedTimeMinutes?: number;
 }
 
 export class ProblemSetItem extends Entity<UniqueEntityID> {
   private _problemSetId: UniqueEntityID;
   private _problemId: UniqueEntityID;
   private _orderIndex: number;
+  private _points: number;
+  private _estimatedTimeMinutes: number;
 
   constructor(props: ProblemSetItemProps, id?: UniqueEntityID) {
     super(id || new UniqueEntityID());
     this._problemSetId = props.problemSetId;
     this._problemId = props.problemId;
     this._orderIndex = props.orderIndex;
+    this._points = props.points ?? 10;
+    this._estimatedTimeMinutes = props.estimatedTimeMinutes ?? 3;
   }
 
   // Getters
@@ -33,12 +39,34 @@ export class ProblemSetItem extends Entity<UniqueEntityID> {
     return this._orderIndex;
   }
 
+  get points(): number {
+    return this._points;
+  }
+
+  get estimatedTimeMinutes(): number {
+    return this._estimatedTimeMinutes;
+  }
+
   // Business Logic Methods
   public updateOrderIndex(newOrderIndex: number): void {
     if (newOrderIndex < 0) {
       throw new Error('Order index cannot be negative');
     }
     this._orderIndex = newOrderIndex;
+  }
+
+  public updatePoints(points: number): void {
+    if (points < 0) {
+      throw new Error('Points cannot be negative');
+    }
+    this._points = points;
+  }
+
+  public updateEstimatedTime(minutes: number): void {
+    if (minutes < 0) {
+      throw new Error('Estimated time cannot be negative');
+    }
+    this._estimatedTimeMinutes = minutes;
   }
 
   public isAtPosition(position: number): boolean {

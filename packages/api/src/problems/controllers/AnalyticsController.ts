@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import {
   AuthenticatedRequest,
   GetAnalyticsQuery,
@@ -23,7 +23,7 @@ export class AnalyticsController extends BaseController {
   }
 
   // 종합 분석 정보 조회
-  async getAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -72,7 +72,7 @@ export class AnalyticsController extends BaseController {
   }
 
   // 문제 뱅크 요약 정보
-  async getSummary(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getSummary(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -104,7 +104,7 @@ export class AnalyticsController extends BaseController {
   }
 
   // 태그 분석 정보
-  async getTagAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getTagAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -135,7 +135,7 @@ export class AnalyticsController extends BaseController {
   }
 
   // 난이도별 분석 정보
-  async getDifficultyAnalysis(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getDifficultyAnalysis(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -166,7 +166,7 @@ export class AnalyticsController extends BaseController {
   }
 
   // 캐시 무효화 (관리자 전용)
-  async invalidateCache(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async invalidateCache(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;

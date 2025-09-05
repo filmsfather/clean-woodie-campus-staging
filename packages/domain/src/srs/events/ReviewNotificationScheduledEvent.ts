@@ -20,7 +20,7 @@ export class ReviewNotificationScheduledEvent extends BaseDomainEvent {
     public readonly priority: 'high' | 'medium' | 'low' = 'medium',
     public readonly metadata?: Record<string, any>   // 추가 메타데이터
   ) {
-    super()
+    super(scheduleId, 1, metadata)
   }
 
   /**
@@ -73,12 +73,6 @@ export class ReviewNotificationScheduledEvent extends BaseDomainEvent {
     return this.scheduledFor <= new Date()
   }
 
-  /**
-   * 애그리게이트 ID (스케줄 ID를 사용)
-   */
-  get aggregateId(): UniqueEntityID {
-    return this.scheduleId
-  }
 
   /**
    * 알림 데이터 생성

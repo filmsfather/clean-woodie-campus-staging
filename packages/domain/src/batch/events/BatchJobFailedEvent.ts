@@ -20,7 +20,6 @@ interface BatchJobResult {
  */
 export class BatchJobFailedEvent extends BaseDomainEvent {
   public readonly eventType: string = 'BatchJobFailedEvent'
-  public readonly aggregateId: UniqueEntityID
   public readonly name: string
   public readonly type: BatchJobType
   public readonly errorMessage: string
@@ -33,17 +32,13 @@ export class BatchJobFailedEvent extends BaseDomainEvent {
     errorMessage: string,
     result?: BatchJobResult
   ) {
-    super()
-    this.aggregateId = aggregateId
+    super(aggregateId)
     this.name = name
     this.type = type
     this.errorMessage = errorMessage
     this.result = result
   }
 
-  getAggregateId(): UniqueEntityID {
-    return this.aggregateId
-  }
 
   /**
    * 부분적 성공 여부 확인

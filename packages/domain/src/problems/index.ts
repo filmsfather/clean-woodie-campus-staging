@@ -7,3 +7,4 @@ export * from './value-objects/ProblemType';
 export * from './value-objects/Difficulty';
 export * from './value-objects/ProblemContent';
 export * from './value-objects/AnswerContent';
+export * from './events';

@@ -12,12 +12,110 @@ import type {
   RewardDto, RewardRedemptionDto
 } from '@woodie/application';
 
+// Problems UseCase 관련 타입들 
+import type {
+  ProblemDto, ProblemDetailDto, ProblemSearchRequestDto, ProblemSearchResponseDto,
+  CreateProblemInput, CreateProblemOutput,
+  UpdateProblemContentInput, UpdateProblemAnswerInput,
+  ChangeProblemDifficultyInput, ManageProblemTagsInput,
+  ActivateProblemInput, DeactivateProblemInput, DeleteProblemInput,
+  CloneProblemInput, GetProblemListInput, GetProblemListOutput,
+  ProblemOutput
+} from '../types/problems';
+
+// Auth UseCase 관련 타입들
+import type {
+  CreateInviteDto, InviteDto, UseInviteTokenDto,
+  ValidateInviteTokenDto, InviteTokenValidationDto,
+  CreateProfileDto, UpdateProfileFormState,
+  ProfileListDto, ChangeRoleDto,
+  RoleStatistics
+} from '../types/auth';
+
 /**
  * MSW 핸들러 - 모든 UseCase에 대한 현실적인 API 모킹
  * Storybook과 테스트에서 사용됩니다.
  */
 
-// Mock 사용자 데이터
+// Mock 데이터 - Clean Architecture 원칙에 따라 Domain Entity 구조 모방
+
+// Mock Problems 데이터
+const mockProblems: ProblemDetailDto[] = [
+  {
+    id: '1',
+    teacherId: 'teacher-1',
+    title: '이차방정식의 해 구하기',
+    description: '주어진 이차방정식 ax² + bx + c = 0에서 판별식을 이용하여 해의 개수와 해를 구하는 문제입니다.',
+    type: 'multiple_choice',
+    difficulty: 5,
+    tags: ['수학', '대수', '이차방정식', '판별식'],
+    isActive: true,
+    createdAt: '2024-01-15T10:30:00Z',
+    updatedAt: '2024-01-16T14:20:00Z',
+    content: {
+      type: 'multiple_choice',
+      title: '이차방정식의 해 구하기',
+      description: '주어진 이차방정식 ax² + bx + c = 0에서 판별식을 이용하여 해의 개수와 해를 구하는 문제입니다.',
+      instructions: '다음 이차방정식 2x² - 5x + 2 = 0의 해를 구하시오.',
+      choices: [
+        '1) x = 1/2, x = 2',
+        '2) x = 1, x = 3', 
+        '3) x = -1/2, x = -2',
+        '4) x = 2, x = 3',
+        '5) 해가 없다'
+      ]
+    },
+    correctAnswer: {
+      type: 'multiple_choice',
+      points: 10
+    }
+  },
+  {
+    id: '2',
+    teacherId: 'teacher-1',
+    title: '미적분 기본 정리',
+    description: '미적분의 기본 정리를 적용하여 정적분을 계산하는 문제입니다.',
+    type: 'short_answer',
+    difficulty: 8,
+    tags: ['수학', '미적분', '정적분'],
+    isActive: false,
+    createdAt: '2024-01-14T14:20:00Z',
+    updatedAt: '2024-01-16T09:15:00Z',
+    content: {
+      type: 'short_answer',
+      title: '미적분 기본 정리',
+      description: '미적분의 기본 정리를 적용하여 정적분을 계산하는 문제입니다.',
+      instructions: '다음 정적분 ∫[0→2] (3x² + 2x - 1) dx 의 값을 구하시오.',
+      placeholder: '예: 10'
+    },
+    correctAnswer: {
+      type: 'short_answer',
+      points: 15
+    }
+  },
+  {
+    id: '3',
+    teacherId: 'teacher-2',
+    title: '물리 운동법칙',
+    description: '뉴턴의 운동 법칙을 적용하여 물체의 운동을 분석하는 문제입니다.',
+    type: 'essay',
+    difficulty: 6,
+    tags: ['물리', '운동', '뉴턴법칙'],
+    isActive: true,
+    createdAt: '2024-01-13T16:45:00Z',
+    updatedAt: '2024-01-13T16:45:00Z',
+    content: {
+      type: 'essay',
+      title: '물리 운동법칙',
+      description: '뉴턴의 운동 법칙을 적용하여 물체의 운동을 분석하는 문제입니다.',
+      instructions: '질량이 2kg인 물체에 10N의 힘이 작용할 때, 물체의 가속도와 3초 후 속도를 구하고 과정을 설명하시오.'
+    },
+    correctAnswer: {
+      type: 'essay',
+      points: 20
+    }
+  }
+];
 const mockUsers = {
   'student-1': {
     id: 'student-1',
@@ -125,7 +223,68 @@ const mockUsers = {
   }
 };
 
-// Auth 핸들러들
+// Mock 초대 데이터 - UseCase 테스트용
+const mockInvites: InviteDto[] = [
+  {
+    id: 'invite-1',
+    email: 'newstudent@test.com',
+    role: 'student',
+    organizationId: 'org-1',
+    classId: 'class-1',
+    token: 'mock-token-student-1',
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    createdBy: 'teacher-1',
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    isExpired: false,
+    isUsed: false,
+    isValid: true
+  },
+  {
+    id: 'invite-2',
+    email: 'newteacher@test.com',
+    role: 'teacher',
+    organizationId: 'org-1',
+    token: 'mock-token-teacher-1',
+    expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    createdBy: 'admin-1',
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    isExpired: false,
+    isUsed: false,
+    isValid: true
+  },
+  {
+    id: 'invite-3',
+    email: 'expired@test.com',
+    role: 'student',
+    organizationId: 'org-1',
+    classId: 'class-1',
+    token: 'mock-token-expired-1',
+    expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    createdBy: 'teacher-1',
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    isExpired: true,
+    isUsed: false,
+    isValid: false
+  },
+  {
+    id: 'invite-4',
+    email: 'used@test.com',
+    role: 'student',
+    organizationId: 'org-1',
+    classId: 'class-2',
+    token: 'mock-token-used-1',
+    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    usedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    createdBy: 'teacher-1',
+    usedBy: 'student-3',
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    isExpired: false,
+    isUsed: true,
+    isValid: false
+  }
+];
+
+// Auth UseCase 핸들러들 - Clean Architecture 원칙에 따라 각 UseCase별로 구분
 export const authHandlers = [
   // SignInUseCase
   http.post('/api/auth/signin', async ({ request }) => {
@@ -219,6 +378,316 @@ export const authHandlers = [
     };
 
     return HttpResponse.json(updatedProfile);
+  }),
+
+  // CreateInviteUseCase
+  http.post('/api/auth/invites', async ({ request }) => {
+    const body = await request.json() as CreateInviteDto;
+    
+    // 이메일 중복 체크 - 도메인 규칙 모방
+    const existingInvite = mockInvites.find(invite => 
+      invite.email === body.email && 
+      invite.organizationId === body.organizationId &&
+      invite.isValid
+    );
+    
+    if (existingInvite) {
+      return HttpResponse.json(
+        { error: 'An active invite already exists for this email in this organization' },
+        { status: 409 }
+      );
+    }
+
+    const newInvite: InviteDto = {
+      id: `invite-${Date.now()}`,
+      email: body.email,
+      role: body.role,
+      organizationId: body.organizationId,
+      classId: body.classId,
+      token: `mock-token-${Date.now()}`,
+      expiresAt: new Date(Date.now() + (body.expiryDays || 7) * 24 * 60 * 60 * 1000).toISOString(),
+      createdBy: body.createdBy,
+      createdAt: new Date().toISOString(),
+      isExpired: false,
+      isUsed: false,
+      isValid: true
+    };
+
+    // Mock 데이터에 추가
+    mockInvites.push(newInvite);
+
+    return HttpResponse.json(newInvite, { status: 201 });
+  }),
+
+  // FindInvitesByCreatorUseCase
+  http.get('/api/auth/invites/by-creator/:creatorId', ({ params, request }) => {
+    const { creatorId } = params;
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '10');
+    const status = url.searchParams.get('status'); // 'pending' | 'used' | 'expired'
+    const role = url.searchParams.get('role'); // 'student' | 'teacher' | 'admin'
+    
+    let filteredInvites = mockInvites.filter(invite => invite.createdBy === creatorId);
+    
+    // 상태 필터링
+    if (status) {
+      filteredInvites = filteredInvites.filter(invite => {
+        if (status === 'pending') return invite.isValid && !invite.isUsed;
+        if (status === 'used') return invite.isUsed;
+        if (status === 'expired') return invite.isExpired;
+        return true;
+      });
+    }
+    
+    // 역할 필터링
+    if (role) {
+      filteredInvites = filteredInvites.filter(invite => invite.role === role);
+    }
+    
+    // 페이지네이션
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedInvites = filteredInvites.slice(startIndex, endIndex);
+
+    return HttpResponse.json({
+      invites: paginatedInvites,
+      totalCount: filteredInvites.length,
+      page,
+      limit,
+      hasMore: endIndex < filteredInvites.length
+    });
+  }),
+
+  // FindInvitesByOrganizationUseCase
+  http.get('/api/auth/invites/by-organization/:organizationId', ({ params, request }) => {
+    const { organizationId } = params;
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '10');
+    
+    const filteredInvites = mockInvites.filter(invite => invite.organizationId === organizationId);
+    
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedInvites = filteredInvites.slice(startIndex, endIndex);
+
+    return HttpResponse.json({
+      invites: paginatedInvites,
+      totalCount: filteredInvites.length,
+      page,
+      limit
+    });
+  }),
+
+  // ValidateInviteTokenUseCase
+  http.post('/api/auth/invites/validate', async ({ request }) => {
+    const body = await request.json() as ValidateInviteTokenDto;
+    
+    const invite = mockInvites.find(inv => inv.token === body.token);
+    
+    if (!invite) {
+      const response: InviteTokenValidationDto = {
+        isValid: false,
+        errorMessage: 'Invalid invite token'
+      };
+      return HttpResponse.json(response);
+    }
+
+    const response: InviteTokenValidationDto = {
+      isValid: invite.isValid,
+      invite: invite.isValid ? invite : undefined,
+      errorMessage: !invite.isValid ? 
+        (invite.isExpired ? 'Invite has expired' : 
+         invite.isUsed ? 'Invite has already been used' : 'Invalid invite') 
+        : undefined
+    };
+
+    return HttpResponse.json(response);
+  }),
+
+  // UseInviteTokenUseCase
+  http.post('/api/auth/invites/use', async ({ request }) => {
+    const body = await request.json() as UseInviteTokenDto;
+    
+    const inviteIndex = mockInvites.findIndex(inv => inv.token === body.token);
+    const invite = mockInvites[inviteIndex];
+    
+    if (!invite || !invite.isValid) {
+      return HttpResponse.json(
+        { error: 'Invalid or expired invite' },
+        { status: 400 }
+      );
+    }
+
+    // 초대 사용 처리 - 도메인 로직 모방
+    const updatedInvite: InviteDto = {
+      ...invite,
+      isUsed: true,
+      isValid: false,
+      usedAt: new Date().toISOString(),
+      usedBy: body.userId
+    };
+    
+    mockInvites[inviteIndex] = updatedInvite;
+
+    return HttpResponse.json({
+      success: true,
+      invite: updatedInvite,
+      message: 'Invite successfully used'
+    });
+  }),
+
+  // DeleteInviteUseCase
+  http.delete('/api/auth/invites/:inviteId', ({ params }) => {
+    const { inviteId } = params;
+    const inviteIndex = mockInvites.findIndex(inv => inv.id === inviteId);
+    
+    if (inviteIndex === -1) {
+      return HttpResponse.json(
+        { error: 'Invite not found' },
+        { status: 404 }
+      );
+    }
+
+    mockInvites.splice(inviteIndex, 1);
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  // DeleteExpiredInvitesUseCase
+  http.delete('/api/auth/invites/expired', () => {
+    const initialCount = mockInvites.length;
+    const activeInvites = mockInvites.filter(invite => !invite.isExpired);
+    const deletedCount = initialCount - activeInvites.length;
+    
+    // Mock 데이터 업데이트
+    mockInvites.length = 0;
+    mockInvites.push(...activeInvites);
+
+    return HttpResponse.json({
+      success: true,
+      deletedCount,
+      message: `${deletedCount} expired invites deleted`
+    });
+  }),
+
+  // FindProfilesByRoleUseCase
+  http.get('/api/auth/profiles/by-role/:role', ({ params, request }) => {
+    const { role } = params;
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '10');
+    const search = url.searchParams.get('search') || '';
+    
+    let profiles = Object.values(mockUsers)
+      .filter(user => user.role === role)
+      .map(user => ({
+        id: user.id,
+        email: user.email,
+        fullName: user.name,
+        displayName: user.name,
+        initials: user.name.split(' ').map(n => n[0]).join('').toUpperCase(),
+        role: user.role,
+        schoolId: 'school-1',
+        gradeLevel: user.profile.grade,
+        avatarUrl: user.profile.profileImageUrl,
+        hasAvatar: !!user.profile.profileImageUrl,
+        settings: {
+          theme: 'light',
+          language: user.profile.preferences.language,
+          notifications: {
+            email: user.profile.preferences.emailNotification,
+            push: true,
+            sms: false
+          },
+          privacy: {
+            showEmail: true,
+            showActivity: true
+          }
+        },
+        createdAt: user.profile.createdAt,
+        updatedAt: user.profile.updatedAt
+      }));
+
+    // 검색 필터링
+    if (search) {
+      profiles = profiles.filter(profile => 
+        profile.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        profile.email.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    // 페이지네이션
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedProfiles = profiles.slice(startIndex, endIndex);
+
+    return HttpResponse.json({
+      profiles: paginatedProfiles,
+      totalCount: profiles.length,
+      page,
+      limit
+    });
+  }),
+
+  // GetRoleStatisticsUseCase
+  http.get('/api/auth/statistics/roles', () => {
+    const allUsers = Object.values(mockUsers);
+    const statistics: RoleStatistics = {
+      totalUsers: allUsers.length,
+      students: allUsers.filter(u => u.role === 'student').length,
+      teachers: allUsers.filter(u => u.role === 'teacher').length,
+      admins: allUsers.filter(u => u.role === 'admin').length,
+      activeInvites: mockInvites.filter(inv => inv.isValid && !inv.isUsed).length,
+      expiredInvites: mockInvites.filter(inv => inv.isExpired).length
+    };
+
+    return HttpResponse.json(statistics);
+  }),
+
+  // ChangeRoleUseCase
+  http.post('/api/auth/users/:targetUserId/role', async ({ params, request }) => {
+    const { targetUserId } = params;
+    const body = await request.json() as ChangeRoleDto;
+    
+    const user = mockUsers[targetUserId as keyof typeof mockUsers];
+    if (!user) {
+      return HttpResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // 역할 변경 - 도메인 규칙 적용 가능 (예: 관리자만 다른 관리자를 만들 수 있음 등)
+    const updatedUser = {
+      ...user,
+      role: body.newRole as 'student' | 'teacher' | 'admin'
+    };
+
+    // Mock 데이터 업데이트
+    (mockUsers as any)[targetUserId] = updatedUser;
+
+    return HttpResponse.json({
+      success: true,
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        role: updatedUser.role
+      }
+    });
+  }),
+
+  // CheckEmailExistsUseCase
+  http.get('/api/auth/check-email/:email', ({ params }) => {
+    const { email } = params;
+    const emailExists = Object.values(mockUsers).some(user => user.email === email);
+    
+    return HttpResponse.json({
+      exists: emailExists,
+      email: decodeURIComponent(email)
+    });
   }),
 ];
 
@@ -799,6 +1268,380 @@ export const gamificationHandlers = [
   }),
 ];
 
+// Problems UseCase 핸들러들
+const problemHandlers = [
+  // GetProblemListUseCase
+  http.get('/api/problems', ({ request }) => {
+    const url = new URL(request.url);
+    const teacherId = url.searchParams.get('teacherId');
+    const isActive = url.searchParams.get('isActive');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    
+    let filteredProblems = mockProblems;
+    
+    if (teacherId) {
+      filteredProblems = filteredProblems.filter(p => p.teacherId === teacherId);
+    }
+    
+    if (isActive !== null) {
+      const activeFilter = isActive === 'true';
+      filteredProblems = filteredProblems.filter(p => p.isActive === activeFilter);
+    }
+    
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedProblems = filteredProblems.slice(startIndex, endIndex);
+    
+    const response: GetProblemListOutput = {
+      problems: paginatedProblems.map(p => ({
+        id: p.id,
+        teacherId: p.teacherId,
+        title: p.title,
+        description: p.description || '',
+        type: p.type,
+        difficulty: p.difficulty,
+        tags: p.tags,
+        isActive: p.isActive,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt
+      })),
+      totalCount: filteredProblems.length,
+      page,
+      limit,
+      hasNext: endIndex < filteredProblems.length
+    };
+    
+    return HttpResponse.json(response);
+  }),
+
+  // GetProblemUseCase
+  http.get('/api/problems/:id', ({ params }) => {
+    const problemId = params.id as string;
+    const problem = mockProblems.find(p => p.id === problemId);
+    
+    if (!problem) {
+      return HttpResponse.json(
+        { error: 'Problem not found' },
+        { status: 404 }
+      );
+    }
+    
+    return HttpResponse.json(problem);
+  }),
+
+  // SearchProblemsUseCase
+  http.post('/api/problems/search', async ({ request }) => {
+    const body = await request.json() as ProblemSearchRequestDto;
+    
+    let filteredProblems = mockProblems;
+    
+    // 검색어 필터링
+    if (body.searchQuery) {
+      const query = body.searchQuery.toLowerCase();
+      filteredProblems = filteredProblems.filter(p => 
+        p.title.toLowerCase().includes(query) ||
+        p.description?.toLowerCase().includes(query) ||
+        p.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+    
+    // 타입 필터링
+    if (body.types && body.types.length > 0) {
+      filteredProblems = filteredProblems.filter(p => body.types!.includes(p.type));
+    }
+    
+    // 난이도 필터링
+    if (body.difficulties && body.difficulties.length > 0) {
+      filteredProblems = filteredProblems.filter(p => body.difficulties!.includes(p.difficulty));
+    }
+    
+    // 태그 필터링
+    if (body.tags && body.tags.length > 0) {
+      filteredProblems = filteredProblems.filter(p => 
+        body.tags!.some(tag => p.tags.includes(tag))
+      );
+    }
+    
+    // 활성 상태 필터링
+    if (body.isActive !== undefined) {
+      filteredProblems = filteredProblems.filter(p => p.isActive === body.isActive);
+    }
+    
+    const response: ProblemSearchResponseDto = {
+      problems: filteredProblems.map(p => ({
+        id: p.id,
+        teacherId: p.teacherId,
+        title: p.title,
+        description: p.description || '',
+        type: p.type,
+        difficulty: p.difficulty,
+        tags: p.tags,
+        isActive: p.isActive,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt
+      })),
+      totalCount: filteredProblems.length,
+      metadata: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        appliedFilters: Object.keys(body).filter(key => body[key as keyof ProblemSearchRequestDto] !== undefined)
+      }
+    };
+    
+    return HttpResponse.json(response);
+  }),
+
+  // CreateProblemUseCase
+  http.post('/api/problems', async ({ request }) => {
+    const body = await request.json() as CreateProblemInput;
+    
+    const newProblem: ProblemOutput = {
+      id: `problem-${Date.now()}`,
+      teacherId: body.teacherId,
+      title: body.title,
+      description: body.description || '',
+      type: body.type,
+      difficulty: body.difficultyLevel,
+      tags: body.tags || [],
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const response: CreateProblemOutput = {
+      problem: newProblem
+    };
+    
+    return HttpResponse.json(response);
+  }),
+
+  // UpdateProblemContentUseCase
+  http.put('/api/problems/:id/content', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const body = await request.json() as UpdateProblemContentInput;
+    
+    const problem = mockProblems.find(p => p.id === problemId);
+    if (!problem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    if (problem.teacherId !== body.teacherId) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    
+    const updatedProblem: ProblemOutput = {
+      id: problem.id,
+      teacherId: problem.teacherId,
+      title: body.title,
+      description: body.description,
+      type: problem.type,
+      difficulty: problem.difficulty,
+      tags: problem.tags,
+      isActive: problem.isActive,
+      createdAt: problem.createdAt,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(updatedProblem);
+  }),
+
+  // UpdateProblemAnswerUseCase
+  http.put('/api/problems/:id/answer', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const body = await request.json() as UpdateProblemAnswerInput;
+    
+    const problem = mockProblems.find(p => p.id === problemId);
+    if (!problem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    if (problem.teacherId !== body.teacherId) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    
+    const updatedProblem: ProblemOutput = {
+      id: problem.id,
+      teacherId: problem.teacherId,
+      title: problem.title,
+      description: problem.description || '',
+      type: problem.type,
+      difficulty: problem.difficulty,
+      tags: problem.tags,
+      isActive: problem.isActive,
+      createdAt: problem.createdAt,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(updatedProblem);
+  }),
+
+  // ChangeProblemDifficultyUseCase
+  http.put('/api/problems/:id/difficulty', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const body = await request.json() as ChangeProblemDifficultyInput;
+    
+    const problem = mockProblems.find(p => p.id === problemId);
+    if (!problem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    if (problem.teacherId !== body.teacherId) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    
+    const updatedProblem: ProblemOutput = {
+      id: problem.id,
+      teacherId: problem.teacherId,
+      title: problem.title,
+      description: problem.description || '',
+      type: problem.type,
+      difficulty: body.newDifficultyLevel,
+      tags: problem.tags,
+      isActive: problem.isActive,
+      createdAt: problem.createdAt,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(updatedProblem);
+  }),
+
+  // ManageProblemTagsUseCase
+  http.put('/api/problems/:id/tags', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const body = await request.json() as ManageProblemTagsInput;
+    
+    const problem = mockProblems.find(p => p.id === problemId);
+    if (!problem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    if (problem.teacherId !== body.teacherId) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    
+    const updatedProblem: ProblemOutput = {
+      id: problem.id,
+      teacherId: problem.teacherId,
+      title: problem.title,
+      description: problem.description || '',
+      type: problem.type,
+      difficulty: problem.difficulty,
+      tags: body.tags,
+      isActive: problem.isActive,
+      createdAt: problem.createdAt,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(updatedProblem);
+  }),
+
+  // ActivateProblemUseCase
+  http.put('/api/problems/:id/activate', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const body = await request.json() as ActivateProblemInput;
+    
+    const problem = mockProblems.find(p => p.id === problemId);
+    if (!problem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    if (problem.teacherId !== body.teacherId) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    
+    const updatedProblem: ProblemOutput = {
+      id: problem.id,
+      teacherId: problem.teacherId,
+      title: problem.title,
+      description: problem.description || '',
+      type: problem.type,
+      difficulty: problem.difficulty,
+      tags: problem.tags,
+      isActive: true,
+      createdAt: problem.createdAt,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(updatedProblem);
+  }),
+
+  // DeactivateProblemUseCase
+  http.put('/api/problems/:id/deactivate', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const body = await request.json() as DeactivateProblemInput;
+    
+    const problem = mockProblems.find(p => p.id === problemId);
+    if (!problem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    if (problem.teacherId !== body.teacherId) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    
+    const updatedProblem: ProblemOutput = {
+      id: problem.id,
+      teacherId: problem.teacherId,
+      title: problem.title,
+      description: problem.description || '',
+      type: problem.type,
+      difficulty: problem.difficulty,
+      tags: problem.tags,
+      isActive: false,
+      createdAt: problem.createdAt,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(updatedProblem);
+  }),
+
+  // DeleteProblemUseCase
+  http.delete('/api/problems/:id', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const url = new URL(request.url);
+    const teacherId = url.searchParams.get('teacherId');
+    
+    const problem = mockProblems.find(p => p.id === problemId);
+    if (!problem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    if (problem.teacherId !== teacherId) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    
+    // 실제로는 배열에서 제거하지만, 여기서는 성공 응답만 반환
+    return HttpResponse.json({ success: true });
+  }),
+
+  // CloneProblemUseCase
+  http.post('/api/problems/:id/clone', async ({ params, request }) => {
+    const problemId = params.id as string;
+    const body = await request.json() as CloneProblemInput;
+    
+    const originalProblem = mockProblems.find(p => p.id === problemId);
+    if (!originalProblem) {
+      return HttpResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+    
+    const clonedProblem: ProblemOutput = {
+      id: `problem-${Date.now()}-clone`,
+      teacherId: body.newTeacherId || body.requesterId,
+      title: `${originalProblem.title} (복사본)`,
+      description: originalProblem.description || '',
+      type: originalProblem.type,
+      difficulty: originalProblem.difficulty,
+      tags: body.preserveOriginalTags ? originalProblem.tags : [],
+      isActive: false, // 복사본은 기본적으로 비활성
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(clonedProblem);
+  })
+];
+
 // 모든 핸들러들을 통합
 export const handlers = [
   ...authHandlers,
@@ -806,4 +1649,5 @@ export const handlers = [
   ...srsHandlers,
   ...progressHandlers,
   ...gamificationHandlers,
+  ...problemHandlers,
 ];

@@ -10,6 +10,7 @@ interface AuthUser {
   name: string; // fullName에서 간단히 name으로 매핑
   displayName: string;
   role: UserRole;
+  organizationId?: string; // 조직 ID 추가
   gradeLevel?: number;
   avatarUrl?: string;
   isActive: boolean;
@@ -39,7 +40,7 @@ interface AuthContextType {
   updateUser: (updates: Partial<AuthUser>) => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -54,47 +55,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // URL에서 역할 확인 (개발용)
-        const currentPath = location.pathname;
-        let defaultRole: UserRole = 'student';
-        let userName = '김학생';
-        let userEmail = 'student@woodie.com';
+        // 저장된 토큰 확인
+        const accessToken = tokenStorage.getAccessToken();
+        const refreshToken = tokenStorage.getRefreshToken();
         
-        if (currentPath.startsWith('/teacher') || currentPath.startsWith('/manage')) {
-          defaultRole = 'teacher';
-          userName = '김교사';
-          userEmail = 'teacher@woodie.com';
-        } else if (currentPath.startsWith('/admin')) {
-          defaultRole = 'admin';
-          userName = '관리자';
-          userEmail = 'admin@woodie.com';
+        if (!accessToken) {
+          // 토큰이 없으면 로그아웃 상태
+          setUser(null);
+          setIsLoading(false);
+          return;
         }
-        
-        // 개발 환경에서는 항상 Mock 사용자로 로그인
-        const mockUser: AuthUser = {
-          id: '1',
-          email: userEmail,
-          name: userName,
-          displayName: userName,
-          role: defaultRole,
-          gradeLevel: defaultRole === 'student' ? 10 : undefined,
-          isActive: true
-        };
-        
-        // Mock 토큰 설정
-        tokenStorage.setAccessToken('mock-access-token');
-        tokenStorage.setRefreshToken('mock-refresh-token');
-        setUser(mockUser);
+
+        // 토큰이 있으면 사용자 정보 복원 시도
+        // TODO: 실제 환경에서는 토큰으로 사용자 정보 조회
+        // 현재는 개발용으로 Mock 데이터 사용
+        if (accessToken.startsWith('mock-')) {
+          // Mock 토큰인 경우 개발용 사용자 정보 생성
+          const currentPath = location.pathname;
+          let defaultRole: UserRole = 'student';
+          let userName = '김학생';
+          let userEmail = 'student@woodie.com';
+          
+          if (currentPath.startsWith('/teacher') || currentPath.startsWith('/manage')) {
+            defaultRole = 'teacher';
+            userName = '김교사';
+            userEmail = 'teacher@woodie.com';
+          } else if (currentPath.startsWith('/admin')) {
+            defaultRole = 'admin';
+            userName = '관리자';
+            userEmail = 'admin@woodie.com';
+          }
+          
+          const mockUser: AuthUser = {
+            id: '1',
+            email: userEmail,
+            name: userName,
+            displayName: userName,
+            role: defaultRole,
+            organizationId: 'mock-org-1', // Mock 조직 ID
+            gradeLevel: defaultRole === 'student' ? 10 : undefined,
+            isActive: true
+          };
+          
+          setUser(mockUser);
+        } else {
+          // 실제 토큰인 경우 API로 사용자 정보 조회
+          // TODO: authApi.getCurrentUser() 호출
+          setUser(null);
+          tokenStorage.clearTokens();
+        }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
         tokenStorage.clearTokens();
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-  }, [location.pathname]);
+  }, []); // location.pathname 의존성 제거
 
   const login = (user: AuthUser, accessToken: string, refreshToken: string) => {
     tokenStorage.setAccessToken(accessToken);
@@ -103,24 +123,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signUp = async (request: SignUpRequest): Promise<void> => {
-    // Mock 회원가입 구현 (실제 환경에서는 SignUpUseCase 호출)
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
-    
-    // 회원가입 후 자동 로그인
-    const newUser: AuthUser = {
-      id: Date.now().toString(),
-      email: request.email,
-      name: request.name,
-      displayName: request.name,
-      role: request.role,
-      gradeLevel: request.role === 'student' ? 10 : undefined,
-      isActive: true
-    };
-    
-    const mockAccessToken = 'mock-access-token-' + Date.now();
-    const mockRefreshToken = 'mock-refresh-token-' + Date.now();
-    
-    login(newUser, mockAccessToken, mockRefreshToken);
+    try {
+      // 실제 API 호출
+      const response = await fetch('http://localhost:3001/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: request.email,
+          password: request.password,
+          name: request.name,
+          role: request.role,
+          classId: request.classId,
+          context: request.context
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || '회원가입에 실패했습니다.');
+      }
+
+      const data = await response.json();
+      
+      // 회원가입 후 자동 로그인
+      const newUser: AuthUser = {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name || data.user.fullName,
+        displayName: data.user.displayName || data.user.name || data.user.fullName,
+        role: data.user.role,
+        organizationId: data.user.organizationId,
+        gradeLevel: data.user.gradeLevel,
+        isActive: data.user.isActive ?? true
+      };
+      
+      login(newUser, data.tokens.accessToken, data.tokens.refreshToken);
+    } catch (error) {
+      console.error('Sign up error:', error);
+      throw error;
+    }
   };
 
   const logout = () => {

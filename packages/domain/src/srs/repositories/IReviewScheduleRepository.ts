@@ -8,6 +8,21 @@ export interface IReviewScheduleRepository {
   findById(id: UniqueEntityID): Promise<ReviewSchedule | null>
 
   /**
+   * 여러 ID로 복습 일정 조회
+   */
+  findByIds(ids: UniqueEntityID[]): Promise<ReviewSchedule[]>
+
+  /**
+   * 특정 학생의 복습 일정 조회
+   */
+  findByStudentId(studentId: UniqueEntityID, limit?: number): Promise<ReviewSchedule[]>
+
+  /**
+   * 특정 문제의 복습 일정 조회
+   */
+  findByProblemId(problemId: UniqueEntityID, limit?: number): Promise<ReviewSchedule[]>
+
+  /**
    * 학생과 문제로 복습 일정 조회
    */
   findByStudentAndProblem(
@@ -38,6 +53,27 @@ export interface IReviewScheduleRepository {
     studentId: UniqueEntityID,
     currentDate: Date
   ): Promise<ReviewSchedule[]>
+
+  /**
+   * 특정 학생의 지연된 복습 항목들 조회 (별칭)
+   */
+  findOverdueByStudentId(
+    studentId: UniqueEntityID,
+    currentDate?: Date
+  ): Promise<ReviewSchedule[]>
+
+  /**
+   * 지연된 복습 일정 전체 조회
+   */
+  findOverdueSchedules(currentDate?: Date): Promise<ReviewSchedule[]>
+
+  /**
+   * 특정 학생의 지연된 복습 항목 수 조회
+   */
+  countOverdueByStudentId(
+    studentId: UniqueEntityID,
+    currentDate?: Date
+  ): Promise<number>
 
   /**
    * 복습 일정 저장/업데이트

@@ -40,6 +40,24 @@ const buttonVariants = cva(
           'p-0 h-auto',
           'dark:text-brand-400 dark:hover:text-brand-300',
         ],
+        error: [
+          'bg-error text-white',
+          'hover:bg-red-600',
+          'active:bg-red-700',
+          'shadow-sm hover:shadow-md',
+        ],
+        success: [
+          'bg-success text-white',
+          'hover:bg-green-600',
+          'active:bg-green-700',
+          'shadow-sm hover:shadow-md',
+        ],
+        warning: [
+          'bg-warning text-black',
+          'hover:bg-yellow-500',
+          'active:bg-yellow-600',
+          'shadow-sm hover:shadow-md',
+        ],
         destructive: [
           'bg-error text-white',
           'hover:bg-red-600',

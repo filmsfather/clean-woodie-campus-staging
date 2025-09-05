@@ -1,10 +1,8 @@
-import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './components'
 import { AuthProvider } from './contexts/AuthContext'
 import { MainLayout } from './components/layout/MainLayout'
-import { ProblemSetList } from './components/problemsets/ProblemSetList'
 import { DesignSystemDemo } from './components/DesignSystemDemo'
 import { StudentDashboard } from './components/dashboard/student'
 import { TodayStudyPage } from './components/dashboard/student/pages/TodayStudyPage'
@@ -13,14 +11,16 @@ import { ProblemSolvingPage } from './components/dashboard/student/pages/Problem
 import { MyProgressPage } from './components/dashboard/student/pages/MyProgressPage'
 import { TeacherDashboard } from './components/dashboard/teacher'
 import { AdminDashboard } from './components/dashboard/admin'
-import { UserManagement } from './components/admin/UserManagement'
 import { ClassManagement } from './components/admin/ClassManagement'
 import { Unauthorized } from './components/auth/Unauthorized'
-import { SignInPage, SignUpPage, ProfilePage } from './pages/auth'
-import { TodayReviewsPage, ReviewStatisticsPage } from './pages/srs'
+import { AdminGuard, TeacherGuard } from './components/auth'
+import { SignInPage, SignUpPage, ProfilePage, InviteManagementPage, UserManagementPage, AdminProfilePage } from './pages/auth'
+import { ReviewPage as SRSReviewPage, StatisticsPage, SettingsPage } from './pages/srs'
 import { ClassProgressPage, StreakLeaderboardPage } from './pages/progress'
 import { RewardRedemptionPage, LeaderboardPage } from './pages/gamification'
-import { ProblemBankBrowser, GradingWorkflow, AnalyticsDashboard } from './components/problems'
+import { ProblemSetsPage, ProblemSetDetailPage, CreateProblemSetPage, EditProblemSetPage } from './pages/problemsets'
+import { ProblemList } from './components/problems'
+import { AnalyticsDashboard } from './components/problems/analytics'
 
 // React Query client 생성
 const queryClient = new QueryClient({
@@ -49,8 +49,9 @@ function App() {
                 <Route path="dashboard" element={<StudentDashboard />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="study/today" element={<TodayStudyPage />} />
-                <Route path="study/reviews" element={<TodayReviewsPage />} />
-                <Route path="study/stats" element={<ReviewStatisticsPage />} />
+                <Route path="srs/review" element={<SRSReviewPage />} />
+                <Route path="srs/statistics" element={<StatisticsPage />} />
+                <Route path="srs/settings" element={<SettingsPage />} />
                 <Route path="study/review" element={<ReviewPage />} />
                 <Route path="study/solve" element={<ProblemSolvingPage />} />
                 <Route path="study/progress" element={<MyProgressPage />} />
@@ -64,30 +65,30 @@ function App() {
                 <Route path="gamification/leaderboard" element={<LeaderboardPage />} />
                 
                 {/* 교사 전용 라우트 */}
-                <Route path="teacher" element={<TeacherDashboard />} />
-                <Route path="teacher/dashboard" element={<TeacherDashboard />} />
-                <Route path="manage/students" element={<GradingWorkflow assignment={{
-                  id: '1', 
-                  title: '학생 과제 관리', 
-                  description: '학생들의 과제 제출 및 채점 관리',
-                  dueDate: new Date(),
-                  problems: [],
-                  totalPoints: 100,
-                  submissionCount: 0,
-                  gradedCount: 0
-                }} submissions={[]} onUpdateSubmission={async () => {}} onBulkGrade={async () => {}} onPublishGrades={async () => {}} onExportGrades={async () => {}} />} />
-                <Route path="manage/problem-sets" element={<ProblemSetList />} />
-                <Route path="manage/problems" element={<ProblemBankBrowser mode="manage" />} />
-                <Route path="manage/analytics" element={<AnalyticsDashboard isAdminView={false} />} />
+                <Route path="teacher" element={<TeacherGuard><TeacherDashboard /></TeacherGuard>} />
+                <Route path="teacher/dashboard" element={<TeacherGuard><TeacherDashboard /></TeacherGuard>} />
+                <Route path="manage/students" element={<TeacherGuard><UserManagementPage /></TeacherGuard>} />
+                <Route path="manage/problem-sets" element={<TeacherGuard><ProblemSetsPage /></TeacherGuard>} />
+                <Route path="manage/problems" element={<TeacherGuard><ProblemList problems={[]} loading={false} totalCount={0} currentPage={1} hasNext={false} /></TeacherGuard>} />
+                <Route path="manage/analytics" element={<TeacherGuard><div className="p-6"><AnalyticsDashboard isAdminView={false} /></div></TeacherGuard>} />
+                
+                {/* 문제집 관련 라우트 */}
+                <Route path="problemsets" element={<ProblemSetsPage />} />
+                <Route path="problemsets/create" element={<CreateProblemSetPage />} />
+                <Route path="problemsets/:id" element={<ProblemSetDetailPage />} />
+                <Route path="problemsets/:id/edit" element={<EditProblemSetPage />} />
                 
                 {/* 관리자 전용 라우트 */}
-                <Route path="admin" element={<AdminDashboard />} />
-                <Route path="admin/dashboard" element={<AdminDashboard />} />
-                <Route path="admin/users" element={<UserManagement />} />
-                <Route path="admin/classes" element={<ClassManagement />} />
-                <Route path="admin/content" element={<ProblemBankBrowser mode="manage" />} />
-                <Route path="admin/system" element={<div className="p-6"><h2 className="text-2xl font-bold mb-4">시스템 설정</h2><p>시스템 설정 페이지를 준비 중입니다.</p></div>} />
-                <Route path="admin/analytics" element={<AnalyticsDashboard isAdminView={true} />} />
+                <Route path="admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+                <Route path="admin/dashboard" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+                <Route path="admin/users" element={<AdminGuard><UserManagementPage /></AdminGuard>} />
+                <Route path="admin/invites" element={<AdminGuard><InviteManagementPage /></AdminGuard>} />
+                <Route path="admin/profile" element={<AdminGuard><AdminProfilePage /></AdminGuard>} />
+                <Route path="admin/classes" element={<AdminGuard><ClassManagement /></AdminGuard>} />
+                <Route path="admin/problem-sets" element={<AdminGuard><ProblemSetsPage defaultFilter="all" /></AdminGuard>} />
+                <Route path="admin/content" element={<AdminGuard><ProblemList problems={[]} loading={false} totalCount={0} currentPage={1} hasNext={false} /></AdminGuard>} />
+                <Route path="admin/system" element={<AdminGuard><div className="p-6"><h2 className="text-2xl font-bold mb-4">시스템 설정</h2><p>시스템 설정 페이지를 준비 중입니다.</p></div></AdminGuard>} />
+                <Route path="admin/analytics" element={<AdminGuard><div className="p-6"><AnalyticsDashboard isAdminView={true} /></div></AdminGuard>} />
                 
                 {/* 개발용 페이지들 */}
                 <Route path="design" element={<DesignSystemDemo />} />

@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { BaseController } from '../../common/BaseController';
 import { GamificationApplicationService } from '@woodie/application/gamification/services/GamificationApplicationService';
 import { AuthenticatedRequest } from '../../problems/interfaces/ProblemApiTypes';
@@ -14,7 +14,7 @@ export class GamificationController extends BaseController {
    * GET /api/gamification/dashboard
    * 게임화 대시보드 데이터 조회
    */
-  public getDashboard = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public getDashboard = async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.user?.id;
       if (!studentId) {
@@ -37,7 +37,7 @@ export class GamificationController extends BaseController {
    * POST /api/gamification/tokens/award
    * 토큰 지급 (관리자용)
    */
-  public awardTokens = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public awardTokens = async (req: Request, res: Response): Promise<void> => {
     try {
       const { studentId, amount, reason } = req.body;
 
@@ -69,7 +69,7 @@ export class GamificationController extends BaseController {
    * POST /api/gamification/rewards/redeem
    * 보상 교환
    */
-  public redeemReward = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public redeemReward = async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.user?.id;
       if (!studentId) {
@@ -100,7 +100,7 @@ export class GamificationController extends BaseController {
    * GET /api/gamification/leaderboards
    * 리더보드 조회
    */
-  public getLeaderboards = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public getLeaderboards = async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.user?.id;
       const limit = parseInt(req.query.limit as string) || 10;
@@ -124,7 +124,7 @@ export class GamificationController extends BaseController {
    * POST /api/gamification/events/quiz-completed
    * 퀴즈 완료 이벤트 처리
    */
-  public onQuizCompleted = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public onQuizCompleted = async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.user?.id;
       if (!studentId) {
@@ -164,7 +164,7 @@ export class GamificationController extends BaseController {
    * POST /api/gamification/events/assignment-submitted
    * 과제 제출 이벤트 처리
    */
-  public onAssignmentSubmitted = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public onAssignmentSubmitted = async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.user?.id;
       if (!studentId) {
@@ -195,7 +195,7 @@ export class GamificationController extends BaseController {
    * POST /api/gamification/events/attendance
    * 출석 이벤트 처리
    */
-  public onAttendance = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public onAttendance = async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.user?.id;
       if (!studentId) {
@@ -230,7 +230,7 @@ export class GamificationController extends BaseController {
    * POST /api/gamification/events/goal-achieved
    * 학습 목표 달성 이벤트 처리
    */
-  public onGoalAchieved = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  public onGoalAchieved = async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.user?.id;
       if (!studentId) {

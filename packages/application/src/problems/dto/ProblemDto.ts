@@ -5,6 +5,7 @@ export interface ProblemDto {
   teacherId: string;
   type: string;
   title: string;
+  description?: string;
   difficulty: number;
   tags: string[];
   isActive: boolean;
@@ -70,6 +71,7 @@ export interface SearchMetadataDto {
 
 export interface ProblemSearchResponseDto {
   problems: ProblemDto[];
+  totalCount: number;
   metadata: SearchMetadataDto;
 }
 

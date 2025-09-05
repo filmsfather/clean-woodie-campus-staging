@@ -153,4 +153,54 @@ export class AssignmentTarget extends Entity<UniqueEntityID> {
 
     return Result.ok<AssignmentTarget>(target);
   }
+
+  // === 영속성 지원 메서드들 ===
+
+  // 복원을 위한 정적 팩토리 메서드
+  public static restore(props: {
+    id: string;
+    assignmentId: string;
+    targetIdentifier: AssignmentTargetIdentifier;
+    assignedBy: string;
+    assignedAt: Date;
+    revokedBy?: string;
+    revokedAt?: Date;
+    isActive: boolean;
+  }): Result<AssignmentTarget> {
+    const history = new AssignmentHistory({
+      assignedAt: props.assignedAt,
+      assignedBy: props.assignedBy,
+      revokedAt: props.revokedAt,
+      revokedBy: props.revokedBy
+    });
+
+    const target = new AssignmentTarget({
+      assignmentId: new UniqueEntityID(props.assignmentId),
+      targetIdentifier: props.targetIdentifier,
+      history: [history]
+    }, new UniqueEntityID(props.id));
+
+    return Result.ok<AssignmentTarget>(target);
+  }
+
+  // 편의 속성들 (infrastructure에서 사용)
+  get assignedBy(): string {
+    const latestHistory = this.getLatestHistory();
+    return latestHistory?.assignedBy || '';
+  }
+
+  get assignedAt(): Date {
+    const latestHistory = this.getLatestHistory();
+    return latestHistory?.assignedAt || new Date();
+  }
+
+  get revokedBy(): string | undefined {
+    const latestHistory = this.getLatestHistory();
+    return latestHistory?.revokedBy;
+  }
+
+  get revokedAt(): Date | undefined {
+    const latestHistory = this.getLatestHistory();
+    return latestHistory?.revokedAt;
+  }
 }

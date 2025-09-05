@@ -22,7 +22,7 @@ export class AchievementEarnedEvent extends BaseDomainEvent {
     public readonly userAchievementId: UniqueEntityID,
     public readonly earnedAt: Date
   ) {
-    super();
+    super(userAchievementId);
   }
 
   /**

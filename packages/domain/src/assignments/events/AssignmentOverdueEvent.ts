@@ -19,7 +19,7 @@ export class AssignmentOverdueEvent extends BaseDomainEvent {
     activeTargetCount: number,
     overdueAt: Date = new Date()
   ) {
-    super();
+    super(assignmentId);
     this.assignmentId = assignmentId;
     this.title = title;
     this.dueDate = dueDate;

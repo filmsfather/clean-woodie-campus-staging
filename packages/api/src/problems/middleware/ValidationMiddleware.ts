@@ -372,6 +372,111 @@ export class ValidationMiddleware {
     });
   }
 
+  // === Use Case 전용 검증 메서드들 ===
+
+  // 문제 내용 업데이트 검증
+  static validateUpdateProblemContent() {
+    return this.validateBody({
+      title: {
+        required: true,
+        type: 'string',
+        min: 1,
+        max: 500,
+        custom: (value: string) => {
+          if (!value || value.trim().length === 0) {
+            return 'Title is required';
+          }
+          return true;
+        }
+      },
+      description: {
+        required: false,
+        type: 'string',
+        max: 2000
+      }
+    });
+  }
+
+  // 문제 답안 업데이트 검증
+  static validateUpdateProblemAnswer() {
+    return this.validateBody({
+      correctAnswerValue: {
+        required: true,
+        type: 'string',
+        min: 1,
+        max: 1000,
+        custom: (value: string) => {
+          if (!value || value.trim().length === 0) {
+            return 'Correct answer value is required';
+          }
+          return true;
+        }
+      }
+    });
+  }
+
+  // 난이도 변경 검증
+  static validateChangeDifficulty() {
+    return this.validateBody({
+      difficultyLevel: {
+        required: true,
+        type: 'number',
+        min: 1,
+        max: 5
+      }
+    });
+  }
+
+  // 태그 관리 검증
+  static validateManageTags() {
+    return this.validateBody({
+      tags: {
+        required: true,
+        type: 'array',
+        custom: (value: any) => {
+          if (!Array.isArray(value)) {
+            return 'Tags must be an array';
+          }
+          if (value.length > 10) {
+            return 'Cannot have more than 10 tags';
+          }
+          for (const tag of value) {
+            if (typeof tag !== 'string' || tag.trim().length === 0) {
+              return 'All tags must be non-empty strings';
+            }
+            if (tag.length > 50) {
+              return 'Each tag must be less than 50 characters';
+            }
+          }
+          return true;
+        }
+      }
+    });
+  }
+
+  // 문제 복제 검증
+  static validateCloneProblem() {
+    return this.validateBody({
+      targetTeacherId: {
+        required: false,
+        type: 'string',
+        custom: (value: string) => {
+          if (value) {
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(value)) {
+              return 'Target teacher ID must be a valid UUID';
+            }
+          }
+          return true;
+        }
+      },
+      preserveOriginalTags: {
+        required: false,
+        type: 'boolean'
+      }
+    });
+  }
+
   // === Private 헬퍼 메서드들 ===
 
   private static validateObject(

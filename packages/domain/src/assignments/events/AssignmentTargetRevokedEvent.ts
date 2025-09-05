@@ -18,7 +18,7 @@ export class AssignmentTargetRevokedEvent extends BaseDomainEvent {
     revokedBy: string,
     revokedAt: Date = new Date()
   ) {
-    super();
+    super(assignmentId);
     this.assignmentId = assignmentId;
     this.targetType = targetType;
     this.targetId = targetId;

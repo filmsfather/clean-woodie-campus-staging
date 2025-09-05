@@ -20,7 +20,7 @@ export class StreakAchievedEvent extends BaseDomainEvent {
     public readonly isPersonalRecord: boolean,
     public readonly streakMilestone?: number // 10일, 30일, 100일 등 특별한 이정표
   ) {
-    super()
+    super(studentId)
   }
 
   /**

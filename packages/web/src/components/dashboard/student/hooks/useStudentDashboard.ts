@@ -1,7 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { StudentDashboardDto } from '@woodie/application';
-import type { GetStudentDashboardResponse } from '@woodie/application';
+// import { StudentDashboardDto } from '@woodie/application';
+// import type { GetStudentDashboardResponse } from '@woodie/application';
+
+// 임시 타입 정의 - 실제 application 패키지 연결 시 제거
+interface StudentDashboardDto {
+  studentId: string;
+  todayTasks: any[];
+  progress: any;
+  upcomingDeadlines: any[];
+  currentStreak: number;
+  longestStreak: number;
+  reviewCount: number;
+  totalStudyHours?: number;
+  averageAccuracy?: number;
+  completedProblemSets?: number;
+  totalActiveProblemSets?: number;
+}
+
+interface GetStudentDashboardResponse {
+  dashboard: StudentDashboardDto;
+}
 
 // Application Layer DTO를 UI 타입으로 직접 사용 (DTO-First 원칙)
 // TODO: 실제 GetStudentDashboardUseCase와 연동
@@ -31,6 +50,11 @@ const mockStudentDashboardResponse: GetStudentDashboardResponse = {
     reviewCount: 45,
     currentStreak: 7,
     longestStreak: 28,
+    // QuickStatsGrid용 통계 데이터 추가
+    totalStudyHours: 127.5,
+    averageAccuracy: 87,
+    completedProblemSets: 12,
+    totalActiveProblemSets: 18,
     progressData: [
       { date: '2025-08-26', problemsSolved: 12, timeSpent: 45 },
       { date: '2025-08-27', problemsSolved: 8, timeSpent: 30 },
@@ -99,7 +123,7 @@ export const useStartStudySession = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       return { sessionId: `session-${Date.now()}`, taskId };
     },
-    onSuccess: (data, taskId) => {
+    onSuccess: (_data, taskId) => {
       // 대시보드 데이터 무효화하여 새로고침
       queryClient.invalidateQueries({ queryKey: ['studentDashboard'] });
       

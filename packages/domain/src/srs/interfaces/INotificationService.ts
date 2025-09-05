@@ -69,14 +69,19 @@ export interface INotificationSettingsRepository {
   findByUserId(userId: UniqueEntityID): Promise<NotificationSettings | null>
 
   /**
+   * 학생별 알림 설정 조회 (다른 용도)
+   */
+  findByStudentId(studentId: UniqueEntityID): Promise<Result<NotificationSettings | null>>
+
+  /**
    * 알림 설정 저장
    */
-  save(userId: UniqueEntityID, settings: NotificationSettings): Promise<void>
+  save(userId: UniqueEntityID, settings: NotificationSettings): Promise<Result<void>>
 
   /**
    * 알림 설정 삭제
    */
-  delete(userId: UniqueEntityID): Promise<void>
+  delete(userId: UniqueEntityID): Promise<Result<void>>
 
   /**
    * 특정 알림 타입이 활성화된 사용자 목록 조회

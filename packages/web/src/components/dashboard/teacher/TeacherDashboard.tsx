@@ -4,10 +4,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
 import { Progress } from '../../ui/Progress';
+import { Modal } from '../../ui';
 import { useTeacherDashboard } from './hooks/useTeacherDashboard';
 import { DashboardSkeleton } from '../shared/components';
 import { Unauthorized } from '../../auth/Unauthorized';
 import { AnalyticsDashboard } from '../../problems/analytics';
+import UserManagementContainer from '../../../containers/auth/UserManagementContainer';
+import InviteManagementContainer from '../../../containers/auth/InviteManagementContainer';
+import { CreateProblemForm, ProblemList } from '../../problems';
+import { UserDirectory } from '../../auth';
+import { useAssignments, useDueSoonAssignments, useOverdueAssignments } from '../../../hooks';
 import type { StudentProgress, RecentActivity, TeacherAlert } from './types';
 
 export const TeacherDashboard: React.FC = () => {
@@ -15,7 +21,34 @@ export const TeacherDashboard: React.FC = () => {
   const { data, isLoading } = useTeacherDashboard(user?.id || '', {
     enabled: !!user && user.role === 'teacher'
   });
+
+  // Assignment hooks
+  const {
+    assignments,
+    summary: assignmentSummary,
+    loading: assignmentsLoading
+  } = useAssignments({
+    status: 'ALL',
+    sortBy: 'dueDate',
+    sortOrder: 'asc'
+  });
+
+  const {
+    assignments: dueSoonAssignments,
+    summary: dueSoonSummary
+  } = useDueSoonAssignments(48); // 48시간 내 마감
+
+  const {
+    assignments: overdueAssignments,
+    summary: overdueSummary
+  } = useOverdueAssignments();
   const [currentView, setCurrentView] = useState<'dashboard' | 'analytics'>('dashboard');
+  const [showStudentDirectory, setShowStudentDirectory] = useState(false);
+  const [showCreateInvite, setShowCreateInvite] = useState(false);
+  const [showInviteList, setShowInviteList] = useState(false);
+  const [showCreateProblemSet, setShowCreateProblemSet] = useState(false);
+  const [showAssignProblemSet, setShowAssignProblemSet] = useState(false);
+  const [showCreateAssignment, setShowCreateAssignment] = useState(false);
 
   if (!user || user.role !== 'teacher') {
     return <Unauthorized message="교사만 접근할 수 있는 페이지입니다." />;
@@ -65,6 +98,59 @@ export const TeacherDashboard: React.FC = () => {
           오늘도 학생들과 함께 성장하는 하루 되세요!
         </p>
       </div>
+
+      {/* 과제 현황 요약 카드들 */}
+      {assignmentSummary && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="text-center py-6 space-y-2">
+              <div className="text-3xl font-bold text-primary">
+                {assignmentSummary.totalCount}
+              </div>
+              <div className="text-sm text-text-secondary">전체 과제</div>
+              <Badge variant="outline" size="sm">
+                활성: {assignmentSummary.activeCount}개
+              </Badge>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="text-center py-6 space-y-2">
+              <div className="text-3xl font-bold text-warning">
+                {assignmentSummary.dueSoonCount}
+              </div>
+              <div className="text-sm text-text-secondary">마감임박</div>
+              <Badge variant="warning" size="sm">
+                48시간 내
+              </Badge>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="text-center py-6 space-y-2">
+              <div className="text-3xl font-bold text-error">
+                {assignmentSummary.overdueCount}
+              </div>
+              <div className="text-sm text-text-secondary">연체</div>
+              <Badge variant="error" size="sm">
+                처리 필요
+              </Badge>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="text-center py-6 space-y-2">
+              <div className="text-3xl font-bold text-info">
+                {assignmentSummary.draftCount}
+              </div>
+              <div className="text-sm text-text-secondary">임시저장</div>
+              <Badge variant="default" size="sm">
+                배정 대기
+              </Badge>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* 클래스 현황 카드들 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -141,65 +227,241 @@ export const TeacherDashboard: React.FC = () => {
         </Card>
       )}
 
+      {/* 교사용 사용자 관리 섹션 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <span>👥</span>
+            <span>학생 및 초대 관리</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowStudentDirectory(true)}
+              className="flex flex-col items-center space-y-2 h-16"
+            >
+              <span>📋</span>
+              <span className="text-sm">학생 목록</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCreateInvite(true)}
+              className="flex flex-col items-center space-y-2 h-16"
+            >
+              <span>📧</span>
+              <span className="text-sm">학생 초대</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowInviteList(true)}
+              className="flex flex-col items-center space-y-2 h-16"
+            >
+              <span>📝</span>
+              <span className="text-sm">초대 현황</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 메인 컨텐츠 그리드 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 실시간 활동 피드 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span>📈</span>
-                <span>실시간 활동</span>
-              </div>
-              <Badge variant="outline" size="sm">
-                실시간
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="max-h-80 overflow-y-auto space-y-3">
-              {data.recentActivity.slice(0, 10).map((activity) => (
-                <ActivityCard key={activity.id} activity={activity} />
-              ))}
-            </div>
-            <Button variant="outline" size="sm" className="w-full">
-              모든 활동 보기
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* 학생 현황 */}
+        {/* 우리 반 학생들 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <span>👥</span>
-                <span>학생 현황</span>
+                <span>우리 반 학생들</span>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => setShowStudentDirectory(true)}>
                 전체 보기
               </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="max-h-80 overflow-y-auto space-y-3">
-              {data.studentProgress
-                .sort((a, b) => {
-                  // 위험군 학생을 먼저 표시
-                  if (a.status === 'at_risk' && b.status !== 'at_risk') return -1;
-                  if (a.status !== 'at_risk' && b.status === 'at_risk') return 1;
-                  // 그 다음은 최근 활동 순
-                  return new Date(b.recentActivity.lastLogin).getTime() - 
-                         new Date(a.recentActivity.lastLogin).getTime();
-                })
-                .slice(0, 8)
-                .map((student) => (
-                  <StudentCard key={student.id} student={student} />
-                ))}
-            </div>
+          <CardContent>
+            <UserDirectory
+              users={[]} // TODO: 실제 학생 데이터 연결
+              totalCount={data.classStatistics.totalStudents}
+              isLoading={false}
+              error={null}
+              filter={{ role: 'student' }}
+              onFilterChange={() => {}}
+              compact={true}
+              showFilters={false}
+              showActions={['profile', 'performance']}
+              limit={8}
+              onUserSelect={(user) => {
+                // TODO: 학생 상세 정보 모달 또는 페이지로 이동
+                console.log('학생 선택:', user);
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* 내 문제집 현황 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span>📚</span>
+                <span>내 문제집 현황</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowAssignProblemSet(true)}>
+                배정하기
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ProblemList
+              problems={[]} // TODO: 교사의 문제집 데이터 연결
+              loading={false}
+              error={null}
+              compact={true}
+              showActions={['edit', 'stats', 'assign']}
+              limit={6}
+              onProblemSelect={(problem) => {
+                // TODO: 문제집 상세 페이지로 이동
+                console.log('문제집 선택:', problem);
+              }}
+              onProblemEdit={(problem) => {
+                // TODO: 문제집 편집 모달 열기
+                console.log('문제집 편집:', problem);
+              }}
+            />
           </CardContent>
         </Card>
       </div>
+
+      {/* 과제 관리 섹션 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span>📋</span>
+              <span>과제 관리</span>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/assignments'}
+              >
+                전체 보기
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setShowCreateAssignment(true)}
+              >
+                새 과제 만들기
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* 최근 과제들 */}
+          <div className="space-y-4">
+            {assignmentsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : assignments && assignments.length > 0 ? (
+              <>
+                {assignments.slice(0, 5).map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border-primary bg-surface-secondary hover:bg-surface-tertiary transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <Badge 
+                          variant={
+                            assignment.status === 'ACTIVE' ? 'success' : 
+                            assignment.status === 'DRAFT' ? 'default' : 
+                            assignment.status === 'CLOSED' ? 'warning' : 'default'
+                          }
+                          size="sm"
+                        >
+                          {assignment.status}
+                        </Badge>
+                        <h4 className="font-medium text-text-primary">
+                          {assignment.title}
+                        </h4>
+                        {assignment.dueDateStatus.isOverdue && (
+                          <Badge variant="error" size="sm">
+                            연체
+                          </Badge>
+                        )}
+                        {assignment.dueDateStatus.isDueSoon && !assignment.dueDateStatus.isOverdue && (
+                          <Badge variant="warning" size="sm">
+                            마감임박
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="mt-2 flex items-center space-x-4 text-sm text-text-secondary">
+                        <span>
+                          마감: {new Date(assignment.dueDate).toLocaleDateString('ko-KR')}
+                        </span>
+                        <span>
+                          대상: {assignment.targetInfo.totalTargets}명
+                        </span>
+                        <span>
+                          활성: {assignment.targetInfo.activeTargets}명
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {assignment.permissions.canActivate && (
+                        <Button variant="outline" size="sm">
+                          활성화
+                        </Button>
+                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => window.location.href = `/assignments/${assignment.id}`}
+                      >
+                        상세보기
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                {assignments.length > 5 && (
+                  <div className="text-center pt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.location.href = '/assignments'}
+                    >
+                      {assignments.length - 5}개 더 보기
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-400 text-4xl mb-3">📋</div>
+                <h3 className="text-lg font-medium text-text-primary mb-2">
+                  아직 과제가 없습니다
+                </h3>
+                <p className="text-text-secondary mb-4">
+                  학생들에게 배정할 과제를 생성해보세요.
+                </p>
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => setShowCreateAssignment(true)}
+                >
+                  첫 과제 만들기
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 문제집 현황 */}
       <Card>
@@ -210,10 +472,18 @@ export const TeacherDashboard: React.FC = () => {
               <span>배정한 문제집</span>
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowCreateProblemSet(true)}
+              >
                 새 문제집 만들기
               </Button>
-              <Button variant="default" size="sm">
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setShowAssignProblemSet(true)}
+              >
                 문제집 배정하기
               </Button>
             </div>
@@ -282,12 +552,28 @@ export const TeacherDashboard: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col items-center space-y-2">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center space-y-2"
+              onClick={() => setShowCreateAssignment(true)}
+            >
+              <span className="text-2xl">📋</span>
+              <span className="text-sm">새 과제</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center space-y-2"
+              onClick={() => setShowCreateProblemSet(true)}
+            >
               <span className="text-2xl">📝</span>
               <span className="text-sm">새 문제집</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center space-y-2">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center space-y-2"
+              onClick={() => setShowAssignProblemSet(true)}
+            >
               <span className="text-2xl">📤</span>
               <span className="text-sm">문제집 배정</span>
             </Button>
@@ -299,13 +585,130 @@ export const TeacherDashboard: React.FC = () => {
               <span className="text-2xl">📊</span>
               <span className="text-sm">성적 분석</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center space-y-2">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center space-y-2"
+              onClick={() => setShowStudentDirectory(true)}
+            >
               <span className="text-2xl">👥</span>
               <span className="text-sm">학생 관리</span>
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Auth 컴포넌트 모달들 */}
+      <Modal 
+        isOpen={showStudentDirectory} 
+        onClose={() => setShowStudentDirectory(false)}
+        title="학생 디렉토리"
+        size="xl"
+      >
+        <UserManagementContainer 
+          organizationId={user?.organizationId}
+          showStatistics={false}
+          showBulkActions={false}
+          defaultFilter={{
+            role: 'student'
+          }}
+        />
+      </Modal>
+
+      <Modal 
+        isOpen={showCreateInvite} 
+        onClose={() => setShowCreateInvite(false)}
+        title="학생 초대"
+        size="lg"
+      >
+        <InviteManagementContainer 
+          organizationId={user?.organizationId}
+          createdBy={user?.id}
+          showCreateForm={true}
+          defaultRole="student"
+          onInviteCreated={() => {
+            setShowCreateInvite(false);
+          }}
+        />
+      </Modal>
+
+      <Modal 
+        isOpen={showInviteList} 
+        onClose={() => setShowInviteList(false)}
+        title="초대 현황 관리"
+        size="xl"
+      >
+        <InviteManagementContainer 
+          organizationId={user?.organizationId}
+          createdBy={user?.id}
+          showCreateForm={false}
+          showAllInvites={false}
+        />
+      </Modal>
+
+      {/* 문제집 생성 모달 */}
+      <Modal 
+        isOpen={showCreateProblemSet} 
+        onClose={() => setShowCreateProblemSet(false)}
+        title="새 문제집 만들기"
+        size="lg"
+      >
+        <CreateProblemForm 
+          onSuccess={() => {
+            setShowCreateProblemSet(false);
+            // TODO: 문제집 생성 후 데이터 새로고침
+          }}
+          onCancel={() => setShowCreateProblemSet(false)}
+        />
+      </Modal>
+
+      {/* 문제집 배정 모달 */}
+      <Modal 
+        isOpen={showAssignProblemSet} 
+        onClose={() => setShowAssignProblemSet(false)}
+        title="문제집 배정하기"
+        size="xl"
+      >
+        <div className="space-y-4">
+          <div className="text-sm text-text-secondary mb-4">
+            학생들에게 배정할 문제집을 선택하세요.
+          </div>
+          <ProblemList 
+            problems={[]} // TODO: 교사의 문제집 목록 연결
+            loading={false}
+            showPagination={false}
+            onProblemSelect={(problem) => {
+              // TODO: 문제집 배정 로직 구현
+              console.log('문제집 배정:', problem);
+              setShowAssignProblemSet(false);
+            }}
+          />
+        </div>
+      </Modal>
+
+      {/* 과제 생성 모달 */}
+      <Modal 
+        isOpen={showCreateAssignment} 
+        onClose={() => setShowCreateAssignment(false)}
+        title="새 과제 만들기"
+        size="xl"
+      >
+        <div className="space-y-4">
+          <div className="text-sm text-text-secondary mb-4">
+            과제는 문제집을 선택하고 학생들에게 배정하여 생성합니다.
+          </div>
+          <div className="text-center py-8">
+            <Button 
+              variant="default"
+              onClick={() => {
+                setShowCreateAssignment(false);
+                window.location.href = '/assignments/create';
+              }}
+            >
+              과제 생성 페이지로 이동
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -418,7 +821,7 @@ const StudentCard: React.FC<StudentCardProps> = ({ student }) => {
       <div className="flex items-center space-x-3">
         <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
           <span className="text-primary-600 text-sm font-semibold">
-            {student.name.charAt(0)}
+            {student.name?.charAt(0) || '?'}
           </span>
         </div>
         <div>

@@ -18,7 +18,7 @@ export class AssignmentTargetAddedEvent extends BaseDomainEvent {
     assignedBy: string,
     assignedAt: Date = new Date()
   ) {
-    super();
+    super(assignmentId);
     this.assignmentId = assignmentId;
     this.targetType = targetType;
     this.targetId = targetId;

@@ -52,13 +52,14 @@ export interface SelectOption {
 export interface SelectProps
   extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'>,
     VariantProps<typeof selectVariants> {
-  options: SelectOption[]    // 선택 옵션 배열
+  options?: SelectOption[]    // 선택 옵션 배열 (children 방식 사용 시 optional)
   placeholder?: string       // 플레이스홀더 텍스트
   error?: string            // 에러 메시지
   helperText?: string       // 도움말 텍스트
   searchable?: boolean      // 검색 기능 활성화 여부
   clearable?: boolean       // 클리어 버튼 표시 여부
   onClear?: () => void      // 클리어 버튼 클릭 핸들러
+  onValueChange?: (value: string) => void // 값 변경 핸들러 (onChange와 동일하지만 더 간단한 시그니처)
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
@@ -74,6 +75,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       searchable = false,
       clearable = false,
       onClear,
+      onValueChange,
       value,
       onChange,
       disabled,
@@ -83,22 +85,22 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ) => {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
-    const [filteredOptions, setFilteredOptions] = useState(options)
+    const [filteredOptions, setFilteredOptions] = useState(options || [])
     const containerRef = useRef<HTMLDivElement>(null)
     const searchInputRef = useRef<HTMLInputElement>(null)
 
     const hasError = error || variant === 'error'
     const selectVariant = hasError ? 'error' : variant
-    const selectedOption = options.find(option => option.value === value)
+    const selectedOption = options?.find(option => option.value === value)
 
     useEffect(() => {
-      if (searchable) {
+      if (searchable && options) {
         const filtered = options.filter(option =>
           option.label.toLowerCase().includes(searchTerm.toLowerCase())
         )
         setFilteredOptions(filtered)
       } else {
-        setFilteredOptions(options)
+        setFilteredOptions(options || [])
       }
     }, [searchTerm, options, searchable])
 
@@ -133,6 +135,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       } as React.ChangeEvent<HTMLSelectElement>
       
       onChange?.(syntheticEvent)
+      onValueChange?.(option.value)
       setIsOpen(false)
       setSearchTerm('')
     }
@@ -172,6 +175,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         currentTarget: { value: '' },
       } as React.ChangeEvent<HTMLSelectElement>
       onChange?.(syntheticEvent)
+      onValueChange?.('')
     }
 
     if (!searchable) {
@@ -192,7 +196,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                   {placeholder}
                 </option>
               )}
-              {options.map((option) => (
+              {(options || []).map((option) => (
                 <option
                   key={option.value}
                   value={option.value}
@@ -311,7 +315,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     No options found
                   </div>
                 ) : (
-                  filteredOptions.map((option) => (
+                  (filteredOptions || []).map((option) => (
                     <div
                       key={option.value}
                       className={cn(

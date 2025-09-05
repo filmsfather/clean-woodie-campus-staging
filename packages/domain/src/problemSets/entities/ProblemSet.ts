@@ -15,6 +15,8 @@ interface ProblemSetProps {
   title: ProblemSetTitle; // 문제집 제목
   description?: ProblemSetDescription; // 문제집 설명 (선택적)
   items?: ProblemSetItem[]; // 문제 항목들 (선택적)
+  isPublic?: boolean; // 공개 여부 (선택적, 기본값: false)
+  isShared?: boolean; // 공유 여부 (선택적, 기본값: false)
   createdAt?: Date; // 생성 시각 (선택적, 기본값은 현재 시각)
   updatedAt?: Date; // 수정 시각 (선택적, 기본값은 현재 시각)
 }
@@ -26,6 +28,8 @@ export class ProblemSet extends AggregateRoot<UniqueEntityID> {
   private _title: ProblemSetTitle;
   private _description?: ProblemSetDescription;
   private _items: ProblemSetItem[];
+  private _isPublic: boolean;
+  private _isShared: boolean;
   private _createdAt: Date;
   private _updatedAt: Date;
 
@@ -35,6 +39,8 @@ export class ProblemSet extends AggregateRoot<UniqueEntityID> {
     this._title = props.title;
     this._description = props.description;
     this._items = props.items || [];
+    this._isPublic = props.isPublic ?? false;
+    this._isShared = props.isShared ?? false;
     this._createdAt = props.createdAt || new Date();
     this._updatedAt = props.updatedAt || new Date();
   }
@@ -66,6 +72,14 @@ export class ProblemSet extends AggregateRoot<UniqueEntityID> {
 
   get updatedAt(): Date {
     return this._updatedAt;
+  }
+
+  get isPublic(): boolean {
+    return this._isPublic;
+  }
+
+  get isShared(): boolean {
+    return this._isShared;
   }
 
   // 비즈니스 로직 메서드들 - 문제집의 핵심 도메인 행위
@@ -196,6 +210,18 @@ export class ProblemSet extends AggregateRoot<UniqueEntityID> {
     this._updatedAt = new Date();
   }
 
+  // 문제집 공개 설정
+  public setPublic(isPublic: boolean): void {
+    this._isPublic = isPublic;
+    this._updatedAt = new Date();
+  }
+
+  // 문제집 공유 설정
+  public setShared(isShared: boolean): void {
+    this._isShared = isShared;
+    this._updatedAt = new Date();
+  }
+
   // 쿼리 메서드들 - 상태 조회 및 검증
   public isEmpty(): boolean {
     return this._items.length === 0;
@@ -282,5 +308,92 @@ export class ProblemSet extends AggregateRoot<UniqueEntityID> {
     }
 
     return Result.ok<ProblemSet>(problemSet);
+  }
+
+  // === 영속성 지원 메서드들 ===
+
+  // 복원을 위한 정적 팩토리 메서드
+  public static restore(props: {
+    id: string;
+    teacherId: string;
+    title: ProblemSetTitle;
+    description?: ProblemSetDescription;
+    isPublic: boolean;
+    isShared: boolean;
+    items?: Array<{
+      id: string;
+      problemId: string;
+      orderIndex: number;
+      points?: number;
+      settings?: any;
+    }>;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Result<ProblemSet> {
+    const problemSet = new ProblemSet({
+      teacherId: props.teacherId,
+      title: props.title,
+      description: props.description,
+      isPublic: props.isPublic,
+      isShared: props.isShared,
+      createdAt: props.createdAt,
+      updatedAt: props.updatedAt
+    }, new UniqueEntityID(props.id));
+
+    // 아이템들 복원
+    if (props.items && props.items.length > 0) {
+      for (const itemData of props.items) {
+        const itemResult = ProblemSetItem.create({
+          problemSetId: problemSet.id,
+          problemId: new UniqueEntityID(itemData.problemId),
+          orderIndex: itemData.orderIndex,
+          points: itemData.points,
+          estimatedTimeMinutes: 3 // 기본값
+        }, new UniqueEntityID(itemData.id));
+
+        if (itemResult.isSuccess) {
+          problemSet._items.push(itemResult.value);
+        }
+      }
+    }
+
+    return Result.ok<ProblemSet>(problemSet);
+  }
+
+  // 직렬화 (영속성을 위한)
+  public toPersistence(): {
+    id: string;
+    teacherId: string;
+    title: string;
+    description?: string;
+    isPublic: boolean;
+    isShared: boolean;
+    items?: Array<{
+      id: string;
+      problemId: string;
+      orderIndex: number;
+      points?: number;
+      settings?: any;
+    }>;
+    createdAt: Date;
+    updatedAt: Date;
+  } {
+    return {
+      id: this.id.toString(),
+      teacherId: this._teacherId,
+      title: this._title.value,
+      description: this._description?.value,
+      isPublic: this._isPublic,
+      isShared: this._isShared,
+      items: this._items.map(item => ({
+        id: item.id.toString(),
+        problemId: item.problemId.toString(),
+        orderIndex: item.orderIndex,
+        points: item.points,
+        settings: {} // 임시로 빈 객체
+      })),
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt
+    };
   }
 }

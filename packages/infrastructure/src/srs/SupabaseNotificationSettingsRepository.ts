@@ -1,4 +1,4 @@
-import { UniqueEntityID } from '@woodie/domain/common/Identifier'
+import { UniqueEntityID, Result } from '@woodie/domain/common'
 import { INotificationSettingsRepository } from '@woodie/domain/srs/interfaces/INotificationService'
 import { NotificationSettings } from '@woodie/domain/srs/value-objects/NotificationSettings'
 
@@ -59,10 +59,46 @@ export class SupabaseNotificationSettingsRepository implements INotificationSett
   }
 
   /**
+   * 학생별 알림 설정 조회
+   */
+  async findByStudentId(studentId: UniqueEntityID): Promise<Result<NotificationSettings | null>> {
+    try {
+      const { data, error } = await this.client
+        .from(`${this.schema}.${this.tableName}`)
+        .select('*')
+        .eq('user_id', studentId.toString())
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') { // No rows returned
+          return Result.ok<NotificationSettings | null>(null)
+        }
+        return Result.fail<NotificationSettings | null>(`Failed to find notification settings: ${error.message}`)
+      }
+
+      if (!data) {
+        return Result.ok<NotificationSettings | null>(null)
+      }
+
+      const domainSettings = this.toDomain(data)
+      return Result.ok<NotificationSettings | null>(domainSettings)
+
+    } catch (error) {
+      console.error(`Error finding notification settings for student ${studentId.toString()}:`, error)
+      return Result.fail<NotificationSettings | null>(`Unexpected error finding notification settings: ${error}`)
+    }
+  }
+
+  /**
    * INotificationSettingsRepository save 구현
    */
-  async save(userId: UniqueEntityID, settings: NotificationSettings): Promise<void> {
-    return this.saveUserSettings(userId, settings)
+  async save(userId: UniqueEntityID, settings: NotificationSettings): Promise<Result<void>> {
+    try {
+      await this.saveUserSettings(userId, settings)
+      return Result.ok<void>()
+    } catch (error) {
+      return Result.fail<void>(`Failed to save notification settings: ${error}`)
+    }
   }
 
   /**
@@ -94,8 +130,13 @@ export class SupabaseNotificationSettingsRepository implements INotificationSett
   /**
    * INotificationSettingsRepository delete 구현
    */
-  async delete(userId: UniqueEntityID): Promise<void> {
-    return this.deleteUserSettings(userId)
+  async delete(userId: UniqueEntityID): Promise<Result<void>> {
+    try {
+      await this.deleteUserSettings(userId)
+      return Result.ok<void>()
+    } catch (error) {
+      return Result.fail<void>(`Failed to delete notification settings: ${error}`)
+    }
   }
 
   /**

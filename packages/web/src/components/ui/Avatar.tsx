@@ -3,12 +3,33 @@ import React from 'react';
 export interface AvatarProps {
   className?: string;
   children?: React.ReactNode;
+  src?: string;
+  alt?: string;
+  size?: string;
+  initials?: string;
+  hasAvatar?: boolean;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({ className = '', children }) => {
+export const Avatar: React.FC<AvatarProps> = ({ 
+  className = '', 
+  children, 
+  src, 
+  alt = '', 
+  size = '10',
+  initials,
+  hasAvatar = false
+}) => {
+  const sizeClass = size === '8' ? 'h-8 w-8' : size === '12' ? 'h-12 w-12' : 'h-10 w-10';
+  
   return (
-    <div className={`relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full ${className}`}>
-      {children}
+    <div className={`relative flex shrink-0 overflow-hidden rounded-full ${sizeClass} ${className}`}>
+      {hasAvatar && src ? (
+        <AvatarImage src={src} alt={alt} />
+      ) : initials ? (
+        <AvatarFallback>{initials}</AvatarFallback>
+      ) : (
+        children
+      )}
     </div>
   );
 };

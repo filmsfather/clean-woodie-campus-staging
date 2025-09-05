@@ -6,9 +6,11 @@ export * from './use-cases/index'
 export * from './services/index'
 export * from './auth/index'
 export * from './progress/index'
+export * from './problems/index'
+export * from './problemsets/index'
+export * from './assignments/index'
 
-// 공통 인터페이스 및 설정
-export * from './common/interfaces'
+// 공통 인터페이스 및 설정 (IProblemService 충돌 방지를 위해 problems에서 가져옴)
 export * from './common/config'
 export * from './utils'
 

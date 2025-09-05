@@ -1,6 +1,6 @@
 import { UniqueEntityID } from '@woodie/domain/common/Identifier'
 import { StudyRecord, ReviewFeedback, ReviewFeedbackType, IStudyRecordRepository } from '@woodie/domain/srs'
-import { BaseRepository } from '../repositories/BaseRepository'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 interface StudyRecordRow {
   id: string
@@ -17,40 +17,15 @@ interface StudyRecordRow {
  * Supabase 기반 StudyRecord 리포지토리 구현체
  * Domain 인터페이스를 Infrastructure에서 구현
  */
-export class SupabaseStudyRecordRepository extends BaseRepository<StudyRecord> implements IStudyRecordRepository {
-  protected client: any
+export class SupabaseStudyRecordRepository implements IStudyRecordRepository {
+  private client: SupabaseClient
   private readonly tableName = 'study_records'
   private readonly schema = 'learning'
 
-  constructor(client: any) {
-    super()
+  constructor(client: SupabaseClient) {
     this.client = client
   }
 
-  async findById(id: UniqueEntityID): Promise<StudyRecord | null> {
-    const { data, error } = await this.client
-      .from(`${this.schema}.${this.tableName}`)
-      .select('*')
-      .eq('id', id.toString())
-      .single()
-
-    if (error || !data) {
-      return null
-    }
-
-    return this.toDomain(data)
-  }
-
-  async delete(id: UniqueEntityID): Promise<void> {
-    const { error } = await this.client
-      .from(`${this.schema}.${this.tableName}`)
-      .delete()
-      .eq('id', id.toString())
-
-    if (error) {
-      throw new Error(`Failed to delete study record: ${error.message}`)
-    }
-  }
 
   async save(record: StudyRecord): Promise<void> {
     const persistence = this.toPersistence(record)
@@ -62,6 +37,52 @@ export class SupabaseStudyRecordRepository extends BaseRepository<StudyRecord> i
     if (error) {
       throw new Error(`Failed to save study record: ${error.message}`)
     }
+  }
+
+  // Missing interface methods
+  async findByStudentId(studentId: UniqueEntityID, limit?: number): Promise<StudyRecord[]> {
+    return this.findByStudent(studentId, limit)
+  }
+
+  async findByProblemId(problemId: UniqueEntityID, limit?: number): Promise<StudyRecord[]> {
+    return this.findByProblem(problemId, limit)
+  }
+
+  async countByStudent(studentId: UniqueEntityID): Promise<number> {
+    const { count, error } = await this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('id', { count: 'exact' })
+      .eq('student_id', studentId.toString())
+
+    if (error) {
+      throw new Error(`Failed to count study records: ${error.message}`)
+    }
+
+    return count || 0
+  }
+
+  async countByStudentId(studentId: UniqueEntityID): Promise<number> {
+    return this.countByStudent(studentId)
+  }
+
+  async findByDateRange(
+    studentId: UniqueEntityID,
+    startDate: Date,
+    endDate: Date
+  ): Promise<StudyRecord[]> {
+    const { data, error } = await this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('*')
+      .eq('student_id', studentId.toString())
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString())
+      .order('created_at', { ascending: false })
+
+    if (error || !data) {
+      return []
+    }
+
+    return data.map((row: StudyRecordRow) => this.toDomain(row))
   }
 
   async findByStudent(studentId: UniqueEntityID, limit = 50): Promise<StudyRecord[]> {
@@ -112,38 +133,6 @@ export class SupabaseStudyRecordRepository extends BaseRepository<StudyRecord> i
     return data.map((row: StudyRecordRow) => this.toDomain(row))
   }
 
-  async countByStudent(studentId: UniqueEntityID): Promise<number> {
-    const { count, error } = await this.client
-      .from(`${this.schema}.${this.tableName}`)
-      .select('id', { count: 'exact' })
-      .eq('student_id', studentId.toString())
-
-    if (error) {
-      throw new Error(`Failed to count study records: ${error.message}`)
-    }
-
-    return count || 0
-  }
-
-  async findByDateRange(
-    studentId: UniqueEntityID,
-    startDate: Date,
-    endDate: Date
-  ): Promise<StudyRecord[]> {
-    const { data, error } = await this.client
-      .from(`${this.schema}.${this.tableName}`)
-      .select('*')
-      .eq('student_id', studentId.toString())
-      .gte('created_at', startDate.toISOString())
-      .lte('created_at', endDate.toISOString())
-      .order('created_at', { ascending: false })
-
-    if (error || !data) {
-      return []
-    }
-
-    return data.map((row: StudyRecordRow) => this.toDomain(row))
-  }
 
   private toDomain(row: StudyRecordRow): StudyRecord {
     const feedbackResult = ReviewFeedback.create(row.feedback)

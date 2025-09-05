@@ -46,7 +46,8 @@ const modalVariants = cva(
 export interface ModalProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof modalVariants> {
-  open: boolean                    // 모달 표시 여부
+  open?: boolean                   // 모달 표시 여부
+  isOpen?: boolean                 // 모달 표시 여부 (open과 동일, 호환성을 위해 추가)
   onClose: () => void             // 모달 닫기 핸들러
   closeOnBackdropClick?: boolean  // 백드롭 클릭 시 닫기 여부 (기본: true)
   closeOnEscape?: boolean         // ESC 키로 닫기 여부 (기본: true)
@@ -104,6 +105,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       className,
       size,
       open,
+      isOpen,
       onClose,
       closeOnBackdropClick = true,
       closeOnEscape = true,
@@ -115,12 +117,13 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     },
     ref
   ) => {
-    const focusTrapRef = useFocusTrap(open)
+    const isModalOpen = open ?? isOpen ?? false
+    const focusTrapRef = useFocusTrap(isModalOpen)
     const modalRef = useRef<HTMLDivElement>(null)
 
     // Handle escape key
     useEffect(() => {
-      if (!open || !closeOnEscape) return
+      if (!isModalOpen || !closeOnEscape) return
 
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -130,18 +133,18 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
       document.addEventListener('keydown', handleEscape)
       return () => document.removeEventListener('keydown', handleEscape)
-    }, [open, closeOnEscape, onClose])
+    }, [isModalOpen, closeOnEscape, onClose])
 
     // Prevent body scroll when modal is open
     useEffect(() => {
-      if (open) {
+      if (isModalOpen) {
         const originalStyle = window.getComputedStyle(document.body).overflow
         document.body.style.overflow = 'hidden'
         return () => {
           document.body.style.overflow = originalStyle
         }
       }
-    }, [open])
+    }, [isModalOpen])
 
     const handleBackdropClick = (e: React.MouseEvent) => {
       if (closeOnBackdropClick && e.target === e.currentTarget) {
@@ -149,7 +152,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       }
     }
 
-    if (!open) return null
+    if (!isModalOpen) return null
 
     return createPortal(
       <div

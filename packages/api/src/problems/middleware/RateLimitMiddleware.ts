@@ -116,6 +116,26 @@ export class RateLimitMiddleware {
     });
   }
 
+  // === Use Case 전용 제한 메서드들 ===
+
+  // 상태 변경 작업 제한 (활성화/비활성화)
+  static statusChangeLimit() {
+    return this.createRateLimit({
+      windowMs: 5 * 60 * 1000,  // 5분
+      maxRequests: 20,          // 5분간 20회
+      message: 'Too many status change requests. Please try again in 5 minutes.'
+    });
+  }
+
+  // 복제 작업 제한
+  static cloneLimit() {
+    return this.createRateLimit({
+      windowMs: 10 * 60 * 1000, // 10분
+      maxRequests: 15,          // 10분간 15회
+      message: 'Too many clone requests. Please try again in 10 minutes.'
+    });
+  }
+
   // === 특별한 제한 정책들 ===
 
   // 사용자별 제한 (IP + 사용자 ID 조합)

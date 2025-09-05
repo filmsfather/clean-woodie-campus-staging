@@ -1059,4 +1059,96 @@ export class SupabaseProblemRepository implements IProblemRepository {
   async getStatistics(teacherId?: string): Promise<Result<ProblemStatistics>> {
     return this.getTeacherStatistics(teacherId || '');
   }
+
+  // Find many problems with criteria and pagination
+  async findMany(criteria: any, pagination?: { offset: number; limit: number }): Promise<Result<Problem[]>> {
+    try {
+      let query = this.supabase
+        .from('learning.problems')
+        .select('*');
+
+      // Apply criteria filters
+      if (criteria) {
+        if (criteria.teacherId) {
+          query = query.eq('teacher_id', criteria.teacherId);
+        }
+        if (criteria.isActive !== undefined) {
+          query = query.eq('is_active', criteria.isActive);
+        }
+        if (criteria.difficulty !== undefined) {
+          query = query.eq('difficulty', criteria.difficulty);
+        }
+        if (criteria.type) {
+          query = query.eq('type', criteria.type);
+        }
+        if (criteria.tags && Array.isArray(criteria.tags) && criteria.tags.length > 0) {
+          query = query.overlaps('tags', criteria.tags);
+        }
+      }
+
+      // Apply pagination
+      if (pagination) {
+        query = query.range(pagination.offset, pagination.offset + pagination.limit - 1);
+      }
+
+      // Default ordering
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+
+      if (error) {
+        return Result.fail(`Failed to find many problems: ${error.message}`);
+      }
+
+      const problems: Problem[] = [];
+      for (const record of data || []) {
+        const problemResult = this.mapToDomain(record);
+        if (problemResult.isSuccess) {
+          problems.push(problemResult.value);
+        }
+      }
+
+      return Result.ok(problems);
+    } catch (error) {
+      return Result.fail(`Error finding many problems: ${error}`);
+    }
+  }
+
+  // Count problems matching criteria
+  async count(criteria: any): Promise<Result<number>> {
+    try {
+      let query = this.supabase
+        .from('learning.problems')
+        .select('*', { count: 'exact', head: true });
+
+      // Apply criteria filters
+      if (criteria) {
+        if (criteria.teacherId) {
+          query = query.eq('teacher_id', criteria.teacherId);
+        }
+        if (criteria.isActive !== undefined) {
+          query = query.eq('is_active', criteria.isActive);
+        }
+        if (criteria.difficulty !== undefined) {
+          query = query.eq('difficulty', criteria.difficulty);
+        }
+        if (criteria.type) {
+          query = query.eq('type', criteria.type);
+        }
+        if (criteria.tags && Array.isArray(criteria.tags) && criteria.tags.length > 0) {
+          query = query.overlaps('tags', criteria.tags);
+        }
+      }
+
+      const { count, error } = await query;
+
+      if (error) {
+        return Result.fail(`Failed to count problems: ${error.message}`);
+      }
+
+      return Result.ok(count || 0);
+    } catch (error) {
+      return Result.fail(`Error counting problems: ${error}`);
+    }
+  }
 }

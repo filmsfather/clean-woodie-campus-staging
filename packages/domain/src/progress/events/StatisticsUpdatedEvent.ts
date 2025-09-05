@@ -31,7 +31,7 @@ export class StatisticsUpdatedEvent extends BaseDomainEvent {
     public readonly isCompleted: boolean, // 문제집을 완료했는지
     public readonly performanceGrade: 'A' | 'B' | 'C' | 'D' | 'F'
   ) {
-    super()
+    super(studentId)
   }
 
   /**

@@ -307,7 +307,7 @@ export const useCreateClass = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (params: {
+    mutationFn: async (_params: {
       className: string;
       teacherId: string;
       maxStudents?: number;

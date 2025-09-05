@@ -1,19 +1,24 @@
-// Editor components
-export * from './editor';
+// Problems 컴포넌트들 통합 export
+// UseCase별 UI 표면들을 체계적으로 관리
 
-// Solver components  
-export * from './solver';
+// Query UseCase 대응 컴포넌트들
+export { ProblemList } from './ProblemList';
+export { ProblemDetail } from './ProblemDetail';  
+export { ProblemSearch } from './ProblemSearch';
+export { ProblemSelector } from './ProblemSelector';
 
-// Results components
-export * from './results';
+// Command UseCase 대응 폼 컴포넌트들
+export { CreateProblemForm } from './forms/CreateProblemForm';
+export { UpdateProblemContentForm } from './forms/UpdateProblemContentForm';
+export { UpdateProblemAnswerForm } from './forms/UpdateProblemAnswerForm';
+export { ChangeProblemDifficultyForm } from './forms/ChangeProblemDifficultyForm';
+export { ManageProblemTagsForm } from './forms/ManageProblemTagsForm';
 
-// Analytics components
-export * from './analytics';
-
-// Grading components
-export * from './grading';
-
-// Utility components
-export { ProblemBankBrowser } from './ProblemBankBrowser';
-export { FilterPanel, COMMON_FILTER_CONFIGS } from './FilterPanel';
-export { TagManager } from './TagManager';
+// Command UseCase 대응 액션 버튼들
+export { 
+  ProblemActionButtons,
+  ActivateProblemButton,
+  DeactivateProblemButton,
+  CloneProblemButton,
+  DeleteProblemButton
+} from './actions/ProblemActionButtons';

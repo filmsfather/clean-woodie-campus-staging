@@ -77,6 +77,7 @@ export interface CheckboxProps
   description?: string     // 설명 텍스트 (라벨 아래 표시)
   error?: string          // 에러 메시지
   indeterminate?: boolean // 중간 상태 여부 (일부 선택된 상태)
+  onCheckedChange?: (checked: boolean) => void // 추가적인 체크 상태 변경 핸들러
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
@@ -92,6 +93,8 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       checked,
       disabled,
       id,
+      onCheckedChange,
+      onChange,
       ...props
     },
     ref
@@ -107,6 +110,12 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       }
     }, [indeterminate, ref])
 
+    // Combined change handler
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      onChange?.(event)
+      onCheckedChange?.(event.target.checked)
+    }
+
     return (
       <div className="flex items-start space-x-2">
         <div className="relative">
@@ -121,6 +130,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             )}
             checked={checked}
             disabled={disabled}
+            onChange={handleChange}
             {...props}
           />
           

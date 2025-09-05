@@ -10,6 +10,16 @@ interface AuthRequest extends Request {
     role?: UserRole;
     classId?: string;
     refreshToken?: string;
+    userId?: string;
+    requesterId?: string;
+    token?: string;
+  };
+  params: {
+    userId?: string;
+  };
+  query: {
+    email?: string;
+    token?: string;
   };
 }
 
@@ -255,6 +265,160 @@ export class AuthController {
       });
     } catch (error) {
       console.error('ResetPassword controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  async deleteUser(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const { requesterId } = req.body;
+
+      if (!userId) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing userId parameter'
+        });
+        return;
+      }
+
+      const result = await this.authService.deleteUser({
+        userId,
+        requesterId
+      });
+
+      if (result.isFailure) {
+        const statusCode = result.error.includes('Only admins') ? 403 :
+                          result.error.includes('not found') ? 404 : 400;
+        
+        res.status(statusCode).json({
+          success: false,
+          error: result.error
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'User deleted successfully'
+      });
+    } catch (error) {
+      console.error('DeleteUser controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  async findUserByEmail(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { email } = req.query;
+
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing email parameter'
+        });
+        return;
+      }
+
+      const result = await this.authService.findUserByEmail({
+        email: email as string
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+        return;
+      }
+
+      const user = result.value;
+      
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          id: user.id.toString(),
+          email: user.email.value,
+          name: user.name,
+          role: user.role,
+          classId: user.classId,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        }
+      });
+    } catch (error) {
+      console.error('FindUserByEmail controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  async findUserByInviteToken(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { token } = req.query;
+
+      if (!token) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing token parameter'
+        });
+        return;
+      }
+
+      const result = await this.authService.findUserByInviteToken({
+        token: token as string
+      });
+
+      if (result.isFailure) {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+        return;
+      }
+
+      const user = result.value;
+      
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          error: 'User not found for the provided invite token'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          id: user.id.toString(),
+          email: user.email.value,
+          name: user.name,
+          role: user.role,
+          classId: user.classId,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        }
+      });
+    } catch (error) {
+      console.error('FindUserByInviteToken controller error:', error);
       res.status(500).json({
         success: false,
         error: 'Internal server error'

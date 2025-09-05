@@ -16,7 +16,7 @@ export class ProblemSetItemRemovedEvent extends BaseDomainEvent {
     public readonly problemId: UniqueEntityID,
     public readonly removedFromIndex: number
   ) {
-    super();
+    super(problemSetId);
   }
 
   public getEventData(): ProblemSetItemRemovedEventData {

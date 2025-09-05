@@ -6,6 +6,14 @@ import { ProblemContent } from '../value-objects/ProblemContent';
 import { AnswerContent } from '../value-objects/AnswerContent';
 import { Difficulty } from '../value-objects/Difficulty';
 import { Tag } from '../value-objects/Tag';
+import {
+  ProblemCreatedEvent,
+  ProblemContentUpdatedEvent,
+  ProblemAnswerUpdatedEvent,
+  ProblemDifficultyChangedEvent,
+  ProblemActivatedEvent,
+  ProblemDeactivatedEvent
+} from '../events';
 
 // Problem 도메인 엔티티 - 애그리게이트 루트
 interface ProblemProps {
@@ -70,10 +78,24 @@ export class Problem extends AggregateRoot<ProblemProps> {
       return Result.fail<void>('Cannot change problem type after creation');
     }
 
+    const previousContent = {
+      title: this.props.content.title,
+      description: this.props.content.description || ''
+    };
+
     this.props.content = newContent;
     this.props.updatedAt = new Date();
     
-    // TODO: 도메인 이벤트 발행 (ProblemContentUpdated)
+    // 도메인 이벤트 발행
+    this.addDomainEvent(new ProblemContentUpdatedEvent(
+      this.id,
+      this.props.teacherId,
+      previousContent,
+      {
+        title: newContent.title,
+        description: newContent.description || ''
+      }
+    ));
     
     return Result.ok<void>();
   }
@@ -85,20 +107,34 @@ export class Problem extends AggregateRoot<ProblemProps> {
       return Result.fail<void>('Answer type must match problem type');
     }
 
+    const previousAnswerType = this.props.correctAnswer.type;
     this.props.correctAnswer = newAnswer;
     this.props.updatedAt = new Date();
     
-    // TODO: 도메인 이벤트 발행 (ProblemAnswerUpdated)
+    // 도메인 이벤트 발행
+    this.addDomainEvent(new ProblemAnswerUpdatedEvent(
+      this.id,
+      this.props.teacherId,
+      previousAnswerType,
+      newAnswer.type
+    ));
     
     return Result.ok<void>();
   }
 
   // 난이도 변경
   public changeDifficulty(newDifficulty: Difficulty): Result<void> {
+    const previousDifficulty = this.props.difficulty.level;
     this.props.difficulty = newDifficulty;
     this.props.updatedAt = new Date();
     
-    // TODO: 도메인 이벤트 발행 (ProblemDifficultyChanged)
+    // 도메인 이벤트 발행
+    this.addDomainEvent(new ProblemDifficultyChangedEvent(
+      this.id,
+      this.props.teacherId,
+      previousDifficulty,
+      newDifficulty.level
+    ));
     
     return Result.ok<void>();
   }
@@ -158,7 +194,12 @@ export class Problem extends AggregateRoot<ProblemProps> {
     this.props.isActive = true;
     this.props.updatedAt = new Date();
     
-    // TODO: 도메인 이벤트 발행 (ProblemActivated)
+    // 도메인 이벤트 발행
+    this.addDomainEvent(new ProblemActivatedEvent(
+      this.id,
+      this.props.teacherId,
+      this.props.content.title
+    ));
     
     return Result.ok<void>();
   }
@@ -171,7 +212,12 @@ export class Problem extends AggregateRoot<ProblemProps> {
     this.props.isActive = false;
     this.props.updatedAt = new Date();
     
-    // TODO: 도메인 이벤트 발행 (ProblemDeactivated)
+    // 도메인 이벤트 발행
+    this.addDomainEvent(new ProblemDeactivatedEvent(
+      this.id,
+      this.props.teacherId,
+      this.props.content.title
+    ));
     
     return Result.ok<void>();
   }
@@ -277,7 +323,15 @@ export class Problem extends AggregateRoot<ProblemProps> {
       updatedAt: now
     }, id);
 
-    // TODO: 도메인 이벤트 발행 (ProblemCreated)
+    // 도메인 이벤트 발행
+    problem.addDomainEvent(new ProblemCreatedEvent(
+      problem.id,
+      props.teacherId,
+      props.content.title,
+      props.content.type.value,
+      props.difficulty.level,
+      uniqueTags.map(tag => tag.name)
+    ));
 
     return Result.ok<Problem>(problem);
   }

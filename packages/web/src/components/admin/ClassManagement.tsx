@@ -10,7 +10,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Input, Modal, Select } from '../ui'
-import { cn } from '../../utils/cn'
 
 // 타입 정의
 interface ClassInfo {
@@ -41,13 +40,15 @@ interface TeacherAssignment {
   isActive: boolean
 }
 
-interface User {
-  id: string
-  name: string
-  email: string
-  role: 'student' | 'teacher' | 'admin'
-  isActive: boolean
+// Type guards
+const isStudentAssignment = (assignment: StudentAssignment | TeacherAssignment): assignment is StudentAssignment => {
+  return 'studentId' in assignment;
 }
+
+const isTeacherAssignment = (assignment: StudentAssignment | TeacherAssignment): assignment is TeacherAssignment => {
+  return 'teacherId' in assignment;
+}
+
 
 interface ClassStats {
   totalClasses: number
@@ -686,9 +687,23 @@ const AssignmentModal: React.FC<AssignmentModalProps> = ({
         
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {assignments.map((assignment) => {
-            const userId = type === 'student' ? assignment.studentId : (assignment as TeacherAssignment).teacherId
-            const userName = type === 'student' ? assignment.studentName : (assignment as TeacherAssignment).teacherName
-            const userEmail = type === 'student' ? assignment.studentEmail : (assignment as TeacherAssignment).teacherEmail
+            const userId = type === 'student' && isStudentAssignment(assignment) 
+              ? assignment.studentId 
+              : type === 'teacher' && isTeacherAssignment(assignment)
+              ? assignment.teacherId
+              : '';
+            
+            const userName = type === 'student' && isStudentAssignment(assignment) 
+              ? assignment.studentName 
+              : type === 'teacher' && isTeacherAssignment(assignment)
+              ? assignment.teacherName
+              : '';
+              
+            const userEmail = type === 'student' && isStudentAssignment(assignment) 
+              ? assignment.studentEmail 
+              : type === 'teacher' && isTeacherAssignment(assignment)
+              ? assignment.teacherEmail
+              : '';
             const isAssigned = assignment.classIds.includes(classInfo.id)
             const otherClasses = assignment.classNames.filter(name => name !== classInfo.name)
 

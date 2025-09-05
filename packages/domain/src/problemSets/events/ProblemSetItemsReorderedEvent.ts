@@ -14,7 +14,7 @@ export class ProblemSetItemsReorderedEvent extends BaseDomainEvent {
     public readonly problemSetId: UniqueEntityID,
     public readonly newOrder: UniqueEntityID[]
   ) {
-    super();
+    super(problemSetId);
   }
 
   public getEventData(): ProblemSetItemsReorderedEventData {

@@ -1,8 +1,12 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // 루트 디렉토리에서 환경변수 로드
+  const env = loadEnv(mode, path.resolve(__dirname, '../..'), '')
+  
+  return {
   plugins: [react()],
   resolve: {
     alias: {
@@ -18,7 +22,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      external: (id, importer) => {
+      external: (id, _importer) => {
         // MSW 관련 모듈은 외부 의존성으로 처리하여 번들에서 제외
         if (id.includes('msw') && !id.includes('msw-storybook-addon')) {
           return true;
@@ -40,8 +44,14 @@ export default defineConfig({
   },
   define: {
     // 환경별 컴파일 타임 상수
-    __MSW_ENABLED__: JSON.stringify(process.env.NODE_ENV === 'development'),
-    __STORYBOOK_ENABLED__: JSON.stringify(process.env.VITE_STORYBOOK_ENABLED === 'true'),
-    __DEV_TOOLS_ENABLED__: JSON.stringify(process.env.VITE_ENABLE_DEV_TOOLS === 'true'),
+    __MSW_ENABLED__: JSON.stringify(
+      mode === 'development' && 
+      env.VITE_MSW_ENABLED !== 'false'
+    ),
+    __STORYBOOK_ENABLED__: JSON.stringify(env.VITE_STORYBOOK_ENABLED === 'true'),
+    __DEV_TOOLS_ENABLED__: JSON.stringify(env.VITE_ENABLE_DEV_TOOLS === 'true'),
   },
+  // 환경변수 디렉토리 설정
+  envDir: path.resolve(__dirname, '../..'),
+  }
 })

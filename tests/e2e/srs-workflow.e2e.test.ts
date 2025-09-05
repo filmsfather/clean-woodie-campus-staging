@@ -53,7 +53,6 @@ describe('SRS System E2E Workflow', () => {
     })
 
     if (authError) {
-      console.log('Skipping E2E tests - auth user creation failed', authError)
       return
     }
 
@@ -85,7 +84,6 @@ describe('SRS System E2E Workflow', () => {
       .single()
 
     if (problemError) {
-      console.log('Skipping E2E tests - problem creation failed', problemError)
       return
     }
 
@@ -101,7 +99,7 @@ describe('SRS System E2E Workflow', () => {
 
   it('완전한 SRS 워크플로우가 작동해야 함', async () => {
     if (!testUser || !testProblem) {
-      console.log('Skipping workflow test - setup incomplete')
+      // Setup incomplete
       return
     }
 
@@ -210,7 +208,7 @@ describe('SRS System E2E Workflow', () => {
 
   it('연체 복습 시나리오가 올바르게 처리되어야 함', async () => {
     if (!testUser || !testProblem) {
-      console.log('Skipping overdue test - setup incomplete')
+      // Setup incomplete
       return
     }
 
@@ -290,7 +288,7 @@ describe('SRS System E2E Workflow', () => {
 
   it('알림 설정 변경이 올바르게 적용되어야 함', async () => {
     if (!testUser) {
-      console.log('Skipping notification settings test - setup incomplete')
+      // Setup incomplete
       return
     }
 
@@ -356,7 +354,7 @@ describe('SRS System E2E Workflow', () => {
 
   it('학습 통계가 정확하게 계산되어야 함', async () => {
     if (!testUser || !testProblem) {
-      console.log('Skipping statistics test - setup incomplete')
+      // Setup incomplete
       return
     }
 

@@ -7,6 +7,8 @@ export type NotificationTypeValue =
   | 'review'             // 복습 시간 알림
   | 'summary'            // 일일 요약 알림
   | 'milestone'          // 마일스톤 알림
+  | 'streak'             // 연속 학습 알림
+  | 'achievement'        // 성취 알림
 
 interface NotificationTypeProps {
   value: NotificationTypeValue
@@ -34,7 +36,9 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
       'overdue', 
       'review', 
       'summary', 
-      'milestone'
+      'milestone',
+      'streak',
+      'achievement'
     ]
 
     if (!validTypes.includes(type)) {
@@ -73,6 +77,48 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
   }
 
   /**
+   * 연속 학습 알림 타입
+   */
+  public static streak(): NotificationType {
+    return new NotificationType({ value: 'streak' })
+  }
+
+  /**
+   * 성취 알림 타입
+   */
+  public static achievement(): NotificationType {
+    return new NotificationType({ value: 'achievement' })
+  }
+
+  /**
+   * 복습 관련 알림인지 확인
+   */
+  public isReview(): boolean {
+    return this.props.value === 'review'
+  }
+
+  /**
+   * 연체 알림인지 확인
+   */
+  public isOverdue(): boolean {
+    return this.props.value === 'overdue'
+  }
+
+  /**
+   * 연속 학습 알림인지 확인
+   */
+  public isStreak(): boolean {
+    return this.props.value === 'streak'
+  }
+
+  /**
+   * 성취 알림인지 확인
+   */
+  public isAchievement(): boolean {
+    return this.props.value === 'achievement'
+  }
+
+  /**
    * 긴급도 확인 (연체 알림이 가장 긴급)
    */
   public isUrgent(): boolean {
@@ -84,10 +130,12 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
    */
   public getPriority(): number {
     const priorityMap: Record<NotificationTypeValue, number> = {
-      'overdue': 1,    // 최고 우선순위
+      'overdue': 1,      // 최고 우선순위
       'review': 2,
-      'milestone': 3,
-      'summary': 4     // 최저 우선순위
+      'streak': 3,
+      'achievement': 4,
+      'milestone': 5,
+      'summary': 6       // 최저 우선순위
     }
     
     return priorityMap[this.props.value]
@@ -96,7 +144,7 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
   /**
    * 알림 카테고리 반환 (UI 분류용)
    */
-  public getCategory(): 'overdue' | 'review' | 'summary' | 'milestone' {
+  public getCategory(): NotificationTypeValue {
     return this.props.value
   }
 }

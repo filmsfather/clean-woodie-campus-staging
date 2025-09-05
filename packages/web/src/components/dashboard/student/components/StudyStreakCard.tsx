@@ -57,8 +57,24 @@ const WeeklyPatternGrid: React.FC<{
 };
 
 export const StudyStreakCard: React.FC<StudyStreakCardProps> = ({ studyStreak }) => {
+  if (!studyStreak) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <span>🔥</span>
+            <span>학습 스트릭</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <div className="text-text-secondary">스트릭 데이터를 로딩 중...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const streakPercentage = Math.min((studyStreak.currentStreak / studyStreak.longestStreak) * 100, 100);
-  const totalMinutesThisWeek = studyStreak.weeklyPattern.reduce((sum, day) => sum + day.studyMinutes, 0);
+  const totalMinutesThisWeek = studyStreak.weeklyPattern?.reduce((sum, day) => sum + day.studyMinutes, 0) || 0;
   const averageMinutesPerDay = Math.round(totalMinutesThisWeek / 7);
   
   const getStreakMessage = (streak: number) => {
@@ -112,7 +128,9 @@ export const StudyStreakCard: React.FC<StudyStreakCardProps> = ({ studyStreak })
         </div>
 
         {/* 주간 패턴 */}
-        <WeeklyPatternGrid pattern={studyStreak.weeklyPattern} />
+        {studyStreak.weeklyPattern && (
+          <WeeklyPatternGrid pattern={studyStreak.weeklyPattern} />
+        )}
 
         {/* 추가 통계 */}
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border-primary">

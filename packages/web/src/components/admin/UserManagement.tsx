@@ -11,7 +11,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Input, Select, Modal } from '../ui'
-import { cn } from '../../utils/cn'
 
 // 타입 정의
 interface User {
@@ -245,7 +244,7 @@ export const UserManagement: React.FC = () => {
 
   const getRoleBadgeVariant = (role: User['role']) => {
     switch (role) {
-      case 'admin': return 'destructive'
+      case 'admin': return 'error'
       case 'teacher': return 'default'
       case 'student': return 'secondary'
       default: return 'secondary'

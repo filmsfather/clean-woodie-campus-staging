@@ -1,11 +1,11 @@
 import { UseCase } from '../../use-cases/UseCase';
-import { Result, Email, Invite, IInviteRepository, INotificationService } from '@woodie/domain';
+import { Result, Email, Invite, IInviteRepository, IAuthNotificationService } from '@woodie/domain';
 import { CreateInviteDto, InviteDto } from '../dto/InviteDto';
 
 export class CreateInviteUseCase implements UseCase<CreateInviteDto, InviteDto> {
   constructor(
     private inviteRepository: IInviteRepository,
-    private notificationService: INotificationService
+    private notificationService: IAuthNotificationService
   ) {}
 
   async execute(dto: CreateInviteDto): Promise<Result<InviteDto>> {

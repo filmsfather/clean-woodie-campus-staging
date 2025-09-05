@@ -16,10 +16,16 @@ import {
   ProblemBankErrorFactory,
   ProblemBankErrorCode
 } from '../errors/ProblemBankErrors';
+import { 
+  IProblemSearchService, 
+  ProblemSearchCriteria, 
+  ProblemSearchResult 
+} from '../interfaces/IProblemSearchService';
 import * as crypto from 'crypto';
 
 // 문제 검색 전용 서비스 (단일 책임 원칙)
-export class ProblemSearchService {
+// Clean Architecture Domain Service 구현
+export class ProblemSearchService implements IProblemSearchService {
   constructor(
     private problemRepository: IProblemRepository,
     private logger: ILogger,
@@ -27,29 +33,19 @@ export class ProblemSearchService {
   ) {}
 
   async searchProblems(
-    filter: ProblemSearchRequestDto,
-    pagination?: PaginationRequestDto,
-    sort?: SortRequestDto
-  ): Promise<Result<ProblemSearchResponseDto>> {
+    criteria: ProblemSearchCriteria
+  ): Promise<Result<ProblemSearchResult>> {
     const startTime = Date.now();
     const correlationId = this.generateCorrelationId();
     
     try {
       this.logger.info('Starting problem search', {
-        filter,
-        pagination,
-        sort,
+        criteria,
         correlationId
       });
 
-      // 입력 검증
-      const validationResult = this.validateSearchRequest(filter, pagination, sort);
-      if (validationResult.isFailure) {
-        return Result.fail(validationResult.error);
-      }
-
       // 캐시 확인 (검색 결과 캐싱)
-      const cacheKey = this.generateSearchCacheKey(filter, pagination, sort);
+      const cacheKey = this.generateSearchCacheKey(criteria);
       if (this.cacheService) {
         const cached = await this.getCachedSearchResult(cacheKey);
         if (cached) {
@@ -63,9 +59,9 @@ export class ProblemSearchService {
       }
 
       // Repository 필터 변환
-      const repositoryFilter = this.mapToRepositoryFilter(filter);
-      const repositoryPagination = this.mapToRepositoryPagination(pagination);
-      const repositorySort = this.mapToRepositorySort(sort);
+      const repositoryFilter = this.mapCriteriaToRepositoryFilter(criteria);
+      const repositoryPagination = this.mapCriteriaToPagination(criteria);
+      const repositorySort = this.mapCriteriaToSort(criteria);
 
       // Repository 호출
       const searchResult = await this.problemRepository.searchProblems(
@@ -83,28 +79,31 @@ export class ProblemSearchService {
         return Result.fail(error.message);
       }
 
-      // Domain → DTO 변환
-      const responseDto = this.mapToSearchResponseDto(searchResult.value);
+      // Domain 결과 매핑 (Repository 결과를 Domain 인터페이스에 맞게 변환)
+      const result: ProblemSearchResult = {
+        problems: searchResult.value.problems, // 이미 Domain Entity
+        totalCount: searchResult.value.metadata.totalCount || 0
+      };
 
       // 결과 캐싱
-      if (this.cacheService && responseDto.problems.length > 0) {
-        await this.cacheSearchResult(cacheKey, responseDto);
+      if (this.cacheService && result.problems.length > 0) {
+        await this.cacheSearchResult(cacheKey, result);
       }
 
       this.logger.info('Problem search completed successfully', {
-        resultCount: responseDto.problems.length,
-        hasNextPage: responseDto.metadata.hasNextPage,
+        resultCount: result.problems.length,
+        totalCount: result.totalCount,
         correlationId,
         duration: Date.now() - startTime
       });
 
-      return Result.ok(responseDto);
+      return Result.ok(result);
 
     } catch (error) {
       const problemBankError = new ProblemBankError(
         ProblemBankErrorCode.SEARCH_FAILED,
         'Unexpected error during problem search',
-        { filter, pagination, sort, correlationId },
+        { criteria, correlationId },
         error as Error
       );
 
@@ -119,21 +118,21 @@ export class ProblemSearchService {
 
   async findProblemById(
     problemId: string,
-    teacherId: string
-  ): Promise<Result<ProblemDto>> {
+    requesterId?: string
+  ): Promise<Result<Problem>> {
     const correlationId = this.generateCorrelationId();
     
     try {
       this.logger.info('Finding problem by ID', {
         problemId,
-        teacherId,
+        requesterId,
         correlationId
       });
 
-      // 캐시 확인
+      // 캐시 확인 (Domain Entity 캐싱)
       const cacheKey = CacheKeyBuilder.forProblem(problemId);
       if (this.cacheService) {
-        const cached = await this.cacheService.get<ProblemDto>(cacheKey);
+        const cached = await this.cacheService.get<Problem>(cacheKey);
         if (cached) {
           this.logger.info('Problem served from cache', {
             problemId,
@@ -156,7 +155,7 @@ export class ProblemSearchService {
 
         this.logger.warn('Problem not found or access failed', {
           problemId,
-          teacherId,
+          requesterId,
           error: error.message,
           correlationId
         });
@@ -166,42 +165,206 @@ export class ProblemSearchService {
 
       const problem = problemResult.value;
 
-      // 권한 확인
-      if (!problem.isOwnedBy(teacherId)) {
-        const error = ProblemBankErrorFactory.unauthorized(teacherId, problemId);
+      // 권한 확인 (DDD: Domain Entity의 비즈니스 로직 사용)
+      if (requesterId && !problem.isOwnedBy(requesterId)) {
+        const error = ProblemBankErrorFactory.unauthorized(requesterId, problemId);
         this.logger.warn('Unauthorized problem access', {
           problemId,
-          teacherId,
+          requesterId,
           correlationId
         });
         return Result.fail(error.message);
       }
 
-      // Domain → DTO 변환
-      const problemDto = this.mapProblemToDto(problem);
-
-      // 결과 캐싱
+      // 결과 캐싱 (Domain Entity 직접 캐싱)
       if (this.cacheService) {
-        await this.cacheService.set(cacheKey, problemDto, CacheStrategies.getProblemOptions());
+        await this.cacheService.set(cacheKey, problem, CacheStrategies.getProblemOptions());
       }
 
       this.logger.info('Problem found successfully', {
         problemId,
-        teacherId,
+        requesterId,
         correlationId
       });
 
-      return Result.ok(problemDto);
+      return Result.ok(problem);
 
     } catch (error) {
       const problemBankError = new ProblemBankError(
         ProblemBankErrorCode.PROBLEM_NOT_FOUND,
         'Unexpected error finding problem',
-        { problemId, teacherId, correlationId },
+        { problemId, requesterId, correlationId },
         error as Error
       );
 
       this.logger.error('Find problem error', problemBankError.toLogObject(), {
+        correlationId
+      });
+
+      return Result.fail(problemBankError.message);
+    }
+  }
+
+  async findProblemsByTeacher(
+    teacherId: string,
+    includeInactive?: boolean
+  ): Promise<Result<Problem[]>> {
+    const correlationId = this.generateCorrelationId();
+    
+    try {
+      this.logger.info('Finding problems by teacher', {
+        teacherId,
+        includeInactive,
+        correlationId
+      });
+
+      const repositoryFilter = {
+        teacherId,
+        isActive: includeInactive === true ? undefined : true
+      };
+
+      const searchResult = await this.problemRepository.searchProblems(
+        repositoryFilter,
+        undefined,
+        undefined
+      );
+
+      if (searchResult.isFailure) {
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(searchResult.error).message);
+      }
+
+      this.logger.info('Problems found by teacher', {
+        teacherId,
+        count: searchResult.value.problems.length,
+        correlationId
+      });
+
+      return Result.ok(searchResult.value.problems);
+
+    } catch (error) {
+      const problemBankError = new ProblemBankError(
+        ProblemBankErrorCode.SEARCH_FAILED,
+        'Failed to find problems by teacher',
+        { teacherId, includeInactive, correlationId },
+        error as Error
+      );
+
+      this.logger.error('Find problems by teacher error', problemBankError.toLogObject(), {
+        correlationId
+      });
+
+      return Result.fail(problemBankError.message);
+    }
+  }
+
+  async findProblemsByTags(
+    tags: string[],
+    teacherId?: string
+  ): Promise<Result<Problem[]>> {
+    const correlationId = this.generateCorrelationId();
+    
+    try {
+      this.logger.info('Finding problems by tags', {
+        tags,
+        teacherId,
+        correlationId
+      });
+
+      const repositoryFilter = {
+        tagNames: tags,
+        teacherId,
+        isActive: true
+      };
+
+      const searchResult = await this.problemRepository.searchProblems(
+        repositoryFilter,
+        undefined,
+        undefined
+      );
+
+      if (searchResult.isFailure) {
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(searchResult.error).message);
+      }
+
+      this.logger.info('Problems found by tags', {
+        tags,
+        count: searchResult.value.problems.length,
+        correlationId
+      });
+
+      return Result.ok(searchResult.value.problems);
+
+    } catch (error) {
+      const problemBankError = new ProblemBankError(
+        ProblemBankErrorCode.SEARCH_FAILED,
+        'Failed to find problems by tags',
+        { tags, teacherId, correlationId },
+        error as Error
+      );
+
+      this.logger.error('Find problems by tags error', problemBankError.toLogObject(), {
+        correlationId
+      });
+
+      return Result.fail(problemBankError.message);
+    }
+  }
+
+  async findPopularProblems(
+    limit: number = 10,
+    teacherId?: string
+  ): Promise<Result<Problem[]>> {
+    const correlationId = this.generateCorrelationId();
+    
+    try {
+      this.logger.info('Finding popular problems', {
+        limit,
+        teacherId,
+        correlationId
+      });
+
+      const repositoryFilter = {
+        teacherId,
+        isActive: true
+      };
+
+      const repositoryPagination = {
+        limit,
+        page: 1,
+        strategy: 'offset' as const
+      };
+
+      const repositorySort = {
+        field: 'createdAt' as const,
+        direction: 'DESC' as const
+      };
+
+      const searchResult = await this.problemRepository.searchProblems(
+        repositoryFilter,
+        repositoryPagination,
+        repositorySort
+      );
+
+      if (searchResult.isFailure) {
+        return Result.fail(ProblemBankErrorFactory.fromRepositoryError(searchResult.error).message);
+      }
+
+      this.logger.info('Popular problems found', {
+        count: searchResult.value.problems.length,
+        correlationId
+      });
+
+      return Result.ok(searchResult.value.problems);
+
+    } catch (error) {
+      const problemBankError = new ProblemBankError(
+        ProblemBankErrorCode.SEARCH_FAILED,
+        'Failed to find popular problems',
+        { limit, teacherId, correlationId },
+        error as Error
+      );
+
+      this.logger.error('Find popular problems error', problemBankError.toLogObject(), {
         correlationId
       });
 
@@ -280,6 +443,47 @@ export class ProblemSearchService {
 
   // === Private 헬퍼 메서드들 ===
 
+  private validateSearchCriteria(criteria: ProblemSearchCriteria): Result<void> {
+    // 페이지네이션 검증
+    if (criteria.limit && (criteria.limit <= 0 || criteria.limit > 100)) {
+      const error = new ProblemBankError(
+        ProblemBankErrorCode.PAGINATION_ERROR,
+        'Limit must be between 1 and 100'
+      );
+      return Result.fail(error.message);
+    }
+
+    if (criteria.offset && criteria.offset < 0) {
+      const error = new ProblemBankError(
+        ProblemBankErrorCode.PAGINATION_ERROR,
+        'Offset must be greater than or equal to 0'
+      );
+      return Result.fail(error.message);
+    }
+
+    // 난이도 검증
+    if (criteria.difficultyLevel && (criteria.difficultyLevel < 1 || criteria.difficultyLevel > 5)) {
+      const error = new ProblemBankError(
+        ProblemBankErrorCode.INVALID_SEARCH_FILTER,
+        'Difficulty level must be between 1 and 5'
+      );
+      return Result.fail(error.message);
+    }
+
+    if (criteria.difficultyRange) {
+      const { min, max } = criteria.difficultyRange;
+      if (min < 1 || max > 5 || min > max) {
+        const error = new ProblemBankError(
+          ProblemBankErrorCode.INVALID_SEARCH_FILTER,
+          'Invalid difficulty range'
+        );
+        return Result.fail(error.message);
+      }
+    }
+
+    return Result.ok();
+  }
+
   private validateSearchRequest(
     filter: ProblemSearchRequestDto,
     pagination?: PaginationRequestDto,
@@ -341,6 +545,39 @@ export class ProblemSearchService {
     return Result.ok();
   }
 
+  private mapCriteriaToRepositoryFilter(criteria: ProblemSearchCriteria) {
+    return {
+      teacherId: criteria.teacherId,
+      difficultyLevels: criteria.difficultyLevel ? [criteria.difficultyLevel] : 
+                       criteria.difficultyRange ? Array.from(
+                         { length: criteria.difficultyRange.max - criteria.difficultyRange.min + 1 },
+                         (_, i) => criteria.difficultyRange!.min + i
+                       ) : undefined,
+      tagNames: criteria.tags,
+      isActive: criteria.isActive,
+      searchQuery: criteria.searchTerm,
+      createdAfter: criteria.createdAfter ? new Date(criteria.createdAfter) : undefined,
+      createdBefore: criteria.createdBefore ? new Date(criteria.createdBefore) : undefined
+    };
+  }
+
+  private mapCriteriaToPagination(criteria: ProblemSearchCriteria) {
+    if (!criteria.limit && !criteria.offset) return undefined;
+
+    return {
+      limit: criteria.limit || 20,
+      page: criteria.offset ? Math.floor(criteria.offset / (criteria.limit || 20)) + 1 : 1,
+      strategy: 'offset' as const
+    };
+  }
+
+  private mapCriteriaToSort(criteria: ProblemSearchCriteria) {
+    return {
+      field: 'createdAt' as const,
+      direction: 'DESC' as const
+    };
+  }
+
   private mapToRepositoryFilter(filter: ProblemSearchRequestDto) {
     return {
       teacherId: filter.teacherId,
@@ -383,6 +620,7 @@ export class ProblemSearchService {
   private mapToSearchResponseDto(searchResult: any): ProblemSearchResponseDto {
     return {
       problems: searchResult.problems.map((p: Problem) => this.mapProblemToDto(p)),
+      totalCount: searchResult.metadata.totalCount || 0,
       metadata: searchResult.metadata
     };
   }
@@ -401,24 +639,19 @@ export class ProblemSearchService {
     };
   }
 
-  private generateSearchCacheKey(
-    filter: ProblemSearchRequestDto,
-    pagination?: PaginationRequestDto,
-    sort?: SortRequestDto
-  ): string {
-    const searchParams = { filter, pagination, sort };
+  private generateSearchCacheKey(criteria: ProblemSearchCriteria): string {
     const hash = crypto
       .createHash('md5')
-      .update(JSON.stringify(searchParams))
+      .update(JSON.stringify(criteria))
       .digest('hex');
     return CacheKeyBuilder.forSearchResult(hash);
   }
 
-  private async getCachedSearchResult(cacheKey: string): Promise<ProblemSearchResponseDto | null> {
+  private async getCachedSearchResult(cacheKey: string): Promise<ProblemSearchResult | null> {
     if (!this.cacheService) return null;
 
     try {
-      return await this.cacheService.get<ProblemSearchResponseDto>(cacheKey);
+      return await this.cacheService.get<ProblemSearchResult>(cacheKey);
     } catch (error) {
       this.logger.warn('Cache read failed', {
         cacheKey,
@@ -430,7 +663,7 @@ export class ProblemSearchService {
 
   private async cacheSearchResult(
     cacheKey: string,
-    result: ProblemSearchResponseDto
+    result: ProblemSearchResult
   ): Promise<void> {
     if (!this.cacheService) return;
 

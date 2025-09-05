@@ -1,8 +1,9 @@
 import { BaseDomainEvent } from '../../events/DomainEvent'
+import { UniqueEntityID } from '../../common/Identifier'
 import { ReviewFeedbackType } from '../value-objects/ReviewFeedback'
 
 interface ReviewCompletedEventProps {
-  aggregateId: string
+  aggregateId: UniqueEntityID
   studentId: string
   problemId: string
   feedback: ReviewFeedbackType
@@ -21,8 +22,6 @@ interface ReviewCompletedEventProps {
 
 export class ReviewCompletedEvent extends BaseDomainEvent {
   public readonly eventType = 'ReviewCompleted'
-  
-  public readonly aggregateId: string
   public readonly studentId: string
   public readonly problemId: string
   public readonly feedback: ReviewFeedbackType
@@ -39,9 +38,7 @@ export class ReviewCompletedEvent extends BaseDomainEvent {
   public readonly answerContent?: any
 
   constructor(props: ReviewCompletedEventProps) {
-    super()
-    
-    this.aggregateId = props.aggregateId
+    super(props.aggregateId)
     this.studentId = props.studentId
     this.problemId = props.problemId
     this.feedback = props.feedback

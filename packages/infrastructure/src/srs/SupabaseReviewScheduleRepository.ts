@@ -1,6 +1,6 @@
 import { UniqueEntityID } from '@woodie/domain/common/Identifier'
 import { IReviewScheduleRepository, ReviewSchedule, ReviewState, ReviewInterval, EaseFactor } from '@woodie/domain/srs'
-import { BaseRepository } from '../repositories/BaseRepository'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 interface ReviewScheduleRow {
   id: string
@@ -16,13 +16,12 @@ interface ReviewScheduleRow {
   updated_at: string
 }
 
-export class SupabaseReviewScheduleRepository extends BaseRepository<ReviewSchedule> implements IReviewScheduleRepository {
-  protected client: any // Supabase client
+export class SupabaseReviewScheduleRepository implements IReviewScheduleRepository {
+  private client: SupabaseClient
   private readonly tableName = 'review_schedules'
   private readonly schema = 'learning'
 
-  constructor(client: any) {
-    super()
+  constructor(client: SupabaseClient) {
     this.client = client
   }
 
@@ -97,6 +96,109 @@ export class SupabaseReviewScheduleRepository extends BaseRepository<ReviewSched
     }
 
     return data.map((row: ReviewScheduleRow) => this.toDomain(row))
+  }
+
+  // Missing interface methods
+  async findByIds(ids: UniqueEntityID[]): Promise<ReviewSchedule[]> {
+    const { data, error } = await this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('*')
+      .in('id', ids.map(id => id.toString()))
+
+    if (error || !data) {
+      return []
+    }
+
+    return data.map((row: ReviewScheduleRow) => this.toDomain(row))
+  }
+
+  async findByStudentId(studentId: UniqueEntityID, limit?: number): Promise<ReviewSchedule[]> {
+    let query = this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('*')
+      .eq('student_id', studentId.toString())
+      .order('next_review_at', { ascending: true })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
+
+    if (error || !data) {
+      return []
+    }
+
+    return data.map((row: ReviewScheduleRow) => this.toDomain(row))
+  }
+
+  async findByProblemId(problemId: UniqueEntityID, limit?: number): Promise<ReviewSchedule[]> {
+    let query = this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('*')
+      .eq('problem_id', problemId.toString())
+      .order('next_review_at', { ascending: true })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
+
+    if (error || !data) {
+      return []
+    }
+
+    return data.map((row: ReviewScheduleRow) => this.toDomain(row))
+  }
+
+  async findOverdueByStudentId(
+    studentId: UniqueEntityID,
+    currentDate?: Date
+  ): Promise<ReviewSchedule[]> {
+    const date = currentDate || new Date()
+    return this.findOverdueReviews(studentId, date)
+  }
+
+  async findOverdueSchedules(currentDate?: Date): Promise<ReviewSchedule[]> {
+    const date = currentDate || new Date()
+    const yesterdayEnd = new Date(date)
+    yesterdayEnd.setDate(yesterdayEnd.getDate() - 1)
+    yesterdayEnd.setHours(23, 59, 59, 999)
+
+    const { data, error } = await this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('*')
+      .lt('next_review_at', yesterdayEnd.toISOString())
+      .order('next_review_at', { ascending: true })
+
+    if (error || !data) {
+      return []
+    }
+
+    return data.map((row: ReviewScheduleRow) => this.toDomain(row))
+  }
+
+  async countOverdueByStudentId(
+    studentId: UniqueEntityID,
+    currentDate?: Date
+  ): Promise<number> {
+    const date = currentDate || new Date()
+    const yesterdayEnd = new Date(date)
+    yesterdayEnd.setDate(yesterdayEnd.getDate() - 1)
+    yesterdayEnd.setHours(23, 59, 59, 999)
+
+    const { count, error } = await this.client
+      .from(`${this.schema}.${this.tableName}`)
+      .select('id', { count: 'exact' })
+      .eq('student_id', studentId.toString())
+      .lt('next_review_at', yesterdayEnd.toISOString())
+
+    if (error) {
+      throw new Error(`Failed to count overdue review schedules: ${error.message}`)
+    }
+
+    return count || 0
   }
 
   async findOverdueReviews(

@@ -24,7 +24,7 @@ export class TokenSpentEvent extends BaseDomainEvent {
     public readonly newTotalSpent: number,
     public readonly spentAt: Date
   ) {
-    super();
+    super(tokenId);
   }
 
   /**

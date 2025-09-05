@@ -49,7 +49,7 @@ export class ProblemController extends BaseController {
 
   // === 기본 CRUD 작업 ===
 
-  async createProblem(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async createProblem(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -155,7 +155,7 @@ export class ProblemController extends BaseController {
     }
   }
 
-  async getProblemById(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getProblemById(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -184,7 +184,7 @@ export class ProblemController extends BaseController {
     }
   }
 
-  async updateProblem(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async updateProblem(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -332,7 +332,7 @@ export class ProblemController extends BaseController {
     }
   }
 
-  async deleteProblem(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async deleteProblem(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -365,7 +365,7 @@ export class ProblemController extends BaseController {
 
   // === 검색 및 조회 ===
 
-  async searchProblems(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async searchProblems(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -380,7 +380,13 @@ export class ProblemController extends BaseController {
       const paginationDto = this.mapPaginationQueryToDto(query);
       const sortDto = this.mapSortQueryToDto(query);
 
-      const result = await this.searchService.searchProblems(searchDto, paginationDto, sortDto);
+      // 단일 검색 요청으로 통합
+      const searchRequest = {
+        ...searchDto,
+        page: paginationDto.page,
+        limit: paginationDto.limit
+      };
+      const result = await this.searchService.searchProblems(searchRequest);
 
       if (result.isFailure) {
         this.sendErrorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, {
@@ -391,7 +397,26 @@ export class ProblemController extends BaseController {
       }
 
       const response: SearchProblemsResponse = {
-        ...result.value,
+        problems: result.value.problems.map(p => ({
+          id: p.id.toString(),
+          teacherId: p.teacherId,
+          title: p.content.title,
+          description: p.content.description || '',
+          type: p.content.type.value,
+          difficulty: p.difficulty.level,
+          tags: p.tags.map(tag => tag.name),
+          isActive: p.isActive,
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString()
+        })),
+        totalCount: result.value.totalCount,
+        metadata: {
+          totalCount: result.value.totalCount,
+          hasNextPage: paginationDto.page * paginationDto.limit < result.value.totalCount,
+          hasPreviousPage: paginationDto.page > 1,
+          currentPage: paginationDto.page,
+          totalPages: Math.ceil(result.value.totalCount / paginationDto.limit)
+        },
         query: {
           filter: searchDto,
           pagination: paginationDto,
@@ -407,7 +432,7 @@ export class ProblemController extends BaseController {
     }
   }
 
-  async getMyProblems(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getMyProblems(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;

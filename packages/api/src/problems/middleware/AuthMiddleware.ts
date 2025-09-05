@@ -9,6 +9,7 @@ interface JwtPayload {
   email: string;
   role: string;
   teacherId?: string;
+  organizationId?: string;
   exp: number;
   iat: number;
 }
@@ -36,11 +37,12 @@ export class AuthMiddleware {
         }
 
         // 요청 객체에 사용자 정보 추가
-        (req as AuthenticatedRequest).user = {
+        req.user = {
           id: payload.sub,
           email: payload.email,
-          role: payload.role as 'teacher' | 'admin',
-          teacherId: payload.teacherId || payload.sub
+          role: payload.role as 'student' | 'teacher' | 'admin',
+          teacherId: payload.teacherId || payload.sub,
+          organizationId: payload.organizationId
         };
 
         // 요청 컨텍스트 생성
@@ -66,7 +68,7 @@ export class AuthMiddleware {
 
   // 교사 역할 권한 확인
   static requireTeacher() {
-    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    return (req: Request, res: Response, next: NextFunction): void => {
       const user = req.user;
       
       if (!user) {
@@ -85,7 +87,7 @@ export class AuthMiddleware {
 
   // 관리자 역할 권한 확인
   static requireAdmin() {
-    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    return (req: Request, res: Response, next: NextFunction): void => {
       const user = req.user;
       
       if (!user) {
@@ -104,7 +106,7 @@ export class AuthMiddleware {
 
   // 문제 소유권 확인 (URL 파라미터에서 problemId 추출)
   static requireProblemOwnership() {
-    return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         const user = req.user;
         const problemId = req.params.id;
@@ -144,7 +146,7 @@ export class AuthMiddleware {
 
   // 일괄 작업 권한 확인
   static requireBulkOperationPermission() {
-    return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         const user = req.user;
         const { problemIds } = req.body;

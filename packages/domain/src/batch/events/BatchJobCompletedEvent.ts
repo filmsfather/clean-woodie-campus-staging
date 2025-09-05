@@ -20,7 +20,6 @@ interface BatchJobResult {
  */
 export class BatchJobCompletedEvent extends BaseDomainEvent {
   public readonly eventType: string = 'BatchJobCompletedEvent'
-  public readonly aggregateId: UniqueEntityID
   public readonly name: string
   public readonly type: BatchJobType
   public readonly durationMs: number
@@ -33,16 +32,11 @@ export class BatchJobCompletedEvent extends BaseDomainEvent {
     durationMs: number,
     result: BatchJobResult
   ) {
-    super()
-    this.aggregateId = aggregateId
+    super(aggregateId)
     this.name = name
     this.type = type
     this.durationMs = durationMs
     this.result = result
-  }
-
-  getAggregateId(): UniqueEntityID {
-    return this.aggregateId
   }
 
   /**

@@ -500,7 +500,7 @@ export const StudentPerformanceAnalysis: React.FC<StudentPerformanceAnalysisProp
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                       <span className="text-primary-600 font-semibold">
-                        {student.name.charAt(0)}
+                        {student.name?.charAt(0) || '?'}
                       </span>
                     </div>
                     <div>

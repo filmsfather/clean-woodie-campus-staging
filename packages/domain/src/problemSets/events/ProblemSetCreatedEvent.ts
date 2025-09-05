@@ -16,7 +16,7 @@ export class ProblemSetCreatedEvent extends BaseDomainEvent {
     public readonly teacherId: UniqueEntityID,
     public readonly title: string
   ) {
-    super();
+    super(problemSetId);
   }
 
   public getEventData(): ProblemSetCreatedEventData {

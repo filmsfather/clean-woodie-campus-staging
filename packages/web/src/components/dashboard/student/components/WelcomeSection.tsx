@@ -1,11 +1,8 @@
 import React from 'react';
-import type { StudentProfile } from '../types';
+import { useAuth } from '../../../../hooks/useAuth';
 
-interface WelcomeSectionProps {
-  profile: StudentProfile;
-}
-
-export const WelcomeSection: React.FC<WelcomeSectionProps> = ({ profile }) => {
+export const WelcomeSection: React.FC = () => {
+  const { user } = useAuth();
   const currentHour = new Date().getHours();
   const greeting = 
     currentHour < 12 ? '좋은 아침' : 
@@ -23,20 +20,24 @@ export const WelcomeSection: React.FC<WelcomeSectionProps> = ({ profile }) => {
     return messages[Math.floor(Math.random() * messages.length)];
   };
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="text-center space-y-4 py-6">
       {/* 아바타 */}
       <div className="flex justify-center">
-        {profile.avatarUrl ? (
+        {user.avatarUrl ? (
           <img
-            src={profile.avatarUrl}
-            alt={profile.name}
+            src={user.avatarUrl}
+            alt={user.name}
             className="w-16 h-16 rounded-full border-2 border-primary-200"
           />
         ) : (
           <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
             <span className="text-primary-600 text-xl font-semibold">
-              {profile.displayName.charAt(0)}
+              {user.displayName?.charAt(0) || '?'}
             </span>
           </div>
         )}
@@ -45,10 +46,10 @@ export const WelcomeSection: React.FC<WelcomeSectionProps> = ({ profile }) => {
       {/* 인사말 */}
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-text-primary">
-          {greeting}이에요, {profile.displayName}님! 👋
+          {greeting}이에요, {user.displayName}님! 👋
         </h1>
         <p className="text-text-secondary">
-          {profile.gradeLevel && `${profile.gradeLevel}학년 `}
+          {user.gradeLevel && `${user.gradeLevel}학년 `}
           {getMotivationalMessage()}
         </p>
         <div className="text-xs text-text-tertiary">

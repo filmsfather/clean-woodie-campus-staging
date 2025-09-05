@@ -99,9 +99,31 @@ export class SupabaseUserRepository implements IUserRepository {
   }
 
   async findByInviteToken(token: string): Promise<User | null> {
-    // TODO: Implement when invite system is ready
-    console.warn('findByInviteToken not implemented yet');
-    return null;
+    try {
+      // 초대 토큰을 통해 해당 이메일을 찾고, 그 이메일로 사용자를 조회
+      const { data: inviteData, error: inviteError } = await this.supabase
+        .from('invites')
+        .select('email')
+        .eq('token', token)
+        .eq('is_used', false)
+        .gte('expires_at', new Date().toISOString())
+        .single();
+
+      if (inviteError || !inviteData) {
+        return null;
+      }
+
+      // 해당 이메일로 사용자 조회
+      const emailResult = Email.create(inviteData.email);
+      if (emailResult.isFailure) {
+        return null;
+      }
+
+      return await this.findByEmail(emailResult.value);
+    } catch (error) {
+      console.error('Find user by invite token error:', error);
+      return null;
+    }
   }
 
   async delete(id: UniqueEntityID): Promise<Result<void>> {

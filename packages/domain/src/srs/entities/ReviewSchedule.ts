@@ -191,7 +191,7 @@ export class ReviewSchedule extends AggregateRoot<ReviewScheduleProps> {
       
       // 7. 이벤트 먼저 생성 (현재 상태 기반으로 이전 값들 캡처)
       this.addDomainEvent(new ReviewCompletedEvent({
-        aggregateId: this.id.toString(),
+        aggregateId: this.id,
         studentId: this.studentId.toString(),
         problemId: this.problemId.toString(),
         feedback: feedback.value,

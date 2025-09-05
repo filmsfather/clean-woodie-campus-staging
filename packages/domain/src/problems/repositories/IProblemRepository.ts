@@ -288,4 +288,10 @@ export interface IProblemRepository {
   
   // Get statistics for problems
   getStatistics(teacherId?: string): Promise<Result<ProblemStatistics>>;
+  
+  // Find many problems with criteria and pagination
+  findMany(criteria: any, pagination?: { offset: number; limit: number }): Promise<Result<Problem[]>>;
+  
+  // Count problems matching criteria
+  count(criteria: any): Promise<Result<number>>;
 }

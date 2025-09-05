@@ -20,7 +20,7 @@ export class StreakLostEvent extends BaseDomainEvent {
     public readonly lastStudyDate: Date,
     public readonly daysSinceLastStudy: number
   ) {
-    super()
+    super(studentId)
   }
 
   /**

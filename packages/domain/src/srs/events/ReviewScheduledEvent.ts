@@ -10,6 +10,6 @@ export class ReviewScheduledEvent extends BaseDomainEvent {
     public readonly problemId: UniqueEntityID,
     public readonly scheduledAt: Date
   ) {
-    super()
+    super(reviewScheduleId)
   }
 }

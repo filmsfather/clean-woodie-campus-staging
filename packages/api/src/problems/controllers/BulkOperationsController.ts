@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import {
   AuthenticatedRequest,
   BulkUpdateStatusRequest,
@@ -28,7 +28,7 @@ export class BulkOperationsController extends BaseController {
   }
 
   // 문제 일괄 복제
-  async cloneProblems(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async cloneProblems(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -80,7 +80,7 @@ export class BulkOperationsController extends BaseController {
   }
 
   // 상태 일괄 업데이트
-  async updateStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async updateStatus(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -114,7 +114,7 @@ export class BulkOperationsController extends BaseController {
   }
 
   // 태그 일괄 업데이트
-  async updateTags(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async updateTags(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -148,7 +148,7 @@ export class BulkOperationsController extends BaseController {
   }
 
   // 권한 확인
-  async checkPermissions(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async checkPermissions(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -185,7 +185,7 @@ export class BulkOperationsController extends BaseController {
   }
 
   // 일괄 작업 검증 (라우트에서 호출)
-  async validateOperation(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async validateOperation(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;
@@ -219,7 +219,7 @@ export class BulkOperationsController extends BaseController {
   }
 
   // 일괄 작업 상태 확인 (라우트에서 호출)
-  async getOperationStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getOperationStatus(req: Request, res: Response): Promise<void> {
     try {
       const requestId = req.requestContext?.requestId || crypto.randomUUID();
       const { user } = req;

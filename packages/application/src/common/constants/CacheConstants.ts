@@ -31,6 +31,21 @@ export const CacheKeys = {
   PROBLEM_SEARCH: (query: string, filters: string) => `problems:search:${query}:${filters}`,
   PROBLEMS_BY_TAGS: (tags: string[], filters: string) => `problems:tags:${tags.join(',')}:${filters}`,
   POPULAR_PROBLEMS: (limit: number) => `problems:popular:${limit}`,
+  
+  // Problem Analytics
+  TEACHER_STATISTICS: (teacherId: string) => `problems:teacher_stats:${teacherId}`,
+  TAG_ANALYTICS: (teacherId: string) => `problems:tag_analytics:${teacherId}`,
+  TAG_RECOMMENDATIONS: (contentHash: string) => `problems:tag_recommend:${contentHash}`,
+  UNIQUE_TAGS: (teacherId: string) => `problems:unique_tags:${teacherId}`,
+  DIFFICULTY_DISTRIBUTION: (teacherId: string) => `problems:difficulty_dist:${teacherId}`,
+  TYPE_DISTRIBUTION: (teacherId: string) => `problems:type_dist:${teacherId}`,
+  SIMILAR_PROBLEMS: (problemId: string, limit: number) => `problems:similar:${problemId}:${limit}`,
+  
+  // Bulk Operations
+  BULK_OWNERSHIP: (teacherId: string, problemIdsHash: string) => 
+    `problems:bulk_ownership:${teacherId}:${problemIdsHash}`,
+  BULK_ACCESS: (teacherId: string, problemIdsHash: string) => 
+    `problems:bulk_access:${teacherId}:${problemIdsHash}`,
 }
 
 export const CacheTTL = {

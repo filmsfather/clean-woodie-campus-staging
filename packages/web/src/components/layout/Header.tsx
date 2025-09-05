@@ -40,7 +40,7 @@ export const Header: React.FC = () => {
                 ) : (
                   <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                     <span className="text-primary-600 text-sm font-medium">
-                      {user.name.charAt(0)}
+                      {user.name?.charAt(0) || '?'}
                     </span>
                   </div>
                 )}

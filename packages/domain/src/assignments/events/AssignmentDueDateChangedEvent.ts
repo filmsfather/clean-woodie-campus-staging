@@ -19,7 +19,7 @@ export class AssignmentDueDateChangedEvent extends BaseDomainEvent {
     reason?: string,
     changedAt: Date = new Date()
   ) {
-    super();
+    super(assignmentId);
     this.assignmentId = assignmentId;
     this.previousDueDate = previousDueDate;
     this.newDueDate = newDueDate;

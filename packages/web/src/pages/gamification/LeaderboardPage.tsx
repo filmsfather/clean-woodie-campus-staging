@@ -402,7 +402,7 @@ export const LeaderboardPage: React.FC = () => {
     );
   }
 
-  const currentBoard = data[selectedBoard];
+  const currentBoard = data?.[selectedBoard];
 
   return (
     <FeatureGuard feature="leaderboards">
@@ -436,8 +436,12 @@ export const LeaderboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 내 순위 카드 (학생만) */}
-        {user.role === 'student' && currentBoard.currentUserRank && (
+        {/* currentBoard가 없으면 렌더링하지 않음 */}
+        {!currentBoard && <div className="text-center py-8">데이터를 불러오는 중...</div>}
+        {currentBoard && (
+          <>
+            {/* 내 순위 카드 (학생만) */}
+        {user.role === 'student' && currentBoard?.currentUserRank && (
           <Card className="mb-8 p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
             <h3 className="text-lg font-semibold mb-4 text-purple-800">내 현재 순위</h3>
             <div className="flex items-center justify-between">
@@ -647,6 +651,8 @@ export const LeaderboardPage: React.FC = () => {
             </div>
           </div>
         </Card>
+          </>
+        )}
       </div>
     </FeatureGuard>
   );

@@ -174,7 +174,7 @@ export const FormLayouts: Story = {
   ),
 }
 
-export const FormActions: Story = {
+export const FormActionsExample: Story = {
   render: () => (
     <div className="space-y-6">
       <div>

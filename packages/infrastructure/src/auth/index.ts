@@ -4,3 +4,6 @@ export * from './SupabaseInviteRepository';
 export * from './SupabaseProfileRepository';
 export * from './services/EmailNotificationService';
 export * from './adapters/ConsoleEmailAdapter';
+export * from './adapters/SendGridEmailAdapter';
+export * from './adapters/NodemailerEmailAdapter';
+export * from './factories/AuthServiceFactory';

@@ -1,4 +1,4 @@
-import { INotificationService } from '@woodie/domain';
+import { IAuthNotificationService } from '@woodie/domain';
 import { Invite } from '@woodie/domain';
 import { Result } from '@woodie/domain';
 
@@ -22,7 +22,7 @@ export interface IEmailAdapter {
 }
 
 // 초대 알림을 이메일로 발송하는 서비스 구현체
-export class EmailNotificationService implements INotificationService {
+export class EmailNotificationService implements IAuthNotificationService {
   constructor(
     private emailAdapter: IEmailAdapter,
     private baseUrl: string // 프론트엔드 기본 URL (환경변수에서 주입)

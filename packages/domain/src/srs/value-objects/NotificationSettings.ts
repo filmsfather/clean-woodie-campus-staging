@@ -121,7 +121,7 @@ export class NotificationSettings extends ValueObject<NotificationSettingsProps>
   /**
    * 특정 알림 타입이 활성화되었는지 확인
    */
-  public isNotificationTypeEnabled(type: 'review' | 'overdue' | 'summary' | 'milestone'): boolean {
+  public isNotificationTypeEnabled(type: 'review' | 'overdue' | 'summary' | 'milestone' | 'streak' | 'achievement'): boolean {
     if (!this.props.enabled) return false
 
     switch (type) {
@@ -133,6 +133,10 @@ export class NotificationSettings extends ValueObject<NotificationSettingsProps>
         return this.props.dailySummary
       case 'milestone':
         return this.props.milestoneAlerts
+      case 'streak':
+        return true // 기본적으로 활성화
+      case 'achievement':
+        return true // 기본적으로 활성화
       default:
         return false
     }

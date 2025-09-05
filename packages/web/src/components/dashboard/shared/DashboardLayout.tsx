@@ -47,11 +47,12 @@ export const WIDGET_REGISTRY: Record<string, React.ComponentType<any>> = {
   'gamification': GamificationDashboard,
   // 교사 대시보드 컴포넌트들
   'class-overview': React.lazy(() => import('../teacher/components/ClassOverview')),
-  'student-performance': React.lazy(() => import('../teacher/components/StudentPerformanceGrid')),
-  'problem-set-analytics': React.lazy(() => import('../../problems/analytics/ProblemSetAnalytics')),
-  'system-metrics': React.lazy(() => import('../admin/components/SystemMetrics')),
-  'user-analytics': React.lazy(() => import('../admin/components/UserAnalytics')),
-  'batch-monitor': React.lazy(() => import('../admin/components/BatchJobMonitor')),
+  'student-performance': React.lazy(() => import('../../problems/analytics/StudentPerformanceAnalysis')),
+  // 아직 구현되지 않은 컴포넌트들 (임시 대체)
+  'problem-set-analytics': () => React.createElement('div', { className: 'p-4 text-gray-500' }, '문제 세트 분석 (준비중)'),
+  'system-metrics': () => React.createElement('div', { className: 'p-4 text-gray-500' }, '시스템 메트릭 (준비중)'),
+  'user-analytics': () => React.createElement('div', { className: 'p-4 text-gray-500' }, '사용자 분석 (준비중)'),
+  'batch-monitor': () => React.createElement('div', { className: 'p-4 text-gray-500' }, '배치 작업 모니터 (준비중)'),
 };
 
 // 역할별 위젯 설정

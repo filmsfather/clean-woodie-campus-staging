@@ -8,7 +8,6 @@ import { BatchJobType } from '../entities/BatchJob'
  */
 export class BatchJobStartedEvent extends BaseDomainEvent {
   public readonly eventType: string = 'BatchJobStartedEvent'
-  public readonly aggregateId: UniqueEntityID
   public readonly name: string
   public readonly type: BatchJobType
   public readonly startedAt: Date
@@ -19,14 +18,10 @@ export class BatchJobStartedEvent extends BaseDomainEvent {
     type: BatchJobType,
     startedAt: Date
   ) {
-    super()
-    this.aggregateId = aggregateId
+    super(aggregateId)
     this.name = name
     this.type = type
     this.startedAt = startedAt
   }
 
-  getAggregateId(): UniqueEntityID {
-    return this.aggregateId
-  }
 }

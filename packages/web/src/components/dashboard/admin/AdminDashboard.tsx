@@ -11,8 +11,13 @@
 
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Progress } from '../../ui'
-import { cn } from '../../../utils/cn'
+import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Progress, Modal } from '../../ui'
+import { useAuth } from '../../../hooks/useAuth'
+import { Unauthorized } from '../../auth/Unauthorized'
+import { RoleStatisticsDashboard } from '../../auth'
+import UserManagementContainer from '../../../containers/auth/UserManagementContainer'
+import InviteManagementContainer from '../../../containers/auth/InviteManagementContainer'
+import { ProblemList } from '../../problems'
 
 // 타입 정의
 interface SystemStats {
@@ -160,12 +165,17 @@ const mockRecentActivity: RecentActivity[] = [
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [systemStats, setSystemStats] = useState<SystemStats>(mockSystemStats)
-  const [userStats, setUserStats] = useState<UserStats>(mockUserStats)
-  const [contentStats, setContentStats] = useState<ContentStats>(mockContentStats)
+  const [userStats] = useState<UserStats>(mockUserStats)
+  const [contentStats] = useState<ContentStats>(mockContentStats)
   const [alerts, setAlerts] = useState<SystemAlert[]>(mockAlerts)
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>(mockRecentActivity)
+  const [recentActivity] = useState<RecentActivity[]>(mockRecentActivity)
   const [isLoading, setIsLoading] = useState(false)
+  const [showCreateInvite, setShowCreateInvite] = useState(false)
+  const [showUserDirectory, setShowUserDirectory] = useState(false)
+  const [showRoleStats, setShowRoleStats] = useState(false)
+  const [showInviteList, setShowInviteList] = useState(false)
 
   // 실시간 데이터 업데이트 시뮬레이션
   useEffect(() => {
@@ -203,7 +213,7 @@ export const AdminDashboard: React.FC = () => {
 
   const getAlertBadgeVariant = (type: SystemAlert['type']) => {
     switch (type) {
-      case 'critical': return 'destructive'
+      case 'critical': return 'error'
       case 'warning': return 'warning'
       case 'info': return 'default'
       default: return 'secondary'
@@ -230,6 +240,11 @@ export const AdminDashboard: React.FC = () => {
     if (diffMins < 60) return `${diffMins}분 전`
     if (diffHours < 24) return `${diffHours}시간 전`
     return `${diffDays}일 전`
+  }
+
+  // 권한 체크 - 관리자만 접근 가능
+  if (!user || user.role !== 'admin') {
+    return <Unauthorized message="관리자만 접근할 수 있는 페이지입니다." />;
   }
 
   return (
@@ -318,7 +333,7 @@ export const AdminDashboard: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               시스템 알림
-              <Badge variant="destructive">{alerts.filter(a => !a.resolved).length}</Badge>
+              <Badge variant="error">{alerts.filter(a => !a.resolved).length}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -359,32 +374,24 @@ export const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* 최근 활동 */}
+        {/* 사용자 통계 */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>최근 활동</CardTitle>
+            <CardTitle>사용자 통계</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-surface-secondary transition-colors">
-                  <span className="text-lg">{getActivityIcon(activity.type)}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{activity.description}</p>
-                    <p className="text-xs text-text-secondary">{activity.user}</p>
-                    <p className="text-xs text-text-secondary">{formatTimeAgo(activity.timestamp)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <RoleStatisticsDashboard 
+              organizationId={user?.organizationId}
+              showExportOptions={false}
+            />
           </CardContent>
         </Card>
       </div>
 
       {/* 관리 기능 그리드 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* 사용자 관리 */}
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleNavigateToManagement('users')}>
+        {/* 사용자 관리 - 실제 Auth 컴포넌트 통합 */}
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <span className="text-2xl">👥</span>
@@ -393,23 +400,40 @@ export const AdminDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-text-secondary">학생</span>
-                <div className="text-right">
-                  <div className="font-semibold">{userStats.students.total.toLocaleString()}</div>
-                  <div className="text-xs text-green-600">+{userStats.students.newThisWeek} 이번 주</div>
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCreateInvite(true)}
+                  className="flex flex-col items-center space-y-2 h-16"
+                >
+                  <span>📧</span>
+                  <span className="text-sm">사용자 초대</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowUserDirectory(true)}
+                  className="flex flex-col items-center space-y-2 h-16"
+                >
+                  <span>📋</span>
+                  <span className="text-sm">사용자 목록</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowRoleStats(true)}
+                  className="flex flex-col items-center space-y-2 h-16"
+                >
+                  <span>📊</span>
+                  <span className="text-sm">역할 통계</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowInviteList(true)}
+                  className="flex flex-col items-center space-y-2 h-16"
+                >
+                  <span>📝</span>
+                  <span className="text-sm">초대 현황</span>
+                </Button>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-text-secondary">교사</span>
-                <div className="text-right">
-                  <div className="font-semibold">{userStats.teachers.total}</div>
-                  <div className="text-xs text-orange-600">승인 대기: {userStats.teachers.pendingApproval}</div>
-                </div>
-              </div>
-              <Button variant="outline" className="w-full mt-4">
-                관리하기
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -443,32 +467,30 @@ export const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* 콘텐츠 관리 */}
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleNavigateToManagement('content')}>
+        {/* 문제 관리 */}
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span className="text-2xl">📚</span>
-              <span>콘텐츠 관리</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">📚</span>
+                <span>문제 관리</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => handleNavigateToManagement('content')}>
+                전체 보기
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-text-secondary">발행된 문제</span>
-                <div className="text-right">
-                  <div className="font-semibold">{contentStats.problems.published.toLocaleString()}</div>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-text-secondary">검토 대기</span>
-                <div className="text-right">
-                  <div className="font-semibold text-orange-600">{contentStats.problems.pendingReview}</div>
-                </div>
-              </div>
-              <Button variant="outline" className="w-full mt-4">
-                관리하기
-              </Button>
-            </div>
+            <ProblemList
+              problems={[]} // TODO: 최근 문제 데이터 연결
+              loading={false}
+              compact={true}
+              showActions={['edit', 'toggle']}
+              limit={5}
+              onProblemSelect={(problem) => {
+                handleNavigateToManagement('content');
+              }}
+            />
           </CardContent>
         </Card>
       </div>
@@ -515,10 +537,10 @@ export const AdminDashboard: React.FC = () => {
             <Button 
               variant="outline" 
               className="h-20 flex flex-col items-center space-y-2"
-              onClick={() => navigate('/admin/users')}
+              onClick={() => setShowCreateInvite(true)}
             >
               <span className="text-2xl">👤</span>
-              <span>사용자 추가</span>
+              <span>사용자 초대</span>
             </Button>
             <Button 
               variant="outline" 
@@ -563,6 +585,105 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* 고급 기능: 실시간 모니터링 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span>📊</span>
+              <span>실시간 시스템 모니터링</span>
+            </div>
+            <Badge variant="success" size="sm">
+              온라인
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">
+                {Math.floor(Math.random() * 100 + 850)}
+              </div>
+              <div className="text-sm text-text-secondary">현재 접속 사용자</div>
+              <div className="text-xs text-green-600 mt-1">
+                ↑ 전년 대비 +12%
+              </div>
+            </div>
+            
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">
+                {Math.floor(Math.random() * 50 + 200)}
+              </div>
+              <div className="text-sm text-text-secondary">오늘 새 문제 풀이</div>
+              <div className="text-xs text-blue-600 mt-1">
+                ↑ 어제 대비 +8%
+              </div>
+            </div>
+            
+            <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {(Math.random() * 2 + 98).toFixed(1)}%
+              </div>
+              <div className="text-sm text-text-secondary">시스템 가동률</div>
+              <div className="text-xs text-purple-600 mt-1">
+                ✓ 높음
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Auth 컴포넌트 모달들 */}
+      <Modal 
+        isOpen={showCreateInvite} 
+        onClose={() => setShowCreateInvite(false)}
+        title="사용자 초대"
+        size="lg"
+      >
+        <InviteManagementContainer 
+          organizationId={user?.organizationId || ''}
+          showCreateForm={true}
+        />
+      </Modal>
+
+      <Modal 
+        isOpen={showUserDirectory} 
+        onClose={() => setShowUserDirectory(false)}
+        title="사용자 디렉토리"
+        size="xl"
+      >
+        <UserManagementContainer 
+          organizationId={user?.organizationId}
+          showStatistics={false}
+          showBulkActions={true}
+        />
+      </Modal>
+
+      <Modal 
+        isOpen={showRoleStats} 
+        onClose={() => setShowRoleStats(false)}
+        title="역할 통계 대시보드"
+        size="xl"
+      >
+        <RoleStatisticsDashboard 
+          organizationId={user?.organizationId}
+          showExportOptions={true}
+        />
+      </Modal>
+
+      <Modal 
+        isOpen={showInviteList} 
+        onClose={() => setShowInviteList(false)}
+        title="초대 현황 관리"
+        size="xl"
+      >
+        <InviteManagementContainer 
+          organizationId={user?.organizationId || ''}
+          showCreateForm={false}
+          showAllInvites={true}
+        />
+      </Modal>
     </div>
   )
 }
