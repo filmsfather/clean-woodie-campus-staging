@@ -1,7 +1,8 @@
 -- profiles.school_id를 TEXT에서 UUID로 변경하여 타입 일관성 확보
 -- 기존 RLS 정책이 해당 컬럼을 참조하므로 먼저 정책 삭제 후 복원
 
--- 1. 기존 RLS 정책 임시 삭제 (school_id를 참조하는 정책들)
+-- 1. 의존성이 있는 뷰들과 RLS 정책 임시 삭제
+DROP VIEW IF EXISTS progress.active_streaks CASCADE;
 DROP POLICY IF EXISTS "Users can view organizations they belong to" ON organizations;
 DROP POLICY IF EXISTS "Teachers can view their organization" ON organizations;
 
@@ -10,7 +11,7 @@ DROP POLICY IF EXISTS "Teachers can view their organization" ON organizations;
 UPDATE profiles 
 SET school_id = NULL 
 WHERE school_id IS NOT NULL 
-  AND school_id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
+  AND school_id::TEXT !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
 
 -- 3. 컬럼 타입 변경
 ALTER TABLE profiles 

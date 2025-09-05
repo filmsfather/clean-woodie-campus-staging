@@ -118,7 +118,22 @@ const port = process.env.PORT || 3001
 
 // Middleware
 app.use(helmet())
-app.use(cors())
+
+// CORS 설정 - Vercel 도메인 허용
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    'https://clean-woodie-campus-staging.vercel.app',
+    'https://clean-woodie-campus-staging-jxegc00q6.vercel.app',
+    /^https:\/\/clean-woodie-campus-staging.*\.vercel\.app$/,
+    /^https:\/\/.*-begnino-film-7031s-projects\.vercel\.app$/
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
 app.use(express.json())
 
 // Trust proxy for accurate IP addresses
