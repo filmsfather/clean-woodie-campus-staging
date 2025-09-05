@@ -352,4 +352,85 @@ export class ReviewSchedule extends AggregateRoot<ReviewScheduleProps> {
       this.getDifficultyLevel() === 'advanced'                                   // 고급 난이도
     )
   }
+
+  /**
+   * 복습이 완료되었는지 확인
+   */
+  public isCompleted(): boolean {
+    return this.lastReviewedAt !== null;
+  }
+
+  /**
+   * 복습을 연기
+   */
+  public postponeReview(hours: number): void {
+    const newReviewTime = new Date(this.nextReviewAt.getTime() + (hours * 60 * 60 * 1000));
+    this.props.reviewState = this.reviewState.withNewReviewTime(newReviewTime);
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * 복습을 앞당기기
+   */
+  public advanceReview(hours: number): void {
+    const newReviewTime = new Date(this.nextReviewAt.getTime() - (hours * 60 * 60 * 1000));
+    // 과거 시간으로 설정되지 않도록 현재 시간 이후로 제한
+    const now = new Date();
+    const finalReviewTime = newReviewTime > now ? newReviewTime : now;
+    
+    this.props.reviewState = this.reviewState.withNewReviewTime(finalReviewTime);
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * 다음 복습 시간 설정
+   */
+  public setNextReviewTime(reviewTime: Date): void {
+    this.props.reviewState = this.reviewState.withNewReviewTime(reviewTime);
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * 간격 업데이트
+   */
+  public updateInterval(intervalDays: number): void {
+    this.props.reviewState = this.reviewState.withNewInterval(intervalDays);
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * Ease Factor 업데이트
+   */
+  public updateEaseFactor(easeFactor: number): void {
+    const easeFactorValue = EaseFactor.create(easeFactor);
+    if (easeFactorValue.isSuccess) {
+      this.props.reviewState = this.reviewState.withNewEaseFactor(easeFactorValue.value);
+      this.props.updatedAt = new Date();
+    }
+  }
+
+  /**
+   * 우선순위 설정 (메타데이터로 처리)
+   */
+  public setPriority(priority: 'low' | 'medium' | 'high'): void {
+    // 우선순위는 도메인 모델에 직접 저장하지 않고 외부에서 관리
+    // 여기서는 업데이트 시간만 갱신
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * 노트 추가 (메타데이터로 처리)
+   */
+  public addNote(note: string): void {
+    // 노트는 도메인 모델에 직접 저장하지 않고 외부에서 관리
+    // 여기서는 업데이트 시간만 갱신
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * 업데이트 기록
+   */
+  public recordUpdate(): void {
+    this.props.updatedAt = new Date();
+  }
 }

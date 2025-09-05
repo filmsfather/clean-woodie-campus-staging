@@ -134,4 +134,51 @@ export class ReviewState extends ValueObject<ReviewStateProps> {
     const diffMs = this.nextReviewAt.getTime() - currentDate.getTime()
     return Math.floor(diffMs / (1000 * 60))
   }
+
+  /**
+   * 새로운 복습 시간으로 상태 생성
+   */
+  public withNewReviewTime(newReviewTime: Date): ReviewState {
+    return new ReviewState({
+      interval: this.interval,
+      easeFactor: this.easeFactor,
+      reviewCount: this.reviewCount,
+      lastReviewedAt: this.lastReviewedAt,
+      nextReviewAt: newReviewTime
+    })
+  }
+
+  /**
+   * 새로운 간격으로 상태 생성
+   */
+  public withNewInterval(intervalDays: number): ReviewState {
+    const newInterval = ReviewInterval.create(intervalDays)
+    if (newInterval.isSuccess) {
+      const nextReviewAt = this.lastReviewedAt 
+        ? newInterval.value.calculateNextReviewDate(this.lastReviewedAt)
+        : this.nextReviewAt
+      
+      return new ReviewState({
+        interval: newInterval.value,
+        easeFactor: this.easeFactor,
+        reviewCount: this.reviewCount,
+        lastReviewedAt: this.lastReviewedAt,
+        nextReviewAt
+      })
+    }
+    return this // 실패 시 현재 상태 반환
+  }
+
+  /**
+   * 새로운 Ease Factor로 상태 생성
+   */
+  public withNewEaseFactor(newEaseFactor: EaseFactor): ReviewState {
+    return new ReviewState({
+      interval: this.interval,
+      easeFactor: newEaseFactor,
+      reviewCount: this.reviewCount,
+      lastReviewedAt: this.lastReviewedAt,
+      nextReviewAt: this.nextReviewAt
+    })
+  }
 }

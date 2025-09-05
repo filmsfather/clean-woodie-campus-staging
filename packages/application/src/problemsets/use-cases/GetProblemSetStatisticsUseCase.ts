@@ -1,5 +1,5 @@
 import { BaseUseCase } from '../../use-cases/UseCase'
-import { Result, IProblemSetRepository } from '@woodie/domain'
+import { Result, IProblemSetRepository, UniqueEntityID } from '@woodie/domain'
 
 /**
  * 문제집 통계 조회 UseCase
@@ -124,7 +124,7 @@ export class GetProblemSetStatisticsUseCase extends BaseUseCase<GetProblemSetSta
       }
 
       // 2. 문제집 조회
-      const problemSetResult = await this.problemSetRepository.findById(request.problemSetId)
+      const problemSetResult = await this.problemSetRepository.findById(new UniqueEntityID(request.problemSetId))
       if (problemSetResult.isFailure) {
         return Result.fail<GetProblemSetStatisticsResponse>('Problem set not found')
       }

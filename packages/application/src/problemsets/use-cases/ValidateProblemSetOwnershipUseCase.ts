@@ -1,5 +1,5 @@
 import { BaseUseCase } from '../../use-cases/UseCase'
-import { Result, IProblemSetRepository } from '@woodie/domain'
+import { Result, IProblemSetRepository, UniqueEntityID } from '@woodie/domain'
 
 /**
  * 문제집 소유권 검증 UseCase
@@ -76,7 +76,7 @@ export class ValidateProblemSetOwnershipUseCase extends BaseUseCase<ValidateProb
 
       // 3. 일괄 소유권 검증 (최적화된 쿼리)
       const bulkOwnershipResult = await this.problemSetRepository.bulkVerifyOwnership(
-        uniqueProblemSetIds,
+        uniqueProblemSetIds.map(id => new UniqueEntityID(id)),
         request.requesterId
       )
 
@@ -170,7 +170,7 @@ export class ValidateProblemSetOwnershipUseCase extends BaseUseCase<ValidateProb
     bulkOwnershipResult: any
   ): Promise<any> {
     // 1. 문제집 조회
-    const problemSetResult = await this.problemSetRepository.findById(problemSetId)
+    const problemSetResult = await this.problemSetRepository.findById(new UniqueEntityID(problemSetId))
     if (problemSetResult.isFailure) {
       return {
         problemSetId,

@@ -1,5 +1,5 @@
 import { BaseUseCase } from '../../use-cases/UseCase'
-import { Result, IProblemSetRepository } from '@woodie/domain'
+import { Result, IProblemSetRepository, UniqueEntityID } from '@woodie/domain'
 
 /**
  * 문제집 공개 설정 변경 UseCase
@@ -46,7 +46,7 @@ export class PublishProblemSetUseCase extends BaseUseCase<PublishProblemSetReque
       }
 
       // 2. 문제집 조회
-      const problemSetResult = await this.problemSetRepository.findById(request.problemSetId)
+      const problemSetResult = await this.problemSetRepository.findById(new UniqueEntityID(request.problemSetId))
       if (problemSetResult.isFailure) {
         return Result.fail<PublishProblemSetResponse>('Problem set not found')
       }

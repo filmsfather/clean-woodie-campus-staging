@@ -1,0 +1,139 @@
+import { Entity } from '../../entities/Entity';
+import { Result } from '../../common/Result';
+import { Guard } from '../../common/Guard';
+/**
+ * 학습 기록 엔티티
+ * 개별 복습 세션의 결과를 기록하는 불변 객체
+ */
+export class StudyRecord extends Entity {
+    constructor(props, id) {
+        super(props, id);
+    }
+    get studentId() {
+        return this.props.studentId;
+    }
+    get problemId() {
+        return this.props.problemId;
+    }
+    get feedback() {
+        return this.props.feedback;
+    }
+    get isCorrect() {
+        return this.props.isCorrect;
+    }
+    get responseTime() {
+        return this.props.responseTime;
+    }
+    get answerContent() {
+        return this.props.answerContent;
+    }
+    get createdAt() {
+        return this.props.createdAt;
+    }
+    /**
+     * 새로운 StudyRecord 생성
+     */
+    static create(props, id) {
+        const guardResult = Guard.againstNullOrUndefinedBulk([
+            { argument: props.studentId, argumentName: 'studentId' },
+            { argument: props.problemId, argumentName: 'problemId' },
+            { argument: props.feedback, argumentName: 'feedback' },
+            { argument: props.isCorrect, argumentName: 'isCorrect' }
+        ]);
+        if (guardResult.isFailure) {
+            return Result.fail(guardResult.error);
+        }
+        const studyRecord = new StudyRecord({
+            studentId: props.studentId,
+            problemId: props.problemId,
+            feedback: props.feedback,
+            isCorrect: props.isCorrect,
+            responseTime: props.responseTime,
+            answerContent: props.answerContent,
+            createdAt: new Date()
+        }, id);
+        return Result.ok(studyRecord);
+    }
+    /**
+     * 재구성 팩토리 메서드 (DB에서 복원할 때 사용)
+     */
+    static reconstitute(props, id) {
+        return new StudyRecord(props, id);
+    }
+    /**
+     * 응답 시간이 정상 범위인지 확인 (통계적 이상치 탐지용)
+     */
+    hasNormalResponseTime() {
+        if (!this.responseTime)
+            return true;
+        // 30초 이내 응답을 정상으로 간주
+        const MAX_NORMAL_RESPONSE_TIME = 30 * 1000; // 30초 (밀리초)
+        return this.responseTime <= MAX_NORMAL_RESPONSE_TIME;
+    }
+    /**
+     * 즉답 여부 확인 (3초 이내)
+     */
+    isInstantResponse() {
+        if (!this.responseTime)
+            return false;
+        return this.responseTime <= 3000; // 3초
+    }
+    /**
+     * 어려워했는지 여부 (응답 시간 기준)
+     */
+    appearsToStruggle() {
+        if (!this.responseTime)
+            return false;
+        return this.responseTime >= 15000; // 15초 이상
+    }
+    /**
+     * 성과 점수 계산 (0-100)
+     * 정답 여부와 응답 시간을 종합적으로 고려
+     */
+    calculatePerformanceScore() {
+        let baseScore = this.isCorrect ? 100 : 0;
+        if (!this.responseTime)
+            return baseScore;
+        // 응답 시간에 따른 보정
+        if (this.isCorrect) {
+            if (this.isInstantResponse()) {
+                baseScore = 100; // 즉답 정답은 만점 유지
+            }
+            else if (this.appearsToStruggle()) {
+                baseScore = 75; // 오래 걸린 정답은 감점
+            }
+            else {
+                baseScore = 90; // 적당한 시간의 정답
+            }
+        }
+        else {
+            // 오답일 때 응답 시간을 고려한 부분 점수
+            if (this.isInstantResponse()) {
+                baseScore = 10; // 즉답 오답은 실수 가능성
+            }
+            else {
+                baseScore = 0; // 오래 생각한 오답은 0점
+            }
+        }
+        return Math.max(0, Math.min(100, baseScore));
+    }
+    /**
+     * 학습 패턴 분석용 메타데이터
+     */
+    getStudyPattern() {
+        const isQuick = this.responseTime && this.responseTime <= 5000;
+        if (this.isCorrect && isQuick) {
+            return { pattern: 'quick_correct', confidence: 0.9 };
+        }
+        else if (this.isCorrect && !isQuick) {
+            return { pattern: 'slow_correct', confidence: 0.7 };
+        }
+        else if (!this.isCorrect && isQuick) {
+            return { pattern: 'quick_incorrect', confidence: 0.8 };
+        }
+        else {
+            return { pattern: 'slow_incorrect', confidence: 0.9 };
+        }
+    }
+}
+//# sourceMappingURL=StudyRecord.js.map

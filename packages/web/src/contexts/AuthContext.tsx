@@ -125,7 +125,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (request: SignUpRequest): Promise<void> => {
     try {
       // 실제 API 호출
-      const response = await fetch('http://localhost:3001/api/auth/signup', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${apiUrl}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

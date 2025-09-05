@@ -8,6 +8,7 @@ interface ProblemSetItemProps {
   orderIndex: number;
   points?: number;
   estimatedTimeMinutes?: number;
+  settings?: Record<string, any>;
 }
 
 export class ProblemSetItem extends Entity<UniqueEntityID> {
@@ -16,6 +17,7 @@ export class ProblemSetItem extends Entity<UniqueEntityID> {
   private _orderIndex: number;
   private _points: number;
   private _estimatedTimeMinutes: number;
+  private _settings: Record<string, any>;
 
   constructor(props: ProblemSetItemProps, id?: UniqueEntityID) {
     super(id || new UniqueEntityID());
@@ -24,6 +26,7 @@ export class ProblemSetItem extends Entity<UniqueEntityID> {
     this._orderIndex = props.orderIndex;
     this._points = props.points ?? 10;
     this._estimatedTimeMinutes = props.estimatedTimeMinutes ?? 3;
+    this._settings = props.settings ?? {};
   }
 
   // Getters
@@ -45,6 +48,10 @@ export class ProblemSetItem extends Entity<UniqueEntityID> {
 
   get estimatedTimeMinutes(): number {
     return this._estimatedTimeMinutes;
+  }
+
+  get settings(): Record<string, any> {
+    return { ...this._settings };
   }
 
   // Business Logic Methods

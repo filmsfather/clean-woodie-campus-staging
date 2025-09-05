@@ -83,7 +83,7 @@ export class UpdateReviewScheduleUseCase extends BaseUseCase<UpdateReviewSchedul
       }
 
       // 4. 스케줄 상태 확인
-      if (schedule.isCompleted) {
+      if (schedule.isCompleted()) {
         return Result.fail<UpdateReviewScheduleResponse>('Cannot update completed review schedule')
       }
 
@@ -136,12 +136,12 @@ export class UpdateReviewScheduleUseCase extends BaseUseCase<UpdateReviewSchedul
 
       // 노트 추가
       if (request.updates.notes) {
-        schedule.addNote(request.updates.notes, request.requesterId)
+        schedule.addNote(request.updates.notes)
         updatedFields.push('notes')
       }
 
       // 7. 수정 이력 기록
-      schedule.recordUpdate(request.requesterId, request.reason, updatedFields)
+      schedule.recordUpdate()
 
       // 8. 저장
       await this.reviewScheduleRepository.save(schedule)

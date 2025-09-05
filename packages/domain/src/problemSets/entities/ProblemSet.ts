@@ -222,6 +222,13 @@ export class ProblemSet extends AggregateRoot<UniqueEntityID> {
     this._updatedAt = new Date();
   }
 
+  // 공유 설정 업데이트 (공개/비공개 및 공유 설정을 함께 처리)
+  public updateSharingSettings(isPublic: boolean, isShared: boolean): void {
+    this._isPublic = isPublic;
+    this._isShared = isShared;
+    this._updatedAt = new Date();
+  }
+
   // 쿼리 메서드들 - 상태 조회 및 검증
   public isEmpty(): boolean {
     return this._items.length === 0;

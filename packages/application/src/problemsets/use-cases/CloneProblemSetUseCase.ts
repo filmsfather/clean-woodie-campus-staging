@@ -1,5 +1,5 @@
 import { BaseUseCase } from '../../use-cases/UseCase'
-import { Result, ProblemSet, ProblemSetTitle, ProblemSetDescription, IProblemSetRepository } from '@woodie/domain'
+import { Result, ProblemSet, ProblemSetTitle, ProblemSetDescription, IProblemSetRepository, UniqueEntityID } from '@woodie/domain'
 
 /**
  * 문제집 복제 UseCase
@@ -64,7 +64,7 @@ export class CloneProblemSetUseCase extends BaseUseCase<CloneProblemSetRequest, 
       }
 
       // 2. 원본 문제집 조회
-      const sourceProblemSetResult = await this.problemSetRepository.findById(request.sourceProblemSetId)
+      const sourceProblemSetResult = await this.problemSetRepository.findById(new UniqueEntityID(request.sourceProblemSetId))
       if (sourceProblemSetResult.isFailure) {
         return Result.fail<CloneProblemSetResponse>('Source problem set not found')
       }
@@ -138,9 +138,7 @@ export class CloneProblemSetUseCase extends BaseUseCase<CloneProblemSetRequest, 
       for (const sourceItem of sourceItems) {
         const addResult = clonedProblemSet.addProblem(
           sourceItem.problemId,
-          sourceItem.orderIndex,
-          sourceItem.points,
-          sourceItem.settings
+          sourceItem.orderIndex
         )
         
         if (addResult.isSuccess) {

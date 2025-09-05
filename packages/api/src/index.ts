@@ -308,8 +308,20 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() })
 })
 
-app.listen(port, () => {
-  console.log(`API server running on port ${port}`)
+app.get('/api', (req: Request, res: Response) => {
+  res.json({ 
+    message: 'Woodie Campus API', 
+    version: '1.0.0',
+    timestamp: new Date().toISOString() 
+  })
 })
 
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`API server running on port ${port}`)
+  })
+}
+
+// Export the Express API for Vercel
 export default app
