@@ -10,8 +10,6 @@
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "build": "pnpm -r run build",
-    "build:staging": "NODE_ENV=staging pnpm -r run build:staging",
-    "build:production": "NODE_ENV=production pnpm -r run build:production",
     "dev": "pnpm -r --parallel run dev",
     "test": "pnpm -r run test",
     "test:unit": "pnpm -r run test",

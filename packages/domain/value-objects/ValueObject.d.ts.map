@@ -1,1 +1,0 @@
-{"version":3,"file":"ValueObject.d.ts","sourceRoot":"","sources":["../../src/value-objects/ValueObject.ts"],"names":[],"mappings":"AAAA,8BAAsB,WAAW,CAAC,CAAC;IACjC,SAAS,CAAC,QAAQ,CAAC,KAAK,EAAE,CAAC,CAAA;gBAEf,KAAK,EAAE,CAAC;IAIpB,MAAM,CAAC,WAAW,EAAE,WAAW,CAAC,CAAC,CAAC,GAAG,OAAO;IAgB5C,OAAO,CAAC,YAAY;IAiBpB,QAAQ,IAAI,MAAM;CAGnB"}

@@ -6,15 +6,14 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build",
-    "build:vercel": "npm run clean && tsc",
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
+    "start": "pm2 start ecosystem.config.js --env production",
+    "start:dev": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist",
-    "vercel-build": "npm run build:vercel"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
